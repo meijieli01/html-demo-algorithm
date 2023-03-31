@@ -4,7 +4,7 @@ const routes = [
   {
     path: '/login',
     name: 'Login',
-    component: () => import('../views/login/index.vue'),
+    component: () => import('../views/Login.vue'),
     hidden: true,
   },
 ]
@@ -16,7 +16,7 @@ export const mapComponent2LocalFile = {
 export const mapComponent2LocalFileTest = {
   // 测试
   'VIEWER': {
-    component: () => import('../views/page/viewer.vue'),
+    component: () => import('../views/Viewer.vue'),
     functionName: 'viewer',
     functionCode: 'ViewerCT',
     functionId: '100',

@@ -1,0 +1,8 @@
+@import "../node_modules/bootstrap/scss/bootstrap.scss";
+
+label.form-label {
+    &.mj-must::after {
+        content: "*";
+        color: red;
+    }
+}

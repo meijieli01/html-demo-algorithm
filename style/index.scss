@@ -1,0 +1,36 @@
+@import './variables';
+@import './bootstrap';
+@import '../src/third/snippet/layout/layout1';
+
+$heightTopBar: 50px!default;
+.layout-topbar {
+    position: relative;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+    > span {
+      margin-left: 60px;
+      height: $heightTopBar;
+      line-height: $heightTopBar;
+      font-size: 18px;
+      font-weight: 800;
+    }
+    .info {
+      float: right;
+      display: flex;
+      align-items: center;
+      margin: 0 20px 0 0;
+      height: $heightTopBar;
+      line-height: $heightTopBar;
+      em {
+        padding: 0 10px;
+        font-style: normal;
+      }
+      div {
+        cursor: pointer;
+      }
+      div:first-child {
+        margin: 0 10px 0 0;
+      }
+    }
+}
+
+@import './login';

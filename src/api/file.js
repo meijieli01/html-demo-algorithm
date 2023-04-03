@@ -1,6 +1,5 @@
 import request from '@/utils/request';
 import qs from 'qs'
-import store from '../store';
 
 /**
  * @description 系统集成数据
@@ -8,8 +7,8 @@ import store from '../store';
 export function upload(data) {
   return request({
     url: '/admin/upload',
-    // headers: { 'content-type': 'application/x-www-form-urlencoded' },
-    headers: { 'content-type': 'multipart/form-data' },
+    // headers: { 'content-type': 'application/x-www-form-urlencoded' }, // 无文件使用此格式
+    headers: { 'content-type': 'multipart/form-data' }, // 有文件要这个格式
     method: 'POST',
     data: data,
   })
@@ -21,8 +20,9 @@ export function upload(data) {
 export function callAi(data) {
   return request({
     url: '/admin/callAi',
-    headers: { 'content-type': 'multipart/form-data' },
+    headers: { 'content-type': 'application/x-www-form-urlencoded' },
     method: 'POST',
-    data: data,
+    timecount: 1000*60*5, // 五分钟
+    data: qs.stringify(data),
   })
 }

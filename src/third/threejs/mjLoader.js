@@ -1,4 +1,4 @@
-import { FileType } from './utils/modelfile'
+import { FileType, toFileType } from './utils/modelfile'
 import {
   Color,
   MeshPhongMaterial,
@@ -53,6 +53,18 @@ export class FileLoader {
   load(file, cb = () => {}) {
     const url = URL.createObjectURL(file);
     return this.loader.loadAsync(url, cb);
+  }
+}
+
+export class PathLoader {
+  constructor(path) {
+    this.loader = setLoaderType(toFileType(path));
+  }
+  load(path, cb = ()=>{}) {
+    return this.loader.loadAsync(path, cb);
+  }
+  static getName(path) {
+    return path.substr(path.lastIndexOf('/')+1);
   }
 }
 

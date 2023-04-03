@@ -5,11 +5,11 @@
         </div>
         <div class="content-toolbar d-flex flex-column">
             <div class="d-flex flex-wrap">
-                <button class="btn btn-primary m-1" @click="clickLoadShowData(1)">导入输出文件夹-展示模型</button>
-                <button class="btn btn-primary m-1" @click="clickLoadShowData(2)">导入输入文件夹-CT数据</button>
-                <div class="alert alert-warning m-1" role="alert">上传开始时，文件读取会卡顿一下</div>
+                <!-- <button class="btn btn-primary m-1" @click="clickLoadShowData(1)">导入输出文件夹-展示模型</button> -->
+                <button class="btn btn-primary m-1" @click="clickLoadShowData(2)">导入CT数据和咬合数据</button>
+                <div class="alert alert-warning m-1 p-0" role="alert">上传开始时，文件读取会卡顿一下</div>
             </div>
-            <div class="d-flex">
+            <div class="d-flex py-3">
                 <div class="progress w-100" v-if="ud.uploading">
                     <div class="progress-bar" role="progressbar" :style="`width: ${getPer()}%;`" :aria-valuenow="getPer()" aria-valuemin="0" aria-valuemax="100" v-html="getPer()+'%'"></div>
                 </div>
@@ -20,9 +20,24 @@
                     <div class="alert alert-danger" role="alert" v-html="item.name"></div>
                 </div>
             </div>
-            <div class="d-flex flex-wrap">
+            <div class="d-flex flex-wrap">                
+                <div class="alert alert-warning m-1 p-0" role="alert">需要传入一个缺少牙号</div>
+                <select class="form-select" v-model="m1.missId" @change="selectMissingTid">
+                    <option v-for="(tid,i) in ud.tidList" :key="i" :value="tid" v-html="tid"></option>
+                </select>
+            </div>
+            <div class="d-flex flex-wrap">                
                 <button class="btn btn-primary m-1" @click="clickLoadShowData(3)">调用AI</button>
-                <div class="alert alert-warning m-1" role="alert">整个过程计算耗时较长，需要等待！</div>
+                <div class="alert alert-warning m-1 p-0 my-auto" role="alert">整个过程计算耗时较长，需要等待！</div>
+            </div>
+            <div>
+                <div class="alert alert-danger m-1" role="alert" v-if="msg.length > 0" v-html="msg"></div>
+            </div>
+            <div class="overflow-auto">
+                <div class="d-flex" v-for="(item,i) in ud.infoList" :key="i">
+                    <input type="checkbox" :checked="item.check" @change="inputChangeUpdate(item)" />
+                    <div v-html="item.filename"></div>
+                </div>
             </div>
         </div>
         <input type="file" webkitdirectory ref="refFile" @change="handleSelectFile($event)" hidden />
@@ -34,9 +49,10 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue';
 import mqThree from '../third/threejs/threejs';
-import { FileLoader, mjFileType, addColor2Mesh } from '../third/threejs/mjLoader';
-import { upload } from '../api/file';
+import { FileLoader, mjFileType, addColor2Mesh, PathLoader } from '../third/threejs/mjLoader';
+import { upload, callAi } from '../api/file';
 const refFile = ref(null);
+const msg = ref('');
 const ud = reactive({
     type: 0,
     total: 0,
@@ -45,8 +61,22 @@ const ud = reactive({
     uploading:false,
     cacheList: {},
     errorList: [],
-    timestamp: 0,
+    pathList: [],
+    timestamp: '1680511427096',
+    tidList: [
+        18,17,16,15,14,13,12,11,21,22,23,24,25,26,27,28,
+        48,47,46,45,44,43,42,41,31,32,33,34,35,36,37,38,
+    ],
+    fetchTotal: 0,
+    fetchCount: 0,
+    fetchTimestamp: '',
+    fetching: false,
+});
+const m1 = reactive({
+    missId: '',
+    tempDir: '22222',
 })
+const tidList = []
 const stlLoader = new FileLoader(mjFileType.STL);
 onMounted(() => {
     const elScript = document.createElement('script')
@@ -68,13 +98,108 @@ onMounted(() => {
     mqThree.threeEventLoop();
     mqThree.threeResize();
     mqThree.threeFrame();
+
+    // 缓存上传文件的时间点
 })
 function clickLoadShowData(type) {
+    msg.value = '';
     ud.type = type;
     mqThree.threeEmpty();
-    refFile.value.dispatchEvent(new MouseEvent('click'))
+    if (type == 2) {
+        refFile.value.dispatchEvent(new MouseEvent('click'))
+    } else if (type == 3) {
+        if (!m1.missId) {
+            msg.value = '需要选择一个缺少牙号';
+            return;
+        }
+        m1.tempDir = ud.timestamp;
+        callAi(m1).then(res=>{
+            if (res.code == 200) {
+                ud.pathList = res.data;                
+                updateByPath();
+            } else {
+                msg.value = res.message;
+            }
+        })
+    }
+}
+function selectMissingTid() {
+    m1.tempDir = ud.timestamp;
+}
+function updateByPath() {
+    mqThree.threeLoading(true);
+    ud.uploading = true;
+    ud.fetching = true;
+    ud.fetchTotal = ud.pathList.length;
+    ud.fetchCount = 0;
+    ud.fetchTimestamp = Date.now();
+    ud.infoList = [];
+
+    const fetchSinglePath = async (path) => {
+        const validPath = `${import.meta.env.VITE_APP_BASE_API}${path}`;
+        const geo = await new PathLoader(path).load(validPath, (e)=>{
+            // console.log('progress', e.loaded/e.total)
+        })
+        ud.fetchCount++;
+        
+        mqThree.threeLoading(false);
+        if (geo.type == 'BufferGeometry' && geo.attributes.position.count < 1) {
+            console.warn('empty BufferGeometry');
+            return;
+        }
+        const filename = PathLoader.getName(path);
+        ud.infoList.push({
+            filename:filename,
+            check: true,
+        });
+        addColor2Mesh(geo, {name:filename}).then(mesh=>{
+            mqThree.threeAdd(mesh);
+            mqThree.threeFrame();
+        })
+        if (ud.fetchTotal == ud.fetchCount) {
+            ud.uploading = false;
+            ud.fetching = false;
+            console.log('222')
+        } else {
+            mqThree.threeFrame();
+        }
+    }
+    ud.pathList.forEach(path=>{
+        fetchSinglePath(path);
+        // const validPath = `${import.meta.env.VITE_APP_BASE_API}${path}`;
+        // new PathLoader(path).load(validPath, (e)=>{
+        //     // console.log('progress', e.loaded/e.total)
+        // }).then(geo=>{
+        //     ud.fetchCount++;
+        //     if (geo.type == 'BufferGeometry' && geo.attributes.position.count < 1) {
+        //         console.warn('empty BufferGeometry');
+        //         return;
+        //     }
+        //     const filename = PathLoader.getPer(path);
+        //     ud.infoList.push({
+        //         filename:filename,
+        //     });
+        //     addColor2Mesh(geo, {name:filename}).then(mesh=>{
+        //         mqThree.threeAdd(mesh);
+        //         mqThree.threeFrame();
+        //         mqThree.threeLoading(false);
+        //     })
+        //     if (ud.fetchTotal == ud.fetchCount) {
+        //         ud.uploading = false;
+        //         ud.fetching = false;
+        //         console.log('222')
+        //     }
+        // })
+    })
+    mqThree.threeFrame();
+}
+function inputChangeUpdate(item) {
+    console.log('input', item)
 }
 function getPer() {
+    if (ud.fetching) {
+        return Math.round(100 * ud.fetchCount / ud.fetchTotal).toFixed(2);     
+    }
     return Math.round(100 * ud.count / ud.total).toFixed(2); 
 }
 function handleSelectFile(event) {
@@ -98,7 +223,6 @@ function handleSelectFile(event) {
         }
     } else if (ud.type == 2) {
         ud.uploading = true;
-        // delete ud.cacheList[ud.timestamp];
         ud.timestamp = Date.now();
         ud.count2 = 0;
         ud.count = 1;
@@ -108,8 +232,10 @@ function handleSelectFile(event) {
             const formData = new FormData();
             const tmp = ud.cacheList[ud.timestamp][file.name];
             if (tmp && tmp.size > 0 && tmp.loading == false) {
+                msg.value += `重复上传${file.name}`;
                 // 已经上传了的文件，退出
                 return;
+            } else {
             }
             ud.cacheList[ud.timestamp][file.name] = {
                 name: file.name,
@@ -134,13 +260,12 @@ function handleSelectFile(event) {
                 }
             } else {
                 ud.count2++;
+                msg.value += `文件${file.name}上传失败`;
             }
         }
         for (let i = 0; i < files.length; i++) {
             uploadSingleFile(files[i]);
         }
-    } else if (ud.type == 3) {
-        
     }
 }
 </script>

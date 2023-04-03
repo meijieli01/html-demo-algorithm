@@ -11,7 +11,6 @@ export function adminLogin(data) {
     url: '/admin/login',
     headers: { 'content-type': 'application/x-www-form-urlencoded' },
     method: 'POST',
-    // data: data,
     data: qs.stringify(data),
   })
 }

@@ -1,6 +1,5 @@
 import Vuex from 'vuex'
 import moduleUser from './user'
-import moduleOss from './oss'
 const store = new Vuex.Store({
   state: {
     appName: import.meta.env.VITE_APP_NAME,
@@ -18,7 +17,6 @@ const store = new Vuex.Store({
   },
   modules: {
     user: moduleUser,
-    oss: moduleOss,
   },
 })
 

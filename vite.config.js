@@ -2,7 +2,7 @@ import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import html from 'vite-plugin-html'
 import svgLoader from 'vite-svg-loader';
-const {resolve} = require('path')
+import {resolve} from 'path';
 
 // https://vitejs.dev/config/
 export default defineConfig(({mode}) => {

@@ -5,7 +5,7 @@
             <div class="mb-3 row">
                 <label for="loginName" class="col-sm-3 col-form-label text-end">用户名</label>
                 <div class="col-sm-8">
-                <input type="text" class="form-control" v-model="form.username" id="loginName" aria-describedby="email" required>
+                <input type="text" class="form-control" v-model="form.loginname" id="loginName" aria-describedby="email" required>
                 </div>
             </div>
             <div class="mb-3 row">
@@ -32,7 +32,7 @@ const router = useRouter()
 
 const refForm = ref(null)
 const form = reactive({
-  username: '',
+  loginname: '',
   password: '',
 })
 function btnClickLogin(event) {
@@ -42,7 +42,6 @@ function btnClickLogin(event) {
       router.push({ path: '/' })
     })
     .catch(err => {
-      alertMessage('http', err, true);
       if (refForm.value) {
         refForm.value.classList.remove('was-validated')
       }

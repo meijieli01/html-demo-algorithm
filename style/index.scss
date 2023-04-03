@@ -69,5 +69,6 @@ $widthToolbar: 30%;
   .content-toolbar {
     width: $widthToolbar;
     height: 100%;
+    border: 1px dashed lightgray;
   }
 }

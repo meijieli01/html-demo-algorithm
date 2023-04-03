@@ -1,7 +1,0 @@
-[submodule "src/third/snippet"]
-	path = src/third/snippet
-	url = http://47.108.21.164:1080/web/component-snippet.git
-	branch = bootstrap
-[submodule "src/third/threejs"]
-	path = src/third/threejs
-	url = http://47.108.21.164:1080/web/component-threejs.git

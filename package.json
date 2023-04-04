@@ -10,7 +10,6 @@
     "api": "node createapi.js"
   },
   "dependencies": {
-    "ali-oss": "^6.15.2",
     "axios": "^0.21.1",
     "qs": "^6.11.1",
     "three": "^0.128.0",

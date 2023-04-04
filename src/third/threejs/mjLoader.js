@@ -45,9 +45,19 @@ function setLoaderType(ftype) {
   return loader;
 }
 
+class CommonLoader {
+  constructor() {
+
+  }
+  static getName(path) {
+    return path.substr(path.lastIndexOf('/')+1);
+  }
+}
+
 export const mjFileType = FileType;
-export class FileLoader {
+export class FileLoader extends CommonLoader {
   constructor(ftype) {
+    super();
     this.loader = setLoaderType(ftype);
   }
   load(file, cb = () => {}) {
@@ -56,15 +66,17 @@ export class FileLoader {
   }
 }
 
-export class PathLoader {
+export class PathLoader extends CommonLoader {
   constructor(path) {
+    super();
     this.loader = setLoaderType(toFileType(path));
   }
   load(path, cb = ()=>{}) {
-    return this.loader.loadAsync(path, cb);
-  }
-  static getName(path) {
-    return path.substr(path.lastIndexOf('/')+1);
+    try {
+      return this.loader.loadAsync(path, cb);
+    } catch(err) {
+      console.log(err);
+    }
   }
 }
 

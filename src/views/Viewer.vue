@@ -71,6 +71,7 @@ import mqThree from '../third/threejs/threejs';
 import { readFromStorage, writeToStorage } from '../third/snippet/tool/storage';
 import { FileLoader, mjFileType, addColor2Mesh, PathLoader } from '../third/threejs/mjLoader';
 import { upload, callAi } from '../api/file';
+import { baseRoot } from '../../config';
 const refFile = ref(null);
 const msg = ref('');
 const ud = reactive({
@@ -104,7 +105,7 @@ const stlLoader = new FileLoader(mjFileType.STL);
 onMounted(() => {
     const elScript = document.createElement('script')
     elScript.type = 'text/javascript'
-    elScript.src = '/js/libs/draco/draco_encoder.js'
+    elScript.src = `${baseRoot}'js/libs/draco/draco_encoder.js'`
     document.body.appendChild(elScript)
     
     let el = document.getElementById('id3DContainer')

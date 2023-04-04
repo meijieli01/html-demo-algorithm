@@ -11,28 +11,26 @@
             <div v-if="ud.timestampList.length > 0">
                 <div>
                     <div class="d-flex flex-wrap">                
-                        <div class="alert alert-warning m-1 p-0" role="alert">上传文件的时间点，分当前与历史记录</div>
+                        <div class="alert alert-warning m-1 p-0" role="alert">上传文件时间戳，区分未调用与调用历史记录</div>
                         <select class="form-select" v-model="ud.selTimestamp" @change="selectTimestamp">
                             <option v-for="(item,i) in ud.timestampList" :key="i" :value="item" v-html="parseTime(item)"></option>
                         </select>
                     </div>
                     <div class="d-flex flex-wrap">
+                        <div class="alert alert-warning m-1 p-0" role="alert">注意，读取大量文件，会卡顿一下，请耐心等待</div>
                         <button class="btn btn-primary m-1" @click="clickLoadShowData(2)" :disabled="getState()">1.导入CT数据和咬合数据</button>
-                        <div class="alert alert-warning m-1 p-0" role="alert">上传开始时，文件读取会卡顿一下</div>
                     </div>
                 </div>
                 <div class="d-flex flex-wrap">                
-                    <div class="alert alert-warning m-1 p-0" role="alert">需要传入一个缺少牙号</div>
+                    <div class="alert alert-warning m-1 p-0" role="alert">调用AI时要传入一个缺少牙号</div>
                     <select class="form-select" v-model="m1.missId" @change="selectMissingTid" :disabled="getState()">
                         <option v-for="(tid,i) in ud.tidList" :key="i" :value="tid" v-html="tid"></option>
                     </select>
                 </div>
                 <div class="d-flex flex-wrap">                
-                    <button class="btn btn-primary m-1" @click="clickLoadShowData(3)">2.调用AI</button>
+                    <button class="btn btn-primary m-1" @click="clickLoadShowData(3)" :disabled="ud.lockCall">2.调用AI</button>
                     <div class="h-100 m-auto d-flex flex-column justify-content-center">
-                        <div class="spinner-border text-primary" role="status" v-if="ud.calling">
-                            <span class="visually-hidden">Loading...</span>
-                        </div>
+                        <div class="spinner-border text-primary" role="status" v-if="ud.calling"></div>
                     </div>
                     <div class="alert alert-warning m-1 p-0 my-auto" role="alert">整个过程计算耗时较长，需要等待！</div>
                 </div>
@@ -97,6 +95,7 @@ const ud = reactive({
     fetchCount: 0,
     fetching: false,
     calling: false,
+    lockCall: true,
     selTimestamp: {},
 });
 const m1 = reactive({
@@ -138,11 +137,12 @@ function parseTime(timestamp) {
 }
 function getState() {
     const {tmpDir, tid} = ud.selTimestamp || {};
+    // console.log('-state-', tmpDir, tid, typeof tmpDir, typeof tid)
     if (!tmpDir && !tid) {
         // 未选中时，禁用
         return true;
     }
-    if (tmpDir && tmpDir.length > 0 && tid && tid.length > 0) {
+    if (tmpDir > 0 && tid > 0) {
         // 历史记录，禁用
         return true;
     }
@@ -155,7 +155,7 @@ function clickLoadShowData(type) {
     msg.errorList = [];
     msg.countError = 0;
     ud.type = type;
-    mqThree.threeEmpty();
+    clearEmpty();
     if ([1,2].includes(type)) {
         refFile.value.dispatchEvent(new MouseEvent('click'))
     } else if (type == 3) {
@@ -167,6 +167,7 @@ function clickLoadShowData(type) {
         callAi(m1).then(res=>{
             ud.calling = false;
             if (res.code == 200) {
+                ud.lockCall = true;
                 // 新的调用需要缓存记录
                 if (m1.type == 1) {                                             
                     // 更新进去
@@ -188,8 +189,16 @@ function clickLoadShowData(type) {
         });
     }
 }
+function clearEmpty() {
+    mqThree.group.children.forEach(mesh=>{
+        mesh.geometry.dispose();
+        mesh.material.dispose();
+    })
+    mqThree.threeEmpty();
+}
 function selectTimestamp() {
     const { tmpDir, tid } = ud.selTimestamp || {};
+    ud.lockCall = false;
     m1.tempDir = tmpDir;
     if (tid) {
         // 历史记录

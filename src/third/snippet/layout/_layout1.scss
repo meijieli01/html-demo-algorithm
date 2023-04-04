@@ -1,0 +1,117 @@
+$bgSideMenuColor: RGB(68, 75, 80)!default;
+$bgSideMenuColorActive: #32383c!default;
+$bgSideMenuColorHover: RGB(60, 67, 72)!default;
+.layout1-app-wrapper {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    $widthOfLeft: 200px;    
+    display: flex;
+    flex-direction: row;
+    .side-left {
+        width: 200px;
+        height: 100%;
+    }
+    .side-content {
+        width: calc(100vw - #{$widthOfLeft});
+        height: 100%;
+        .app-main {
+            height: calc(100% - #{$layout-top-height});
+            overflow: auto;
+        }
+    }
+}
+.layout-menu {
+    text-indent: 30px;
+    position: relative;
+    a.layout-menu-item {
+        display: block;
+        height: 100%;
+        color: white;
+        text-decoration: none;
+        &:link {
+            color: white;
+        }
+        &:hover {
+            background: $bgSideMenuColorHover;
+        }
+        text-indent: 40px;
+        &.active {
+            background: $bgSideMenuColorActive
+        }
+    }
+    li {
+        cursor: pointer;
+        position: relative;
+        &:not(:first-child) {
+            margin-top: 1px;
+        }
+        height: 40px;
+        line-height: 40px;
+        svg {
+            // position: absolute;
+            // right: 30px;
+            // height: 40px;
+            float: right;
+            margin-right: 20px;
+            margin-top: 10px;
+        }
+    }
+}
+.layout-sidebar {
+    overflow-y: auto;
+    background: $bgSideMenuColor;
+    color: #fff;
+    height: 100%;
+    padding: 0;
+    margin: 0;
+}
+.layout-topbar {
+    display: flex;
+}
+
+.layout-sidebar-tree {
+    overflow-y: auto;
+    background: $bgSideMenuColor;
+    color: #fff;
+    height: 100%;
+    padding: 0;
+    margin: 0;
+}
+
+ul.layout-tree-menu {
+    user-select: none;
+    text-indent: 1rem;
+    padding-left: 1rem;
+    position: relative;
+    list-style: none;
+    a.tree-one-item {
+        display: block;
+        height: 100%;
+        color: white;
+        text-decoration: none;
+        &:link {
+            color: white;
+        }
+        &:hover {
+            background: $bgSideMenuColorHover;
+        }
+        text-indent: 1rem;
+        &.active {
+            background: $bgSideMenuColorActive
+        }
+    }
+    li {
+        cursor: pointer;
+        position: relative;
+        &:not(:first-child) {
+            margin-top: 1px;
+        }
+        line-height: 40px;
+        svg {
+            float: right;
+            margin-right: 20px;
+            margin-top: 10px;
+        }
+    }
+}

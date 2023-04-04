@@ -27,7 +27,6 @@ const actions = {
     return new Promise((resolve, reject) => {
       adminLogin(loginForm)
         .then((res) => {
-          console.log(res, res.data)
           commit('setToken', res.data)
           sessionStorage.setItem('token', res.data)
           resolve()

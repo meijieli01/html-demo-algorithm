@@ -9,21 +9,21 @@
                 <button class="btn btn-primary m-1" @click="clickLoadShowData(4)">创建时间戳</button>
             </div>
             <div v-if="ud.timestampList.length > 0">
-                <div class="d-flex flex-wrap">
-                    <button class="btn btn-primary m-1" @click="clickLoadShowData(2)">1.导入CT数据和咬合数据</button>
-                    <div class="alert alert-warning m-1 p-0" role="alert">上传开始时，文件读取会卡顿一下</div>
+                <div>
+                    <div class="d-flex flex-wrap">                
+                        <div class="alert alert-warning m-1 p-0" role="alert">上传文件的时间点，分当前与历史记录</div>
+                        <select class="form-select" v-model="ud.selTimestamp" @change="selectTimestamp">
+                            <option v-for="(item,i) in ud.timestampList" :key="i" :value="item" v-html="parseTime(item)"></option>
+                        </select>
+                    </div>
+                    <div class="d-flex flex-wrap">
+                        <button class="btn btn-primary m-1" @click="clickLoadShowData(2)" :disabled="getState()">1.导入CT数据和咬合数据</button>
+                        <div class="alert alert-warning m-1 p-0" role="alert">上传开始时，文件读取会卡顿一下</div>
+                    </div>
                 </div>
-                <div class="d-flex flex-wrap">                
-                    <div class="alert alert-warning m-1 p-0" role="alert">上传文件的时间点，分当前与历史记录</div>
-                    <select class="form-select" v-model="ud.selTimestamp" @change="selectTimestamp">
-                        <option v-for="(item,i) in ud.timestampList" :key="i" :value="item" v-html="`${i+1}-${item}`"></option>
-                    </select>
-                </div>
-            </div>
-            <div v-if="ud.timestampList.length > 0">
                 <div class="d-flex flex-wrap">                
                     <div class="alert alert-warning m-1 p-0" role="alert">需要传入一个缺少牙号</div>
-                    <select class="form-select" v-model="m1.missId" @change="selectMissingTid">
+                    <select class="form-select" v-model="m1.missId" @change="selectMissingTid" :disabled="getState()">
                         <option v-for="(tid,i) in ud.tidList" :key="i" :value="tid" v-html="tid"></option>
                     </select>
                 </div>
@@ -68,7 +68,7 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue';
 import mqThree from '../third/threejs/threejs';
-import { readFromStorage } from '../third/snippet/tool/storage';
+import { readFromStorage, writeToStorage } from '../third/snippet/tool/storage';
 import { FileLoader, mjFileType, addColor2Mesh, PathLoader } from '../third/threejs/mjLoader';
 import { upload, callAi } from '../api/file';
 const refFile = ref(null);
@@ -82,7 +82,7 @@ const ud = reactive({
     cacheList: {},
     errorList: [],
     pathList: [],
-    timestampList: ['1680514251226'],
+    timestampList: [],
     timestamp: '1680514251226',
     tidList: [
         18,17,16,15,14,13,12,11,21,22,23,24,25,26,27,28,
@@ -93,11 +93,11 @@ const ud = reactive({
     fetchTimestamp: '',
     fetching: false,
     calling: false,
-    selTimestamp: '',
+    selTimestamp: {},
 });
 const m1 = reactive({
     missId: '',
-    tempDir: '22222',
+    tempDir: '',
 });
 const keyOfLocalStorage = 'keyOfLocalStorage';
 const stlLoader = new FileLoader(mjFileType.STL);
@@ -123,8 +123,25 @@ onMounted(() => {
     mqThree.threeFrame();
 
     // 缓存上传文件的时间点
-    readFromStorage(keyOfLocalStorage, '')
+    ud.timestampList = JSON.parse(readFromStorage(keyOfLocalStorage, '[]'));
 })
+function parseTime(timestamp) {
+    const date = new Date(parseInt(timestamp.tmpDir));
+    const strTid = timestamp.tid ? `${timestamp.tid} ---  ` : '';
+    return `${strTid}${date.getFullYear()}-${date.getMonth()+1}-${date.getDate()} ${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`;
+}
+function getState() {
+    const {tmpDir, tid} = ud.selTimestamp || {};
+    if (!tmpDir && !tid) {
+        // 未选中时，禁用
+        return true;
+    }
+    if (tmpDir && tmpDir.length > 0 && tid && tid.length > 0) {
+        // 历史记录，禁用
+        return true;
+    }
+    return false;
+}
 function clickLoadShowData(type) {
     ud.fetching = false;
     msg.value = '';
@@ -139,12 +156,18 @@ function clickLoadShowData(type) {
             msg.value = '需要选择一个缺少牙号';
             return;
         }
-        m1.tempDir = ud.timestamp;
         ud.calling = true;
-        m1.type = 2;
         callAi(m1).then(res=>{
             ud.calling = false;
             if (res.code == 200) {
+                // 新的调用需要缓存记录
+                if (m1.type == 1) {                                             
+                    // 更新进去
+                    const tmp = ud.timestampList.filter(e=>e.tmpDir==m1.tempDir)[0];               
+                    tmp.tid = m1.missId;
+                    writeToStorage(keyOfLocalStorage, JSON.stringify(ud.timestampList));
+                    ud.timestampList = JSON.parse(readFromStorage(keyOfLocalStorage, '[]'));
+                }
                 ud.pathList = res.data;                
                 updateByPath();
             } else {
@@ -152,16 +175,24 @@ function clickLoadShowData(type) {
             }
         })
     } else if (type == 4) {
-        ud.timestamp = Date.now();
-        ud.timestampList.push(ud.timestamp);
+        ud.timestampList.push({
+            tmpDir: Date.now(),
+            tid: '',
+        });
     }
 }
-function selectMissingTid() {
-    m1.tempDir = ud.timestamp;
-}
 function selectTimestamp() {
-    m1.tempDir = ud.selTimestamp;
-    m1.type =  ud.selTimestamp;
+    const { tmpDir, tid } = ud.selTimestamp || {};
+    m1.tempDir = tmpDir;
+    if (tid) {
+        // 历史记录
+        m1.missId = tid;
+        m1.type = 2;
+    } else {
+        m1.missId = '';
+        m1.type = 1;
+        ud.timestamp = tmpDir;
+    }
 }
 function updateByPath() {
     mqThree.threeLoading(true);
@@ -173,7 +204,7 @@ function updateByPath() {
     ud.infoList = [];
     const fetchSinglePath = async (path) => {
         const filename = PathLoader.getName(path);
-        const validPath = `${import.meta.env.VITE_APP_BASE_API}${path}`;
+        const validPath = `${import.meta.env.VITE_APP_FILE_PREFIX}/${path}`;
         const geo = await new PathLoader(path).load(validPath, (e)=>{
             // console.log('progress', e.loaded/e.total)
         }).catch(err=>{
@@ -207,7 +238,6 @@ function updateByPath() {
         if (ud.fetchTotal == ud.fetchCount) {
             ud.uploading = false;
             ud.fetching = false;
-            console.log('222')
         } else {
             mqThree.threeFrame();
         }
@@ -260,8 +290,11 @@ function handleSelectFile(event) {
             })
         }
     } else if (ud.type == 2) {
+        if (!ud.timestamp || ud.timestamp.length < 1) {
+            msg.value = '请勾选时间戳';
+            return;
+        }
         ud.uploading = true;
-        ud.timestamp = Date.now();
         ud.countError = 0;
         ud.count = 1;
         ud.total = files.length;

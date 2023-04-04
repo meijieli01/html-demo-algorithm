@@ -105,7 +105,7 @@ const stlLoader = new FileLoader(mjFileType.STL);
 onMounted(() => {
     const elScript = document.createElement('script')
     elScript.type = 'text/javascript'
-    elScript.src = `${baseRoot}'js/libs/draco/draco_encoder.js'`
+    elScript.src = `${baseRoot}js/libs/draco/draco_encoder.js`;
     document.body.appendChild(elScript)
     
     let el = document.getElementById('id3DContainer')
@@ -249,13 +249,19 @@ function updateByPath() {
     mqThree.threeFrame();
 }
 function inputChangeUpdate(item) {
-    console.log('input', item)
+    item.check = !item.check;
+    mqThree.group.children.forEach(child=>{
+        if (child.name == item.filename) {
+            child.visible = item.check;
+        }
+    })
+    mqThree.threeFrame();
 }
 function getPer() {
     if (ud.fetching) {
-        return Math.round(100 * ud.fetchCount / ud.fetchTotal).toFixed(2);     
+        return Math.round(100 * ud.fetchCount / ud.fetchTotal).toFixed(0);     
     }
-    return Math.round(100 * ud.count / ud.total).toFixed(2); 
+    return Math.round(100 * ud.count / ud.total).toFixed(0); 
 }
 function handleSelectFile(event) {
     const files = event.target.files;

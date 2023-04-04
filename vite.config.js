@@ -29,6 +29,7 @@ export default defineConfig(({mode}) => {
         {find: '@', replacement: resolve(__dirname, 'src')}
       ],
     },
+    base: '/web',
     build: {
       outDir: buildPath,
       cssCodeSplit: false,

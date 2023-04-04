@@ -39,7 +39,8 @@ const actions = {
   // 获取用户信息并返回可访问路由
   getInfo({ commit,rootGetters  }) {
     return new Promise((resolve, reject) => {
-      if (import.meta.env.DEV) {
+      // 目前只有一个页面
+      if (true || import.meta.env.DEV) {
         const root = Object.assign({}, getRootRouter(rootGetters['appMode'] == 'admin' ? 'product':'front', 'testRoot'), {meta:{},children:[]});
         root.meta.label = 'testRoot';
         root.meta.code = '1000';

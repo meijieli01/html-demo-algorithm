@@ -29,7 +29,6 @@ router.beforeEach(async (to, from, next) => {
         else next(`/login`)
     }
 })
-console.log('env', import.meta.env)
 createApp(App)
 .use(router)
 .use(store)

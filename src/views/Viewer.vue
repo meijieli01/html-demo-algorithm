@@ -37,8 +37,8 @@
                     <div class="alert alert-warning m-1 p-0 my-auto" role="alert">整个过程计算耗时较长，需要等待！</div>
                 </div>
             </div>
-            <div class="d-flex py-3">
-                <div class="alert alert-warning m-1 p-0" role="alert">当前进度</div>
+            <div class="d-flex flex-column py-3">
+                <div class="alert alert-warning text-center m-1 p-0" role="alert">当前进度</div>
                 <div class="progress w-100" v-if="ud.uploading">
                     <div class="progress-bar" role="progressbar" :style="`width: ${getPer()}%;`" :aria-valuenow="getPer()" aria-valuemin="0" aria-valuemax="100" v-html="getPer()+'%'"></div>
                 </div>
@@ -54,8 +54,12 @@
             </div>
             <div class="overflow-auto">
                 <div class="d-flex" v-for="(item,i) in ud.infoList" :key="i">
-                    <input type="checkbox" :checked="item.check" @change="inputChangeUpdate(item)" />
-                    <div v-html="item.filename"></div>
+                    <input type="color" class="form-control" :value="item.color" @change="inputChangeColorUpdate($event,item)" style="width:60px;" />
+                    <input type="range" class="form-control" min="0" max="1" step="0.01" :value="item.opacity" @change="inputChangeOpacityUpdate($event,item)" style="width:160px;" />
+                    <div class="form-check form-switch mx-3">
+                        <input class="form-check-input" type="checkbox" :checked="item.check" @change="inputChangeUpdate(item)" />
+                        <label class="form-check-label" for="flexSwitchCheckDefault" v-html="item.filename"></label>
+                    </div>
                 </div>
             </div>
         </div>
@@ -69,7 +73,7 @@
 import { ref, reactive, onMounted } from 'vue';
 import mqThree from '../third/threejs/threejs';
 import { readFromStorage, writeToStorage } from '../third/snippet/tool/storage';
-import { FileLoader, mjFileType, addColor2Mesh, PathLoader } from '../third/threejs/mjLoader';
+import { FileLoader, mjFileType, addColor2Mesh, PathLoader, updateMeshColor, updateMeshOpacity } from '../third/threejs/mjLoader';
 import { upload, callAi } from '../api/file';
 import { baseRoot } from '../../config';
 const refFile = ref(null);
@@ -91,7 +95,6 @@ const ud = reactive({
     ],
     fetchTotal: 0,
     fetchCount: 0,
-    fetchTimestamp: '',
     fetching: false,
     calling: false,
     selTimestamp: {},
@@ -101,6 +104,8 @@ const m1 = reactive({
     tempDir: '',
 });
 const keyOfLocalStorage = 'keyOfLocalStorage';
+const colorOfDefault = '#B38E6B'
+const opacityOfDefault = 1;
 const stlLoader = new FileLoader(mjFileType.STL);
 onMounted(() => {
     const elScript = document.createElement('script')
@@ -146,6 +151,7 @@ function getState() {
 function clickLoadShowData(type) {
     ud.fetching = false;
     msg.value = '';
+    ud.infoList = [];
     msg.errorList = [];
     msg.countError = 0;
     ud.type = type;
@@ -201,8 +207,6 @@ function updateByPath() {
     ud.fetching = true;
     ud.fetchTotal = ud.pathList.length;
     ud.fetchCount = 0;
-    ud.fetchTimestamp = Date.now();
-    ud.infoList = [];
     const fetchSinglePath = async (path) => {
         const filename = PathLoader.getName(path);
         const validPath = `${import.meta.env.VITE_APP_FILE_PREFIX}/${path}`;
@@ -224,38 +228,58 @@ function updateByPath() {
         ud.fetchCount++;
         if (!geo) return;
         mqThree.threeLoading(false);
-        if (geo.type == 'BufferGeometry' && geo.attributes.position.count < 1) {
-            console.warn('empty BufferGeometry');
-            return;
-        }
-        ud.infoList.push({
-            filename:filename,
-            check: true,
-        });
-        addColor2Mesh(geo, {name:filename}).then(mesh=>{
-            mqThree.threeAdd(mesh);
-            mqThree.threeFrame();
-        })
-        if (ud.fetchTotal == ud.fetchCount) {
-            ud.uploading = false;
-            ud.fetching = false;
-        } else {
-            mqThree.threeFrame();
-        }
+        addGeotoScene(geo, filename);
     }
     ud.pathList.forEach(path=>{
         fetchSinglePath(path);
     })
     mqThree.threeFrame();
 }
+function addGeotoScene(geo, filename) {
+    if (geo.type == 'BufferGeometry' && geo.attributes.position.count < 1) {
+        console.warn('empty BufferGeometry');
+        return;
+    }
+    ud.infoList.push({
+        filename:filename,
+        check: true,
+        color: colorOfDefault,
+        opacity: opacityOfDefault,
+    });
+    addColor2Mesh(geo, {name:filename, color:colorOfDefault, opacity: opacityOfDefault}).then(mesh=>{
+        mqThree.threeAdd(mesh);
+        mqThree.threeFrame();
+    })
+    if (ud.fetchTotal == ud.fetchCount) {
+        ud.uploading = false;
+        ud.fetching = false;
+    } else {
+        mqThree.threeFrame();
+    }
+}
 function inputChangeUpdate(item) {
     item.check = !item.check;
-    mqThree.group.children.forEach(child=>{
-        if (child.name == item.filename) {
-            child.visible = item.check;
-        }
-    })
-    mqThree.threeFrame();
+    const mesh = mqThree.group.children.filter(e=>e.name==item.filename)[0];
+    if (mesh) {
+        mesh.visible = item.check;
+        mqThree.threeFrame();
+    }
+}
+function inputChangeColorUpdate(event, item) {
+    item.color = event.target.value;
+    const mesh = mqThree.group.children.filter(e=>e.name==item.filename)[0];
+    if (mesh) {
+        updateMeshColor(mesh, item.color);
+        mqThree.threeFrame();
+    }
+}
+function inputChangeOpacityUpdate(event, item) {
+    item.opacity = parseFloat(event.target.value);
+    const mesh = mqThree.group.children.filter(e=>e.name==item.filename)[0];
+    if (mesh) {
+        updateMeshOpacity(mesh, item.opacity);
+        mqThree.threeFrame();
+    }
 }
 function getPer() {
     if (ud.fetching) {
@@ -266,6 +290,7 @@ function getPer() {
 function handleSelectFile(event) {
     const files = event.target.files;
     if (ud.type == 1) {
+        // 本地加载stl文件
         ud.fetching = true;
         ud.uploading = true;
         ud.infoList = [];
@@ -277,26 +302,14 @@ function handleSelectFile(event) {
             stlLoader.load(file, (event)=>{
                 // console.log('progress', event.loaded/event.total)
             }).then((geo)=>{
+                const filename = FileLoader.getName(file.name);
                 ud.fetchCount++;
                 mqThree.threeLoading(false);
-                if (geo.type == 'BufferGeometry' && geo.attributes.position.count < 1) {
-                    console.warn('empty BufferGeometry');
-                }
-                const filename = FileLoader.getName(file.name);
-                ud.infoList.push({
-                    filename:filename,
-                    check: true,
-                });
-                addColor2Mesh(geo, {name:filename}).then(mesh=>{
-                    mqThree.threeAdd(mesh);
-                    mqThree.threeFrame();
-                })
-                if (ud.fetchCount==ud.fetchTotal) {
-                    ud.uploading = false;
-                }
+                addGeotoScene(geo, filename);
             })
         }
     } else if (ud.type == 2) {
+        // 上传文件
         if (!ud.timestamp || ud.timestamp.length < 1) {
             msg.value = '请勾选时间戳';
             return;

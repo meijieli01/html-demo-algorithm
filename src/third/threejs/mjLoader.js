@@ -82,7 +82,7 @@ export class PathLoader extends CommonLoader {
 
 export function addColor2Mesh(bufferGeo, options = {}) {
   return new Promise((resolve)=>{
-    const color = options.color || new Color('rgb(179,142,107)')
+    const color = new Color(options.color) || new Color('rgb(179,142,107)')
     let material = new MeshPhongMaterial({
       color: color,
       vertexColors: VertexColors,
@@ -91,6 +91,7 @@ export function addColor2Mesh(bufferGeo, options = {}) {
       shininess: 10,
       normalMapType: ObjectSpaceNormalMap,
       side: DoubleSide,
+      transparent: options.opacity < 1 ? true : false,
     })
     let colors = []
     for (let i = 0; i < bufferGeo.attributes.position.count; i++) {
@@ -106,4 +107,23 @@ export function addColor2Mesh(bufferGeo, options = {}) {
     mesh.name = options.name || Date.now().toString();
     resolve(mesh);
   })
+}
+
+export function updateMeshColor(mesh, strColor) {
+  const color = new Color(strColor);
+  const geo = mesh.geometry;
+  let colors = []
+  for (let i = 0; i < geo.attributes.position.count; i++) {
+    colors.push(color.r)
+    colors.push(color.g)
+    colors.push(color.b)
+  }
+  geo.setAttribute('color', new Float32BufferAttribute(colors, 3))
+  geo.attributes.color.needsUpdate = true;
+}
+
+export function updateMeshOpacity(mesh, opacity) {
+  mesh.material.opacity = opacity;
+  mesh.material.transparent = !(opacity == 1);
+  mesh.material.needsUpdate = true;
 }

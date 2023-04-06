@@ -5,9 +5,9 @@
         </div>
         <div class="content-toolbar d-flex flex-column">
             <div class="d-flex flex-wrap">
-                <button class="btn btn-primary m-1" @click="clickLoadShowData(1)" v-if="isDev">测试本地结果-展示模型</button>
-                <button class="btn btn-primary m-1" @click="clickLoadShowData(4)">创建时间戳</button>
-                <button class="btn btn-primary m-1" @click="clickLoadShowData(5)">加载历史记录</button>
+                <button class="btn btn-primary m-1 btn-sm" @click="clickLoadShowData(1)" v-if="isDev">测试本地结果-展示模型</button>
+                <button class="btn btn-primary m-1 btn-sm" @click="clickLoadShowData(4)">创建时间戳</button>
+                <button class="btn btn-primary m-1 btn-sm" @click="clickLoadShowData(5)">加载历史记录</button>
             </div>
             <div v-if="ud.timestampList.length > 0">
                 <div>
@@ -19,7 +19,7 @@
                     </div>
                     <div class="d-flex flex-wrap">
                         <div class="alert alert-warning m-1 p-0" role="alert">注意，读取大量文件，会卡顿一下，请耐心等待</div>
-                        <button class="btn btn-primary m-1" @click="clickLoadShowData(2)" :disabled="getState()">1.导入CT数据和咬合数据</button>
+                        <button class="btn btn-primary m-1 btn-sm" @click="clickLoadShowData(2)" :disabled="getState()">1.导入CT数据和咬合数据</button>
                     </div>
                 </div>
                 <div class="d-flex flex-wrap">                
@@ -290,8 +290,14 @@ function addGeotoScene(geo, filename) {
         color: color,
         opacity: opacityOfDefault,
     });
-    ud.infoList.sort((a,b)=>a.filename.localeCompare(b, 'en', { sensitivity: "base" }))
-    // console.log('22aa', ud.infoList)
+    function compare(attr) {
+        return function(a,b) {
+            const t1 = a[attr], t2 = b[attr];
+            const t = t1.localeCompare(t2);
+            return t1.localeCompare(t2);
+        }
+    }
+    const tmp = ud.infoList.sort(compare('filename'));
     addColor2Mesh(geo, {name:filename, color:color, opacity: opacityOfDefault}).then(mesh=>{
         appThree.add(mesh);
         appThree.updateFrame();

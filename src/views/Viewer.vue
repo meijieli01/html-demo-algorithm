@@ -111,10 +111,10 @@ onMounted(() => {
     elScript.type = 'text/javascript'
     elScript.src = `${getBaseRoot()}js/libs/draco/draco_encoder.js`;
     document.body.appendChild(elScript)
-    const elScript = document.createElement('script')
-    elScript.type = 'text/javascript'
-    elScript.src = `${getBaseRoot()}js/libs/draco/draco_decoder.js`;
-    document.body.appendChild(elScript)
+    const elScript1 = document.createElement('script')
+    elScript1.type = 'text/javascript'
+    elScript1.src = `${getBaseRoot()}js/libs/draco/draco_decoder.js`;
+    document.body.appendChild(elScript1)
     
     let el = document.getElementById('id3DContainer')
     let rect = el.getBoundingClientRect()

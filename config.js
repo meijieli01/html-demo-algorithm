@@ -1,2 +1,3 @@
-// export const baseRoot = '/'; // 默认
-export const baseRoot = '/web/';
+export function getBaseRoot() {
+    return ['development'].includes(process.env.NODE_ENV) ? '/' : '/web/';
+} 

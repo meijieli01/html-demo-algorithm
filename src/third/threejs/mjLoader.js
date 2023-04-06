@@ -13,13 +13,13 @@ import { STLLoader } from 'three/examples/jsm/loaders/STLLoader'
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader'
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader'
 
-function setLoaderType(ftype) {
+function setLoaderType(ftype, options={}) {
   let loader = null;
   switch (ftype) {
     case FileType.DRC:
     case FileType.MQ: {
       loader = new DRACOLoader()
-      loader.setDecoderPath('/js/libs/draco/')
+      loader.setDecoderPath(options.drcPath || '/js/libs/draco/');
       loader.setDecoderConfig({ type: 'js' })
       loader.preload()
       break
@@ -67,9 +67,9 @@ export class FileLoader extends CommonLoader {
 }
 
 export class PathLoader extends CommonLoader {
-  constructor(path) {
+  constructor(path, drcPath) {
     super();
-    this.loader = setLoaderType(toFileType(path));
+    this.loader = setLoaderType(toFileType(path), {drcPath:drcPath});
   }
   load(path, cb = ()=>{}) {
     try {

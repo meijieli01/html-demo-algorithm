@@ -106,15 +106,16 @@ const keyOfLocalStorage = 'keyOfLocalStorage';
 const colorOfDefault = '#B38E6B'
 const opacityOfDefault = 1;
 const stlLoader = new FileLoader(mjFileType.STL);
+const drcPathPrefix = `${getBaseRoot()}/js/libs/draco/`;
 onMounted(() => {
     const elScript = document.createElement('script')
     elScript.type = 'text/javascript'
-    elScript.src = `${getBaseRoot()}js/libs/draco/draco_encoder.js`;
+    elScript.src = `${drcPathPrefix}draco_encoder.js`;
     document.body.appendChild(elScript)
-    const elScript1 = document.createElement('script')
-    elScript1.type = 'text/javascript'
-    elScript1.src = `${getBaseRoot()}js/libs/draco/draco_decoder.js`;
-    document.body.appendChild(elScript1)
+    // const elScript1 = document.createElement('script')
+    // elScript1.type = 'text/javascript'
+    // elScript1.src = `${drcPathPrefix}draco_decoder.js`;
+    // document.body.appendChild(elScript1)
     
     let el = document.getElementById('id3DContainer')
     let rect = el.getBoundingClientRect()
@@ -223,7 +224,7 @@ function updateByPath() {
     const fetchSinglePath = async (path) => {
         const filename = PathLoader.getName(path);
         const validPath = `${import.meta.env.VITE_APP_FILE_PREFIX}/${path}`;
-        const geo = await new PathLoader(path).load(validPath, (e)=>{
+        const geo = await new PathLoader(path, drcPathPrefix).load(validPath, (e)=>{
             // console.log('progress', e.loaded/e.total)
         }).catch(err=>{
             if (err instanceof ProgressEvent) {

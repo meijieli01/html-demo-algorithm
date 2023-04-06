@@ -3,5 +3,5 @@ export function getBaseRoot() {
 } 
 
 export function getFavicon() {
-    return ['development'].includes(process.env.NODE_ENV) ? '/beta.png' : '/web/beta.png';
+    return ['development'].includes(process.env.NODE_ENV) ? '/beta.png' : '/web/beta.svg';
 } 

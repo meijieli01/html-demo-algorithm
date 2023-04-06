@@ -5,8 +5,9 @@
         </div>
         <div class="content-toolbar d-flex flex-column">
             <div class="d-flex flex-wrap">
-                <button class="btn btn-primary m-1" @click="clickLoadShowData(1)">测试本地结果-展示模型</button>
+                <button class="btn btn-primary m-1" @click="clickLoadShowData(1)" v-if="isDev">测试本地结果-展示模型</button>
                 <button class="btn btn-primary m-1" @click="clickLoadShowData(4)">创建时间戳</button>
+                <button class="btn btn-primary m-1" @click="clickLoadShowData(5)">加载历史记录</button>
             </div>
             <div v-if="ud.timestampList.length > 0">
                 <div>
@@ -69,12 +70,14 @@
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue';
-import mqThree from '../third/threejs/threejs';
+import { mqThree } from '../third/threejs/mjthree';
+import { getCtColorByName } from '../third/threejs/mjColor';
 import { readFromStorage, writeToStorage } from '../third/snippet/tool/storage';
 import { FileLoader, mjFileType, addColor2Mesh, PathLoader, updateMeshColor, updateMeshOpacity } from '../third/threejs/mjLoader';
-import { upload, callAi } from '../api/file';
+import { upload, callAi, getHistory } from '../api/file';
 import { getBaseRoot } from '../../config';
 const refFile = ref(null);
+const isDev = ref(import.meta.env.DEV);
 const msg = ref('');
 const ud = reactive({
     type: 0,
@@ -102,11 +105,11 @@ const m1 = reactive({
     missId: '',
     tempDir: '',
 });
+const appThree = new mqThree();
 const keyOfLocalStorage = 'keyOfLocalStorage';
-const colorOfDefault = '#B38E6B'
 const opacityOfDefault = 1;
 const stlLoader = new FileLoader(mjFileType.STL);
-const drcPathPrefix = `${getBaseRoot()}/js/libs/draco/`;
+const drcPathPrefix = `${getBaseRoot()}js/libs/draco/`;
 onMounted(() => {
     const elScript = document.createElement('script')
     elScript.type = 'text/javascript'
@@ -119,18 +122,22 @@ onMounted(() => {
     
     let el = document.getElementById('id3DContainer')
     let rect = el.getBoundingClientRect()
-    if (import.meta.env.DEV) {
-        window.mjthree = mqThree
+    if (import.meta.env.DEV) {        
+        window.mjthree = appThree;
     }
-    mqThree.threeInit({
+    appThree.init({
         width: rect.width,
         height: rect.height,
         container: el,
         useControl: true,
     })
-    mqThree.threeEventLoop();
-    mqThree.threeResize();
-    mqThree.threeFrame();
+    appThree.setLoadConfig({
+        msg: 'Loading',
+        url: '/web/images/loading.svg',
+    })
+    appThree.eventLoop();
+    appThree.resize();
+    appThree.updateFrame();
 
     // 缓存上传文件的时间点
     ud.timestampList = JSON.parse(readFromStorage(keyOfLocalStorage, '[]'));
@@ -142,7 +149,6 @@ function parseTime(timestamp) {
 }
 function getState() {
     const {tmpDir, tid} = ud.selTimestamp || {};
-    // console.log('-state-', tmpDir, tid, typeof tmpDir, typeof tid)
     if (!tmpDir && !tid) {
         // 未选中时，禁用
         return true;
@@ -174,12 +180,8 @@ function clickLoadShowData(type) {
             if (res.code == 200) {
                 ud.lockCall = true;
                 // 新的调用需要缓存记录
-                if (m1.type == 1) {                                             
-                    // 更新进去
-                    const tmp = ud.timestampList.filter(e=>e.tmpDir==m1.tempDir)[0];               
-                    tmp.tid = m1.missId;
-                    writeToStorage(keyOfLocalStorage, JSON.stringify(ud.timestampList));
-                    ud.timestampList = JSON.parse(readFromStorage(keyOfLocalStorage, '[]'));
+                if (m1.type == 1) {           
+                    updateTimestampData(m1.tempDir, m1.missId, false);
                 }
                 ud.pathList = res.data;                
                 updateByPath();
@@ -192,14 +194,41 @@ function clickLoadShowData(type) {
             tmpDir: Date.now(),
             tid: '',
         });
+    } else if (type == 5) {
+        getHistory().then(res=>{
+            if (res.code ==200) {
+                res.data.forEach(e=>{
+                    const strList = e.split(' ');
+                    const tmpDir = parseInt(strList[0].split('=').pop());
+                    const tid = parseInt(strList[1].split('=').pop());
+                    updateTimestampData(tmpDir, tid, true);
+                })
+            }
+        })
     }
 }
+function updateTimestampData(tmpDir, tid, isNew) {
+    // 更新进去
+    const tmp = ud.timestampList.filter(e=>e.tmpDir==m1.tempDir)[0];
+    if (tmp) {
+        tmp.tid = m1.missId;
+    } else {
+        if (isNew) {
+            ud.timestampList.push({
+                tmpDir: tmpDir,
+                tid: tid,
+            });
+        }
+    }
+    writeToStorage(keyOfLocalStorage, JSON.stringify(ud.timestampList));
+    ud.timestampList = JSON.parse(readFromStorage(keyOfLocalStorage, '[]'));
+}
 function clearEmpty() {
-    mqThree.group.children.forEach(mesh=>{
+    appThree.group.children.forEach(mesh=>{
         mesh.geometry.dispose();
         mesh.material.dispose();
-    })
-    mqThree.threeEmpty();
+    });
+    appThree.empty();
 }
 function selectTimestamp() {
     const { tmpDir, tid } = ud.selTimestamp || {};
@@ -216,7 +245,7 @@ function selectTimestamp() {
     }
 }
 function updateByPath() {
-    mqThree.threeLoading(true);
+    appThree.loading(true);
     ud.uploading = true;
     ud.fetching = true;
     ud.fetchTotal = ud.pathList.length;
@@ -236,63 +265,66 @@ function updateByPath() {
                 }   
             }
             msg.value = '文件加载失败';
-            mqThree.threeLoading(false);
+            appThree.loading(false);
             return null;
         })
         ud.fetchCount++;
         if (!geo) return;
-        mqThree.threeLoading(false);
+        appThree.loading(false);
         addGeotoScene(geo, filename);
     }
     ud.pathList.forEach(path=>{
         fetchSinglePath(path);
     })
-    mqThree.threeFrame();
+    appThree.updateFrame();
 }
 function addGeotoScene(geo, filename) {
     if (geo.type == 'BufferGeometry' && geo.attributes.position.count < 1) {
         console.warn('empty BufferGeometry');
         return;
     }
+    const color = getCtColorByName(filename);
     ud.infoList.push({
         filename:filename,
         check: true,
-        color: colorOfDefault,
+        color: color,
         opacity: opacityOfDefault,
     });
-    addColor2Mesh(geo, {name:filename, color:colorOfDefault, opacity: opacityOfDefault}).then(mesh=>{
-        mqThree.threeAdd(mesh);
-        mqThree.threeFrame();
+    ud.infoList.sort((a,b)=>a.filename.localeCompare(b, 'en', { sensitivity: "base" }))
+    // console.log('22aa', ud.infoList)
+    addColor2Mesh(geo, {name:filename, color:color, opacity: opacityOfDefault}).then(mesh=>{
+        appThree.add(mesh);
+        appThree.updateFrame();
     })
     if (ud.fetchTotal == ud.fetchCount) {
         ud.uploading = false;
         ud.fetching = false;
     } else {
-        mqThree.threeFrame();
+        appThree.updateFrame();
     }
 }
 function inputChangeUpdate(item) {
     item.check = !item.check;
-    const mesh = mqThree.group.children.filter(e=>e.name==item.filename)[0];
+    const mesh = appThree.group.children.filter(e=>e.name==item.filename)[0];
     if (mesh) {
         mesh.visible = item.check;
-        mqThree.threeFrame();
+        appThree.updateFrame();
     }
 }
 function inputChangeColorUpdate(event, item) {
     item.color = event.target.value;
-    const mesh = mqThree.group.children.filter(e=>e.name==item.filename)[0];
+    const mesh = appThree.group.children.filter(e=>e.name==item.filename)[0];
     if (mesh) {
         updateMeshColor(mesh, item.color);
-        mqThree.threeFrame();
+        appThree.updateFrame();
     }
 }
 function inputChangeOpacityUpdate(event, item) {
     item.opacity = parseFloat(event.target.value);
-    const mesh = mqThree.group.children.filter(e=>e.name==item.filename)[0];
+    const mesh = appThree.group.children.filter(e=>e.name==item.filename)[0];
     if (mesh) {
         updateMeshOpacity(mesh, item.opacity);
-        mqThree.threeFrame();
+        appThree.updateFrame();
     }
 }
 function getPer() {
@@ -308,7 +340,7 @@ function handleSelectFile(event) {
         ud.fetching = true;
         ud.uploading = true;
         ud.infoList = [];
-        mqThree.threeLoading(true);
+        appThree.loading(true);
         ud.fetchTotal = files.length;
         ud.fetchCount = 0;
         for (let i = 0; i < files.length; i++) {
@@ -318,7 +350,7 @@ function handleSelectFile(event) {
             }).then((geo)=>{
                 const filename = FileLoader.getName(file.name);
                 ud.fetchCount++;
-                mqThree.threeLoading(false);
+                appThree.loading(false);
                 addGeotoScene(geo, filename);
             })
         }

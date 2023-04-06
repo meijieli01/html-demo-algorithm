@@ -46,6 +46,7 @@ export class mqThree {
     this.useControl = false; // 默认关闭控件
     this.useRender = false; // 默认未主动渲染
     this.showGrid = false; // 网格
+    this.zoomLevel = 0; // 配合网格使用
     // 
     this.camera = new OrthographicCamera(-1, 1, 1, -1, 0.1, 10000);
     // 
@@ -78,22 +79,23 @@ export class mqThree {
     } else {
       throw new Error('container is not a HTMLElement or Canvas')
     }
-    resetCamera()
+    this.resetCamera();
     this.renderer.setClearColor(new Color(0xffffff), 1)
     if (options.useControl) {
       this.useControl = true;
-      this.updateControl()
+      this.updateControl();
     }    
-    threeResize(options.width, options.height)
-    // threeEventLoop()
-    threeFrame()
+    this.resize(options.width, options.height)
+    // this.eventLoop();
+    this.updateFrame();
     
     const winResize = () => {
-      threeResize()
+      this.resize();
     }
     window.removeEventListener('resize', winResize);
     window.addEventListener('resize', winResize);
-    threeResize()
+    this.resize();
+    this.initLight();
   }
   initLight() {
     const {scene} = this;
@@ -130,6 +132,7 @@ export class mqThree {
     this.pointLight2 = pointLight2;
   }
   resize(width, height) {
+    const {rc} = this;
     width = width || rc.width
     height = height || rc.height
     this.updateResize(width, height, true)
@@ -189,151 +192,82 @@ export class mqThree {
     camera.bottom = -fitSideV;
     camera.updateProjectionMatrix();
   }
-  threeFrame(cb) {
-    const { camera, scene, pointLight1, pointLight2, renderer} = this;
-    if (this.showGrid) {
+  updateFrame(cb) {
+    const { camera, scene, pointLight1, pointLight2, renderer, showGrid} = this;
+    if (showGrid) {
       if (camera.zoom < 0.1) {
         camera.zoom = 0.1
         camera.updateProjectionMatrix();
       }
     }
     if (camera.position) {
-      pointLight1.position.copy(camera.position);
-      pointLight2.position.copy(camera.position);
+      if (pointLight1) pointLight1.position.copy(camera.position);
+      if (pointLight2) pointLight2.position.copy(camera.position);
     }
     renderer.clear();
     renderer.render(scene, camera);
     if (cb) cb()
-    if (this.showGrid) {
+    if (showGrid) {
       let v1 = new Vector3(0, 1, 0).unproject(camera)
       let v2 = new Vector3(0, -1, 0).unproject(camera)
       let distance = v1.distanceTo(v2)
-      if (camera.zoom < 0.5) model.level = 1
-      else if (camera.zoom > 2.0) model.level = 2
-      else level = 0
-      drawGrid(distance)
+      if (camera.zoom < 0.5) this.zoomLevel = 1
+      else if (camera.zoom > 2.0) this.zoomLevel = 2
+      else this.zoomLevel = 0;
+      this.drawGrid(distance)
     } else {
-      drawGrid(-1)
+      this.drawGrid(-1)
     }
   }
   updateControl() {
-    if (!this.useControl) return
+    const {camera, renderer, useControl} = this;
+    if (!useControl) return
     if (!this.control) {
-      this.control = new TrackballControls(ud.camera, ud.renderer.domElement)
+      const control = new TrackballControls(camera, renderer.domElement);
       // control.enabled = false;
-      this.control.zoomSpeed = 3.5
-      this.control.panSpeed = 2.5
-      this.control.rotateSpeed = 2.2
-      this.control.noZoom = false
-      this.control.noPan = false
-      this.control.noRotate = false
-      this.control.staticMoving = false
-      this.control.dynamicDampingFactor = 0.3
-      this.control.keys = [65, 83, 68]
-      this.control.addEventListener('change', () => {
-        threeFrame()
+      control.zoomSpeed = 3.5
+      control.panSpeed = 2.5
+      control.rotateSpeed = 2.2
+      control.noZoom = false
+      control.noPan = false
+      control.noRotate = false
+      control.staticMoving = false
+      control.dynamicDampingFactor = 0.3
+      control.keys = [65, 83, 68]
+      control.addEventListener('change', () => {
+        this.updateFrame();
       })
+      this.control = control;
     }
     if (this.control.screen.width < 1 || this.control.screen.height < 1) {
       this.control.handleResize()
     }
     this.control.update();
   }
-  threeUseRender(isUse) {
-    this.useRender = isUse
+  setUseRender(isUse) {
+    this.useRender = isUse;
   }
   dispose() {
     if (this.control) {
       this.control.dispose()
     }
+    this.group.children(child=>{
+      if (child.geometry) child.geometry.dispose();
+      if (child.material) child.material.dispose();
+    })
     if (this.renderer) {
       this.renderer.dispose()
       this.renderer.forceContextLoss()
     }
   }
-}
-
-const mqThree = (function () {
-  const rc = {
-    width: 0,
-    height: 0,
-  }
-  const model = {
-    show: false,
-    loading: false,
-    level: 0,
-    canvas: null,
-    elLoading: null,
-    sequence: false,
-    oldwidth: 0,
-    oldheight: 0,
-    pointLight1: null,
-    pointLight2: null,
-    msg: '', // 加载提示
-  }
-  const ud = {
-    useRender: false,
-    useControl: false,
-    control: null,
-    renderer: null,
-    camera: new OrthographicCamera(-1, 1, 1, -1, 0.1, 10000),
-    scene: new Scene(),
-  }
-  const threeLoading = (isLoading, msg) => {
-    if (isLoading) bindLoading()
-    model.loading = isLoading
-    model.msg = msg || '加载中...'
-    if (model.loading) {
-      model.elLoading.style.display = 'flex'
-    } else {
-      model.elLoading.style.display = 'none'
-    }
-  }
-  const threeGrid = (show) => {
-    if (show) bindGrid()
-    model.show = show
-    threeFrame()
-  }
-  const bindGrid = () => {
-    if (model.canvas) return
-    let canvas = ud.renderer.domElement
-    let elContainer = canvas.parentNode
-    let width = canvas.width
-    let height = canvas.height
-    let canvas2d = document.createElement('canvas')
-    elContainer.appendChild(canvas2d)
-    canvas2d.style = `position: absolute;left: 0px;top: 0px;width: ${width}px;height: ${height}px;pointer-events: none;`
-    canvas2d.width = width
-    canvas2d.height = height
-    canvas2d.classList.add('grid')
-    model.canvas = canvas2d
-  }
-  const bindLoading = () => {
-    if (model.elLoading) return
-    let canvas = ud.renderer.domElement
-    let elContainer = canvas.parentNode
-    let elLoading = document.createElement('div')
-    elContainer.appendChild(elLoading)
-    elLoading.style = `position: absolute;left: 0px;top: 0px;width: 100%;height: 100%;z-index: 55; display: flex; flex-direction: column;background-color: rgba(0,0,0,0.2);`
-    elLoading.innerHTML = `
-      <div style="width: 100px; margin: auto; text-align: center;"><div id="idMqLoadingText">${model.msg}</div><img src='/images/loading.svg' dragable="false" /></div>
-      <div id="close" style="width: 60px; font-size: 2rem; top: 0; right: 0;position: absolute;">x</div>
-    `
-    elLoading.addEventListener('click', (event) => {
-      let target = event.target
-      if (target.getAttribute('id')=='close') {
-        threeLoading(false)
-      }
-    })
-    model.elLoading = elLoading
-  }
-  function drawGrid(distance) {
-    const levelNames = ['1mm', '10mm', '0.1mm']
-    const unitSteps = 10
-    if (!model.canvas) return
+  drawGrid(distance) {
+    const levelNames = ['1mm', '10mm', '0.1mm'];
+    const unitSteps = 10;
+    const {canvasGrid, renderer} = this;
+    if (!canvasGrid) return
     let vp = new Vector4()
-    ud.renderer.getViewport(vp)
-    const ctx = model.canvas.getContext('2d')
+    renderer.getViewport(vp)
+    const ctx = canvasGrid.getContext('2d')
     if (distance < 0) {
       ctx.clearRect(vp.x, vp.y, vp.z, vp.w)
       return
@@ -341,9 +275,9 @@ const mqThree = (function () {
     ctx.globalAlpha = 0.8
     ctx.lineWidth = 0.5
     let unitSize = vp.w / distance
-    if (model.level == 1) {
+    if (this.zoomLevel == 1) {
       unitSize *= 10.0
-    } else if (model.level == 2) {
+    } else if (this.zoomLevel == 2) {
       unitSize *= 0.1
     }
     // console.log('-unit size-', unitSize, distance, levelNames[gridlevel]);
@@ -420,50 +354,104 @@ const mqThree = (function () {
     ctx.lineTo(pointText[0], pointText[1])
     ctx.lineTo(pointText[0] + unitSize, pointText[1])
     ctx.lineTo(pointText[0] + unitSize, pointText[1] - unitSize / 2)
-    ctx.fillText(levelNames[model.level], pointText[0], pointText[1] + unitSize)
+    ctx.fillText(levelNames[this.zoomLevel], pointText[0], pointText[1] + unitSize)
     ctx.stroke()
   }
-  const threeAnimate = () => {
-    if (!ud.useRender) return
-    // this.pointLight1.position.copy(this.camera.position)
-    // this.pointLight2.position.copy(this.camera.position)
-    // this.renderer.clear()
-    // this.renderer.render(this.scene, this.camera)
-    threeFrame()
-    updateControl()
-    requestAnimationFrame(threeAnimate)
+  bindGrid() {
+    const {renderer} = this;
+    if (this.canvasGrid) return;
+    const canvas = renderer.domElement;
+    const elContainer = canvas.parentNode;
+    const width = canvas.width
+    const height = canvas.height
+    const canvas2d = document.createElement('canvas');
+    elContainer.appendChild(canvas2d)
+    canvas2d.style = `position: absolute;left: 0px;top: 0px;width: ${width}px;height: ${height}px;pointer-events: none;`;
+    canvas2d.width = width;
+    canvas2d.height = height;
+    canvas2d.classList.add('grid');
+    this.canvasGrid = canvas2d;
   }
-  const threeEventLoop = () => {
-    ud.renderer.setPixelRatio(window.devicePixelRatio)
-    ud.renderer.shadowMap.enabled = true
-    ud.renderer.shadowMap.type = PCFSoftShadowMap
-    ud.renderer.autoClear = false
-    // ud.renderer.setAnimationLoop(()=>this.renderFrame())
-    function updateFrame() {
-      requestAnimationFrame(updateFrame)
-      updateControl()
+  setLoadConfig(options = {}) {
+    this.loadingMsg = options.msg || '加载中...';
+    this.loadingUrl = options.url || '/images/loading.svg';
+  }
+  loading(isLoading) {
+    if (isLoading) this.bindLoading()
+    this.loadingState = isLoading;
+    if (this.loadingState) {
+      this.elLoading.style.display = 'flex';
+    } else {
+      this.elLoading.style.display = 'none';
     }
-    updateFrame()
   }
-  const resetGroup = () => {
+  bindLoading() {
+    const { renderer } = this;
+    if (this.elLoading) return;
+    const canvas = renderer.domElement;
+    const elContainer = canvas.parentNode;
+    const elLoading = document.createElement('div');
+    elContainer.appendChild(elLoading)
+    elLoading.style = `position: absolute;left: 0px;top: 0px;width: 100%;height: 100%;z-index: 55; display: flex; flex-direction: column;background-color: rgba(0,0,0,0.2);`
+    elLoading.innerHTML = `
+      <div style="width: 100px; margin: auto; text-align: center;"><div id="idMqLoadingText">${this.loadingMsg}</div><img src='/images/loading.svg' dragable="false" /></div>
+      <div id="close" style="width: 60px; font-size: 2rem; top: 0; right: 0;position: absolute;">x</div>
+    `
+    elLoading.addEventListener('click', (event) => {
+      let target = event.target
+      if (target.getAttribute('id')=='close') {
+        this.loading(false);
+      }
+    })
+    this.elLoading = elLoading;
+  }
+  gridVisile(show) {
+    console.log('-grid visible-', show)
+    if (show) this.bindGrid();
+    this.showGrid = show;
+    this.updateFrame()
+  }
+  callAnimate() {
+    if (!ud.useRender) return
+    const animate = () => {
+      this.updateFrame()
+      this.updateControl();
+      requestAnimationFrame(animate);  
+    }
+    animate();
+  }
+  eventLoop() {
+    const {renderer} = this;
+    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = PCFSoftShadowMap;
+    renderer.autoClear = false;
+    // renderer.setAnimationLoop(()=>this.renderFrame())
+    const oneFrame = () => {
+      requestAnimationFrame(oneFrame);
+      this.updateControl();
+    }
+    oneFrame();
+  }
+  resetGroup() {
+    const {group} = this;
     // canvas重新加载后，scene没变，但是canvas已改变
     group.children.forEach((child) => {
-      child.position.copy(new Vector3(0, 0, 0))
-      child.quaternion.copy(new Quaternion(0, 0, 0, 1))
-      child.scale.copy(new Vector3(1, 1, 1))
-      child.updateMatrix()
-      child.updateMatrixWorld()
+      child.position.copy(new Vector3(0, 0, 0));
+      child.quaternion.copy(new Quaternion(0, 0, 0, 1));
+      child.scale.copy(new Vector3(1, 1, 1));
+      child.updateMatrix();
+      child.updateMatrixWorld();
     })
-    group.position.copy(new Vector3(0, 0, 0))
-    group.quaternion.copy(new Quaternion(0, 0, 0, 1))
-    group.scale.copy(new Vector3(1, 1, 1))
-    group.updateMatrix()
-    group.updateMatrixWorld()
-    // console.log('-rest group-', Date.now())
+    group.position.copy(new Vector3(0, 0, 0));
+    group.quaternion.copy(new Quaternion(0, 0, 0, 1));
+    group.scale.copy(new Vector3(1, 1, 1));
+    group.updateMatrix();
+    group.updateMatrixWorld();
   }
-  const resetCamera = () => {
-    ud.camera = new OrthographicCamera(-1, 1, 1, -1, 0.1, 10000)
-    ud.camera.position.set(0, 0, 90)
+  resetCamera() {
+    this.camera = new OrthographicCamera(-1, 1, 1, -1, 0.1, 10000);
+    this.camera.position.set(0, 0, 90)
     // camera.position = new Vector3(0, 0, 90)
     // camera.quaternion  = new Quaternion(0, 0, 0, 1)
     // camera.scale = new Vector3(1, 1, 1)
@@ -471,32 +459,37 @@ const mqThree = (function () {
     // camera.updateMatrixWorld()
     // // console.log('-reset camera-', Date.now())
   }
-  const addAxes = (size) => {
-    let axes = new AxesHelper(size)
-    axes.name = 'axesHelper'
-    if (!ud.scene.getObjectByName(axes.name)) ud.scene.add(axes)
-    threeFrame()
+  addAxes(size) {
+    const {scene} = this;
+    let axes = new AxesHelper(size);
+    axes.name = 'axesHelper';
+    if (!scene.getObjectByName(axes.name)) scene.add(axes);
+    this.updateFrame()
   }
-  const threeAdd = (mesh) => {
-    group.add(mesh)
-    updateCameraViewport()
-    threeFrame()
+  add(mesh) {
+    const {group} = this;
+    group.add(mesh);
+    this.updateCameraViewport();
+    this.updateFrame()
   }
-  const threeRemoveByName = (meshName) => {
+  removeByName(meshName) {
+    const {group} = this;
     let child = group.children.filter((e) => e.name == meshName)
     if (child.length > 0) {
-      group.remove(child[0])
+      group.remove(child[0]);
     }
-    threeFrame()
+    this.updateFrame()
   }
-  const threeEmpty = () => {
+  empty() {
+    const {group} = this;
     group.clear()
-    threeFrame()
+    this.updateFrame()
   }
-  const threeSide = (side) => {
+  side(side) {
+    const {control, group} = this;
     // return
     const {center} = getBox()
-    ud.control.handleResize()
+    control.handleResize()
     let offset = new Vector3(center.x, center.y, center.z);
     offset.multiplyScalar(-1);
     group.position.set(0,0,0);
@@ -522,12 +515,13 @@ const mqThree = (function () {
     }                    
     group.scale.set(1,1,1)
     group.updateMatrixWorld()
-  }  
-  const threeScreenshot = (isBuffer, idx) => {
-    ud.renderer.clear()
-    ud.renderer.render(ud.scene, ud.camera)
+  }
+  screenshot(isBuffer, idx) {
+    const {renderer, scene, camera} = this;
+    renderer.clear()
+    renderer.render(scene, camera)
     return new Promise((resolve) => {
-      let canvas = ud.renderer.domElement
+      const canvas = renderer.domElement
       if (isBuffer) {
         canvas.toBlob((blob) => {
           resolve({ blob: blob, idx: idx })
@@ -537,93 +531,4 @@ const mqThree = (function () {
       }
     })
   }
-  const threeSequenceImages = (w, h, name) => {
-    function oneScreenshot(arg, idx) {
-      return new Promise((resolve) => {
-        // group.rotateX(arg.x)
-        group.rotateY(arg.y)
-        threeFrame(() => {
-          updateResize(w, h)
-          threeFrame(() => {
-            let res = threeScreenshot(true, idx)
-            group.rotateY(-arg.y)
-            // group.rotateX(-arg.x);
-            threeFrame(() => {
-              resolve(res)
-            })
-          })
-        })
-      })
-    }
-    async function queue(arr) {
-      // updateResize(w, h, true)
-      let result = []
-      for (let i = 0; i < arr.length; i++) {
-        let res = await oneScreenshot(arr[i], i)
-        if (res) {
-          result.push(res)
-        }
-      }
-      threeFrame()
-      return result
-    }
-    return new Promise((resolve, reject) => {
-      if (model.sequence) {
-        // console.log('screen image', '-waiting-')
-        reject('waiting')
-      }
-      if (model.oldwidth !== rc.width || model.oldheight !== rc.height) {
-        // console.log('screen image', 'not restore size')
-      }
-      model.sequence = true
-      model.oldwidth = rc.width
-      model.oldheight = rc.height
-      let hasMesh = false
-      group.children.forEach((mesh) => {
-        if (mesh.name == name) {
-          mesh.visible = true
-          hasMesh = true
-        } else mesh.visible = false
-      })
-      if (!hasMesh) {
-        model.sequence = false
-        resolve('no-mesh')
-      }
-      return queue(xyzSequence).then((res) => {
-        updateResize(model.oldwidth, model.oldheight, true)
-        group.children.forEach((mesh) => {
-          mesh.visible = true
-        })
-        resetGroup()
-        threeFrame()
-        model.sequence = false
-        resolve(res)
-      })
-    })
-  }
-  return {
-    model,
-    addAxes,
-    group,
-    ud,
-    resetCamera,
-    resetGroup,
-    threeInit,
-    threeEventLoop,
-    threeAnimate,
-    threeDispose,
-    threeUseRender,
-    threeFrame,
-    threeResize,
-    threeSide,
-    threeAdd,
-    threeRemoveByName,
-    threeEmpty,
-    threeGrid,
-    threeLoading,
-    threeScreenshot,
-    threeSequenceImages,
-  }
-})()
-
-export default mqThree
+}

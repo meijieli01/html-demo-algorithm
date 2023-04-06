@@ -2,7 +2,7 @@ import request from '@/utils/request';
 import qs from 'qs'
 
 /**
- * @description 系统集成数据
+ * @description 上传文件
  */
 export function upload(data) {
   return request({
@@ -15,7 +15,7 @@ export function upload(data) {
 }
 
 /**
- * @description 系统集成数据
+ * @description 调用AI
  */
 export function callAi(data) {
   return request({
@@ -23,6 +23,18 @@ export function callAi(data) {
     headers: { 'content-type': 'application/x-www-form-urlencoded' },
     method: 'POST',
     timecount: 1000*60*5, // 五分钟
+    data: qs.stringify(data),
+  })
+}
+
+/**
+ * @description 加载历史记录
+ */
+export function getHistory(data) {
+  return request({
+    url: '/admin/getRequest',
+    headers: { 'content-type': 'application/x-www-form-urlencoded' },
+    method: 'POST',
     data: qs.stringify(data),
   })
 }

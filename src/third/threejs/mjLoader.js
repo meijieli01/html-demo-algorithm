@@ -87,7 +87,7 @@ export function addColor2Mesh(bufferGeo, options = {}) {
       color: color,
       vertexColors: VertexColors,
       specular: 0x111111,
-      flatShading: options.flatShading || false,
+      // flatShading: options.flatShading || false,
       shininess: 10,
       normalMapType: ObjectSpaceNormalMap,
       side: DoubleSide,
@@ -109,8 +109,9 @@ export function addColor2Mesh(bufferGeo, options = {}) {
   })
 }
 
-export function updateMeshColor(mesh, strColor) {
+export function updateMeshColor(mesh, strColor) {  
   const color = new Color(strColor);
+  console.log('replace color', strColor, color)
   const geo = mesh.geometry;
   let colors = []
   for (let i = 0; i < geo.attributes.position.count; i++) {

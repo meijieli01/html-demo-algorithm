@@ -22,7 +22,7 @@ const colorOfTeethList = {
     '18': '#80561e',
     '17': '#438299',
     '16': '#a37920',
-    '15': '#dc47ba',
+    '15': '#87f879',
     '14': '#be13ed',
     '13': '#e1a1a7',
     '12': '#2a0ef9',
@@ -32,20 +32,20 @@ const colorOfTeethList = {
     '23': '#469066',
     '24': '#536140',
     '25': '#2ff92a',
-    '26': '#87f879',
+    '26': '#dc47ba',
     '27': '#736b8e',
     '28': '#b64291',
     '31': '#f171f7',
     '32': '#881aa0',
     '33': '#2ec28e',
-    '34': '#0aeeb7',
-    '35': '#e05298',
+    '34': '#ccceef',
+    '35': '#5edeed',
     '36': '#cac82d',
     '37': '#b947af',
     '38': '#6b873f',
     '41': '#248d00',
     '42': '#0078ea',
-    '43': '#21ce2f',
+    '43': '#a8471d',
     '44': '#ec258b',
     '45': '#477875',
     '46': '#0c412f',
@@ -58,8 +58,10 @@ export function getCtMeshMaterialByName(name) {
         color: colorModelDefault,
         opacity: opacityOfDefault,
     }
-    if (name.indexOf('upper_jaw') > -1 || name.indexOf('lower_jaw') > -1) {
+    if (name.indexOf('upper_jaw') > -1 || name.indexOf('lower_jaw') > -1) {        
         info.opacity = 0.5;
+        info.color = name.indexOf('upper_jaw') > -1 ? '#E23659' : colorTidOdd;
+        return info;
     }
     if (name.startsWith('mesh_')) {
         info.color = colorCrown;

@@ -16,6 +16,7 @@ import {
   Quaternion,
 } from 'three'
 import { TrackballControls } from 'three/examples/jsm/controls/TrackballControls'
+import { TrackerResource } from './mjTrack';
 
 function localDeg2Rad(deg) {
   return (deg * Math.PI) / 180
@@ -47,6 +48,8 @@ export class mqThree {
     this.useRender = false; // 默认未主动渲染
     this.showGrid = false; // 网格
     this.zoomLevel = 0; // 配合网格使用
+    this.callbackId = 0; // 删除资源
+    this.track = new TrackerResource();
     // 
     this.camera = new OrthographicCamera(-1, 1, 1, -1, 0.1, 10000);
     // 
@@ -74,6 +77,7 @@ export class mqThree {
       }
       // 存在大量创建canvas使用webgl来动态截取模型的图像，会在代码层强行退出
       this.renderer.domElement.addEventListener('webglcontextlost', (event) => {
+        location.reload()
         console.error(event)
       })
     } else {
@@ -166,9 +170,9 @@ export class mqThree {
         root.children.forEach((e) => getBoundingBox(e, bbx))
       }
     }
-    const bbx = new Box3()
-    const size = new Vector3()
-    const center = new Vector3()
+    const bbx = this.track.track(new Box3());
+    const size = new Vector3();
+    const center = new Vector3();
     getBoundingBox(this.scene, bbx);
     bbx.getSize(size)
     bbx.getCenter(center)
@@ -248,6 +252,10 @@ export class mqThree {
     this.useRender = isUse;
   }
   dispose() {
+
+    this.track.dispose();
+
+    cancelAnimationFrame(this.callbackId);
     if (this.control) {
       this.control.dispose()
     }
@@ -255,9 +263,28 @@ export class mqThree {
       if (child.geometry) child.geometry.dispose();
       if (child.material) child.material.dispose();
     })
+    this.scene.traverse((obj)=>{
+      if (obj instanceof Mesh) {
+        obj.geometry.dispose();
+        if (obj.material.map) {
+          obj.material.map.dispose();
+          obj.material.map = null;
+        }
+        obj.material.dispose();
+      }
+    })
+    this.scene.clear();
+
     if (this.renderer) {
       this.renderer.dispose()
       this.renderer.forceContextLoss()
+      this.renderer.context = null;
+      let gl = this.renderer.domElement.getContext('webgl');
+      if (gl) {
+        gl.getExtension('WEBGL_lose_context').loseContext();
+      }
+      const dom = this.renderer.domElement;
+      dom.parentElement.remove(dom);
     }
   }
   drawGrid(distance) {
@@ -416,7 +443,7 @@ export class mqThree {
     const animate = () => {
       this.updateFrame()
       this.updateControl();
-      requestAnimationFrame(animate);  
+      this.callbackId = requestAnimationFrame(animate);  
     }
     animate();
   }
@@ -428,7 +455,8 @@ export class mqThree {
     renderer.autoClear = false;
     // renderer.setAnimationLoop(()=>this.renderFrame())
     const oneFrame = () => {
-      requestAnimationFrame(oneFrame);
+      this.callbackId = requestAnimationFrame(oneFrame);
+      renderer.getContext().finish();
       this.updateControl();
     }
     oneFrame();
@@ -460,15 +488,19 @@ export class mqThree {
     // // console.log('-reset camera-', Date.now())
   }
   addAxes(size) {
-    const {scene} = this;
+    const {scene, track} = this;
     let axes = new AxesHelper(size);
     axes.name = 'axesHelper';
-    if (!scene.getObjectByName(axes.name)) scene.add(axes);
+    if (!scene.getObjectByName(axes.name)) {
+      scene.add(axes);
+      track.track(axes);
+    }
     this.updateFrame()
   }
   add(mesh) {
-    const {group} = this;
+    const {group, track} = this;
     group.add(mesh);
+    track.track(mesh);
     this.updateCameraViewport();
     this.updateFrame()
   }
@@ -481,7 +513,8 @@ export class mqThree {
     this.updateFrame()
   }
   empty() {
-    const {group} = this;
+    const {group, track} = this;
+    track.dispose();
     group.clear()
     this.updateFrame()
   }

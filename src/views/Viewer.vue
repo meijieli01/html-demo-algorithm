@@ -69,9 +69,9 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue';
-import { mqThree } from '../third/threejs/mjthree';
-import { getCtColorByName } from '../third/threejs/mjColor';
+import { ref, reactive, onMounted, onBeforeUnmount } from 'vue';
+import { mqThree } from '../third/threejs/mjThree';
+import { getCtMeshMaterialByName } from '../third/threejs/mjColor';
 import { readFromStorage, writeToStorage } from '../third/snippet/tool/storage';
 import { FileLoader, mjFileType, addColor2Mesh, PathLoader, updateMeshColor, updateMeshOpacity } from '../third/threejs/mjLoader';
 import { upload, callAi, getHistory } from '../api/file';
@@ -107,18 +107,13 @@ const m1 = reactive({
 });
 const appThree = new mqThree();
 const keyOfLocalStorage = 'keyOfLocalStorage';
-const opacityOfDefault = 1;
 const stlLoader = new FileLoader(mjFileType.STL);
 const drcPathPrefix = `${getBaseRoot()}js/libs/draco/`;
 onMounted(() => {
-    const elScript = document.createElement('script')
-    elScript.type = 'text/javascript'
+    const elScript = document.createElement('script');
+    elScript.type = 'text/javascript';
     elScript.src = `${drcPathPrefix}draco_encoder.js`;
-    document.body.appendChild(elScript)
-    // const elScript1 = document.createElement('script')
-    // elScript1.type = 'text/javascript'
-    // elScript1.src = `${drcPathPrefix}draco_decoder.js`;
-    // document.body.appendChild(elScript1)
+    document.body.appendChild(elScript);
     
     let el = document.getElementById('id3DContainer')
     let rect = el.getBoundingClientRect()
@@ -141,6 +136,9 @@ onMounted(() => {
 
     // 缓存上传文件的时间点
     ud.timestampList = JSON.parse(readFromStorage(keyOfLocalStorage, '[]'));
+})
+onBeforeUnmount(() => {
+    appThree.dispose();
 })
 function parseTime(timestamp) {
     const date = new Date(parseInt(timestamp.tmpDir));
@@ -283,12 +281,12 @@ function addGeotoScene(geo, filename) {
         console.warn('empty BufferGeometry');
         return;
     }
-    const color = getCtColorByName(filename);
+    const info = getCtMeshMaterialByName(filename);
     ud.infoList.push({
         filename:filename,
         check: true,
-        color: color,
-        opacity: opacityOfDefault,
+        color: info.color,
+        opacity: info.opacity,
     });
     function compare(attr) {
         return function(a,b) {
@@ -298,7 +296,7 @@ function addGeotoScene(geo, filename) {
         }
     }
     const tmp = ud.infoList.sort(compare('filename'));
-    addColor2Mesh(geo, {name:filename, color:color, opacity: opacityOfDefault}).then(mesh=>{
+    addColor2Mesh(geo, {name:filename, color:info.color, opacity: info.opacity}).then(mesh=>{
         appThree.add(mesh);
         appThree.updateFrame();
     })

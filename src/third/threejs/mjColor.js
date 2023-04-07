@@ -1,9 +1,6 @@
 // 默认模型颜色
-export const colorOfDefault = '#B38E6B';
-export const colorTidEven = '#C41773';
-export const colorTidOdd = '#20CB3C';
-
-
+export const colorModelDefault = '#B38E6B';
+const opacityOfDefault = 1;
 /**
  * /[^\d]/g 去除非数字
  * /[^\.\d]/g 去除非数字和小数点
@@ -18,12 +15,60 @@ const primaryTeethList = [
 /**
  * CT牙号的配置颜色
  */
-export function getCtColorByName(name) {
-    const tid = parseInt(name.replace(/[^1-9]/gi,''))
-    if (tid > 0) {
-        const index = primaryTeethList.indexOf(tid);
-        if (index % 2 == 0) return colorTidOdd;
-        return colorTidEven;
+export const colorTidEven = '#C41773';
+export const colorTidOdd = '#20CB3C';
+const colorCrown = '#808080';
+const colorOfTeethList = {
+    '18': '#80561e',
+    '17': '#438299',
+    '16': '#a37920',
+    '15': '#dc47ba',
+    '14': '#be13ed',
+    '13': '#e1a1a7',
+    '12': '#2a0ef9',
+    '11': '#062147',
+    '21': '#f19b71',
+    '22': '#07ec38',
+    '23': '#469066',
+    '24': '#536140',
+    '25': '#2ff92a',
+    '26': '#87f879',
+    '27': '#736b8e',
+    '28': '#b64291',
+    '31': '#f171f7',
+    '32': '#881aa0',
+    '33': '#2ec28e',
+    '34': '#0aeeb7',
+    '35': '#e05298',
+    '36': '#cac82d',
+    '37': '#b947af',
+    '38': '#6b873f',
+    '41': '#248d00',
+    '42': '#0078ea',
+    '43': '#21ce2f',
+    '44': '#ec258b',
+    '45': '#477875',
+    '46': '#0c412f',
+    '47': '#d47036',
+    '48': '#544e97',
+}
+
+export function getCtMeshMaterialByName(name) {
+    const info = {
+        color: colorModelDefault,
+        opacity: opacityOfDefault,
     }
-    return colorOfDefault;
+    if (name.indexOf('upper_jaw') > -1 || name.indexOf('lower_jaw') > -1) {
+        info.opacity = 0.5;
+    }
+    if (name.startsWith('mesh_')) {
+        info.color = colorCrown;
+        return info;
+    }
+    const tid = name.replace(/[^1-9]/gi,'');
+    if (tid.length > 0) {
+        info.color = colorOfTeethList[tid] || colorModelDefault;
+        return info;
+    }
+    return info;
 }

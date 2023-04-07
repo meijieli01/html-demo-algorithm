@@ -91,8 +91,8 @@ export function addColor2Mesh(bufferGeo, options = {}) {
       shininess: 10,
       normalMapType: ObjectSpaceNormalMap,
       side: DoubleSide,
-      transparent: options.opacity < 1 ? true : false,
-    })
+      transparent: false,
+    });
     let colors = []
     for (let i = 0; i < bufferGeo.attributes.position.count; i++) {
       colors.push(color.r)
@@ -105,6 +105,7 @@ export function addColor2Mesh(bufferGeo, options = {}) {
     bufferGeo.attributes.color.needsUpdate = true
     const mesh = new Mesh(bufferGeo, material)
     mesh.name = options.name || Date.now().toString();
+    updateMeshOpacity(mesh, options.opacity || 1);
     resolve(mesh);
   })
 }

@@ -40,7 +40,8 @@ const actions = {
   getInfo({ commit,rootGetters  }) {
     return new Promise((resolve, reject) => {
       // 目前只有一个页面
-      if (true || import.meta.env.DEV) {
+      // || import.meta.env.DEV
+      if (true) {
         const root = Object.assign({}, getRootRouter(rootGetters['appMode'] == 'admin' ? 'product':'front', 'testRoot'), {meta:{},children:[]});
         root.meta.label = 'testRoot';
         root.meta.code = '1000';

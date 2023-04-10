@@ -15,7 +15,7 @@ export function upload(data) {
 }
 
 /**
- * @description 调用AI
+ * @description 调用AI-CT
  */
 export function callAi(data) {
   return request({
@@ -28,7 +28,7 @@ export function callAi(data) {
 }
 
 /**
- * @description 加载历史记录
+ * @description 加载CT调用成功历史记录
  */
 export function getHistory(data) {
   return request({

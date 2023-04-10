@@ -1,5 +1,5 @@
 import { adminLogin } from '../api/admin';
-import router, {mapComponent2LocalFileTest} from '../router';
+import router, {mapComponent2LocalFile} from '../router';
 import { getRootRouter, emptyRouter } from '../third/snippet/hooks/menuRoute';
 
 const state = {
@@ -37,17 +37,15 @@ const actions = {
     })
   },
   // 获取用户信息并返回可访问路由
-  getInfo({ commit,rootGetters  }) {
+  getInfo({ commit, rootGetters  }) {
     return new Promise((resolve, reject) => {
-      // 目前只有一个页面
-      // || import.meta.env.DEV
       if (true) {
-        const root = Object.assign({}, getRootRouter(rootGetters['appMode'] == 'admin' ? 'product':'front', 'testRoot'), {meta:{},children:[]});
-        root.meta.label = 'testRoot';
+        const root = Object.assign({}, getRootRouter('front', 'viewer'), {meta:{},children:[]});
+        root.meta.label = 'viewerRoot';
         root.meta.code = '1000';
         root.meta.id = '100';
-        for (let k in mapComponent2LocalFileTest) {
-          const item = mapComponent2LocalFileTest[k];
+        for (let k in mapComponent2LocalFile) {
+          const item = mapComponent2LocalFile[k];
           const child = Object.assign({}, emptyRouter, {meta:{},children:[]});
           child.path = `${item.functionId}`;
           child.component = item.component;

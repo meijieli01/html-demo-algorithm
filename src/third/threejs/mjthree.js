@@ -9,6 +9,7 @@ import {
   Object3D,
   Group,
   Color,
+  Mesh,
   OrthographicCamera,
   AmbientLight,
   DirectionalLight,
@@ -76,9 +77,9 @@ export class mqThree {
         options.container.appendChild(this.renderer.domElement)
       }
       // 存在大量创建canvas使用webgl来动态截取模型的图像，会在代码层强行退出
-      this.renderer.domElement.addEventListener('webglcontextlost', (event) => {
-        location.reload()
+      this.renderer.domElement.addEventListener('webglcontextlost', (event) => {        
         console.error(event)
+        // location.reload()
       })
     } else {
       throw new Error('container is not a HTMLElement or Canvas')
@@ -259,7 +260,7 @@ export class mqThree {
     if (this.control) {
       this.control.dispose()
     }
-    this.group.children(child=>{
+    this.group.children.forEach(child=>{
       if (child.geometry) child.geometry.dispose();
       if (child.material) child.material.dispose();
     })
@@ -276,9 +277,9 @@ export class mqThree {
     this.scene.clear();
 
     if (this.renderer) {
+      console.log(this.renderer.info);
       this.renderer.dispose()
       this.renderer.forceContextLoss()
-      this.renderer.context = null;
       let gl = this.renderer.domElement.getContext('webgl');
       if (gl) {
         gl.getExtension('WEBGL_lose_context').loseContext();

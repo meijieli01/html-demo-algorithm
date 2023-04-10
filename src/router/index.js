@@ -10,16 +10,17 @@ const routes = [
 ]
 
 export const mapComponent2LocalFile = {
-  
-}
-
-export const mapComponent2LocalFileTest = {
-  // 测试
-  'VIEWER': {
+  'CT': {
     component: () => import('../views/Viewer.vue'),
-    functionName: 'viewer',
+    functionName: 'CtViewer',
     functionCode: 'ViewerCT',
-    functionId: '100',
+    functionId: '101',
+  },
+  'CROWN': {
+    component: () => import('../views/ViewerCrown.vue'),
+    functionName: 'CrownViewer',
+    functionCode: 'ViewerCrown',
+    functionId: '102',
   },
 }
 

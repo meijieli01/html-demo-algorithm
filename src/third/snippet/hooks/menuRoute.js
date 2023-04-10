@@ -1,4 +1,3 @@
-import productLayout from '../layout/Product1.vue';
 import frontLayout from '../layout/Front1.vue';
 // 空路由
 export const emptyRouter = {
@@ -8,21 +7,15 @@ export const emptyRouter = {
 }
 
 const routerRootList = {
-    'product': {
-        'PRODUCT_ORDER':'/order', // 生产订单列表
-        'STORAGE':'/storage', // 仓储系统
-        'PROCESS_MANAGE':'/process', // 工序
-        'STAFF_MANAGE':'/staff', // 员工
-    },
     'front': {
-        
+        'viewer': '/viewer',
     },
 }
   
 export function getRootRouter(type, name) {
     return {
       path: routerRootList[type][name] || '/any',
-      component: type=='product'? productLayout : type=='front' ? frontLayout : {},
+      component: type=='front' ? frontLayout : {},
       meta: { },
       children: [],
     }

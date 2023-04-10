@@ -54,18 +54,6 @@ class CommonLoader {
   }
 }
 
-export const mjFileType = FileType;
-export class FileLoader extends CommonLoader {
-  constructor(ftype) {
-    super();
-    this.loader = setLoaderType(ftype);
-  }
-  load(file, cb = () => {}) {
-    const url = URL.createObjectURL(file);
-    return this.loader.loadAsync(url, cb);
-  }
-}
-
 export class PathLoader extends CommonLoader {
   constructor(path, drcPath) {
     super();
@@ -77,6 +65,16 @@ export class PathLoader extends CommonLoader {
     } catch(err) {
       console.log(err);
     }
+  }
+}
+
+export class FilePathLoader extends PathLoader {
+  constructor(filename, drcPath) {
+    super(filename, drcPath);
+  }
+  load(file, cb = () => {}) {
+    const url = URL.createObjectURL(file);
+    return super.load(url, cb);
   }
 }
 

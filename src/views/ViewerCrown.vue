@@ -7,7 +7,7 @@
             <div class="d-flex flex-wrap">
                 <button class="btn btn-primary m-1 btn-sm" @click="clickLoadShowData(1)" v-if="isDev">测试本地结果-展示模型</button>
                 <button class="btn btn-primary m-1 btn-sm" @click="clickLoadShowData(4)">创建时间戳</button>
-                <button class="btn btn-primary m-1 btn-sm" @click="clickLoadShowData(5)">加载历史记录</button>
+                <button class="btn btn-primary m-1 btn-sm" @click="clickLoadShowData(5)">加载历史记录2323</button>
             </div>
             <div v-if="ud.timestampList.length > 0">
                 <div>
@@ -62,19 +62,19 @@
                 </div>
             </div>
         </div>
-        <input type="file" webkitdirectory ref="refFile" @change="handleSelectFile($event)" hidden />
+        <!-- <input type="file" webkitdirectory ref="refFile" @change="handleSelectFile($event)" hidden /> -->
         <!-- <input type="file" ref="refFile" @change="handleSelectFile($event)" hidden /> -->
-        <!-- <input type="file" multiple ref="refFile" @change="handleSelectFile($event)" hidden /> -->
+        <input type="file" multiple ref="refFile" @change="handleSelectFile($event)" hidden />
     </div>
 </template>
 
 <script setup>
 import { ref, reactive, onMounted, onBeforeUnmount } from 'vue';
 import { mqThree } from '../third/threejs/mjthree';
-import { getCtMeshMaterialByName } from '../third/threejs/mjColor';
+import { getCrownMeshMaterialByName } from '../third/threejs/mjColor';
 import { readFromStorage, writeToStorage } from '../third/snippet/tool/storage';
-import { FilePathLoader, addColor2Mesh, PathLoader, updateMeshColor, updateMeshOpacity } from '../third/threejs/mjLoader';
-import { upload, callAi, getHistory } from '../api/ct';
+import { addColor2Mesh, PathLoader, updateMeshColor, updateMeshOpacity, FilePathLoader } from '../third/threejs/mjLoader';
+import { upload, getHistoryCrown, callAiCrown } from '../api/crown';
 import { getBaseRoot } from '../../config';
 const refFile = ref(null);
 const isDev = ref(import.meta.env.DEV);
@@ -106,7 +106,7 @@ const m1 = reactive({
     tempDir: '',
 });
 const appThree = new mqThree();
-const keyOfLocalStorage = 'keyOfLocalStorage';
+const keyOfLocalStorage = 'keyOfLocalStorage4Crown';
 const drcPathPrefix = `${getBaseRoot()}js/libs/draco/`;
 onMounted(() => {
     const elScript = document.createElement('script');
@@ -173,7 +173,7 @@ function clickLoadShowData(type) {
             return;
         }
         ud.calling = true;
-        callAi(m1).then(res=>{
+        callAiCrown(m1).then(res=>{
             ud.calling = false;
             if (res.code == 200) {
                 ud.lockCall = true;
@@ -193,7 +193,7 @@ function clickLoadShowData(type) {
             tid: '',
         });
     } else if (type == 5) {
-        getHistory().then(res=>{
+        getHistoryCrown().then(res=>{
             if (res.code ==200) {
                 res.data.forEach(e=>{
                     const strList = e.split(' ');
@@ -207,9 +207,9 @@ function clickLoadShowData(type) {
 }
 function updateTimestampData(tmpDir, tid, isNew) {
     // 更新进去
-    const tmp = ud.timestampList.filter(e=>e.tmpDir==tmpDir)[0];
+    const tmp = ud.timestampList.filter(e=>e.tmpDir==m1.tempDir)[0];
     if (tmp) {
-        tmp.tid = tid;
+        tmp.tid = m1.missId;
     } else {
         if (isNew) {
             ud.timestampList.push({
@@ -281,7 +281,7 @@ function addGeotoScene(geo, filename) {
         console.warn('empty BufferGeometry');
         return;
     }
-    const info = getCtMeshMaterialByName(filename);
+    const info = getCrownMeshMaterialByName(filename);
     ud.infoList.push({
         filename:filename,
         check: true,
@@ -352,8 +352,18 @@ async function handleSelectFile(event) {
             const geo = await new FilePathLoader(file.name, drcPathPrefix).load(file, (event)=>{
                 // console.log('progress', event.loaded/event.total)
             }).catch(err=>{
-
-            })
+                if (err instanceof ProgressEvent) {
+                    if (err.total==0) {
+                        ud.countError++;
+                        ud.errorList.push({
+                            name: filename,
+                        })
+                    }   
+                }
+                msg.value = '文件加载失败';
+                appThree.loading(false);
+                return null;
+            });
             const filename = FilePathLoader.getName(file.name);
             ud.fetchCount++;
             appThree.loading(false);

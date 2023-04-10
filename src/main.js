@@ -1,8 +1,7 @@
 import { createApp } from 'vue'
 import App from './App.vue'
 import router from './router'
-import store from './store'
-import TreeMenu from './third/snippet/layout/TreeMenu.vue';
+import store from './store';
 
 const whiteList = ['/login'] // 白名单
 const newPageList = ['/editor', '/assigned'] // 跳转新页面
@@ -32,5 +31,4 @@ router.beforeEach(async (to, from, next) => {
 createApp(App)
 .use(router)
 .use(store)
-.component('TreeMenu', TreeMenu)
 .mount('#app')

@@ -74,3 +74,15 @@ export function getCtMeshMaterialByName(name) {
     }
     return info;
 }
+
+export function getCrownMeshMaterialByName(name) {
+    const info = {
+        color: colorModelDefault,
+        opacity: opacityOfDefault,
+    }
+    if (name.indexOf('crown') > -1) {        
+        info.color = colorTidOdd;
+        return info;
+    }
+    return info;
+}

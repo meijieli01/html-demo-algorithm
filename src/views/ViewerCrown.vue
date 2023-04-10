@@ -7,7 +7,7 @@
             <div class="d-flex flex-wrap">
                 <button class="btn btn-primary m-1 btn-sm" @click="clickLoadShowData(1)" v-if="isDev">测试本地结果-展示模型</button>
                 <button class="btn btn-primary m-1 btn-sm" @click="clickLoadShowData(4)">创建时间戳</button>
-                <button class="btn btn-primary m-1 btn-sm" @click="clickLoadShowData(5)">加载历史记录2323</button>
+                <button class="btn btn-primary m-1 btn-sm" @click="clickLoadShowData(5)">加载历史记录</button>
             </div>
             <div v-if="ud.timestampList.length > 0">
                 <div>
@@ -18,12 +18,12 @@
                         </select>
                     </div>
                     <div class="d-flex flex-wrap">
-                        <div class="alert alert-warning m-1 p-0" role="alert">注意，读取大量文件，会卡顿一下，请耐心等待</div>
-                        <button class="btn btn-primary m-1 btn-sm" @click="clickLoadShowData(2)" :disabled="getState()">1.导入CT数据和咬合数据</button>
+                        <!-- <div class="alert alert-warning m-1 p-0" role="alert">注意，读取大量文件，会卡顿一下，请耐心等待</div> -->
+                        <button class="btn btn-primary m-1 btn-sm" @click="clickLoadShowData(2)" :disabled="getState()">1.导入上下颌数据</button>
                     </div>
                 </div>
                 <div class="d-flex flex-wrap">                
-                    <div class="alert alert-warning m-1 p-0" role="alert">调用AI时要传入一个缺少牙号</div>
+                    <div class="alert alert-warning m-1 p-0" role="alert">调用AI时要传入生成的备用牙号</div>
                     <select class="form-select" v-model="m1.missId" @change="selectMissingTid" :disabled="getState()">
                         <option v-for="(tid,i) in ud.tidList" :key="i" :value="tid" v-html="tid"></option>
                     </select>
@@ -73,7 +73,7 @@ import { ref, reactive, onMounted, onBeforeUnmount } from 'vue';
 import { mqThree } from '../third/threejs/mjthree';
 import { getCrownMeshMaterialByName } from '../third/threejs/mjColor';
 import { readFromStorage, writeToStorage } from '../third/snippet/tool/storage';
-import { addColor2Mesh, PathLoader, updateMeshColor, updateMeshOpacity, FilePathLoader } from '../third/threejs/mjLoader';
+import { addColor2Mesh, PathLoader, updateMeshColor, updateMeshOpacity, FilePathLoader, emptyTrackFile } from '../third/threejs/mjLoader';
 import { upload, getHistoryCrown, callAiCrown } from '../api/crown';
 import { getBaseRoot } from '../../config';
 const refFile = ref(null);
@@ -137,7 +137,7 @@ onMounted(() => {
     ud.timestampList = JSON.parse(readFromStorage(keyOfLocalStorage, '[]'));
 })
 onBeforeUnmount(() => {
-    clearEmpty();
+    appThree.empty();
     appThree.dispose();
 })
 function parseTime(timestamp) {
@@ -164,8 +164,9 @@ function clickLoadShowData(type) {
     msg.errorList = [];
     msg.countError = 0;
     ud.type = type;
-    clearEmpty();
+    appThree.empty();
     if ([1,2].includes(type)) {
+        emptyTrackFile();
         refFile.value.dispatchEvent(new MouseEvent('click'))
     } else if (type == 3) {
         if (!m1.missId) {
@@ -220,13 +221,6 @@ function updateTimestampData(tmpDir, tid, isNew) {
     }
     writeToStorage(keyOfLocalStorage, JSON.stringify(ud.timestampList));
     ud.timestampList = JSON.parse(readFromStorage(keyOfLocalStorage, '[]'));
-}
-function clearEmpty() {
-    appThree.group.children.forEach(mesh=>{
-        mesh.geometry.dispose();
-        mesh.material.dispose();
-    });
-    appThree.empty();
 }
 function selectTimestamp() {
     const { tmpDir, tid } = ud.selTimestamp || {};
@@ -369,6 +363,7 @@ async function handleSelectFile(event) {
             appThree.loading(false);
             addGeotoScene(geo, filename);
         }
+        emptyTrackFile();
     } else if (ud.type == 2) {
         // 上传文件
         if (!ud.timestamp || ud.timestamp.length < 1) {

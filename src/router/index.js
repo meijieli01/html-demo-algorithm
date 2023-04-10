@@ -12,13 +12,13 @@ const routes = [
 export const mapComponent2LocalFile = {
   'CT': {
     component: () => import('../views/Viewer.vue'),
-    functionName: 'CtViewer',
+    functionName: 'CT',
     functionCode: 'ViewerCT',
     functionId: '101',
   },
   'CROWN': {
     component: () => import('../views/ViewerCrown.vue'),
-    functionName: 'CrownViewer',
+    functionName: 'Crown',
     functionCode: 'ViewerCrown',
     functionId: '102',
   },

@@ -73,7 +73,7 @@ import { ref, reactive, onMounted, onBeforeUnmount } from 'vue';
 import { mqThree } from '../third/threejs/mjthree';
 import { getCtMeshMaterialByName } from '../third/threejs/mjColor';
 import { readFromStorage, writeToStorage } from '../third/snippet/tool/storage';
-import { FilePathLoader, addColor2Mesh, PathLoader, updateMeshColor, updateMeshOpacity } from '../third/threejs/mjLoader';
+import { FilePathLoader, addColor2Mesh, PathLoader, updateMeshColor, updateMeshOpacity, emptyTrackFile } from '../third/threejs/mjLoader';
 import { upload, callAi, getHistory } from '../api/ct';
 import { getBaseRoot } from '../../config';
 const refFile = ref(null);
@@ -137,7 +137,7 @@ onMounted(() => {
     ud.timestampList = JSON.parse(readFromStorage(keyOfLocalStorage, '[]'));
 })
 onBeforeUnmount(() => {
-    clearEmpty();
+    appThree.empty();
     appThree.dispose();
 })
 function parseTime(timestamp) {
@@ -164,8 +164,9 @@ function clickLoadShowData(type) {
     msg.errorList = [];
     msg.countError = 0;
     ud.type = type;
-    clearEmpty();
+    appThree.empty();
     if ([1,2].includes(type)) {
+        emptyTrackFile();
         refFile.value.dispatchEvent(new MouseEvent('click'))
     } else if (type == 3) {
         if (!m1.missId) {
@@ -220,13 +221,6 @@ function updateTimestampData(tmpDir, tid, isNew) {
     }
     writeToStorage(keyOfLocalStorage, JSON.stringify(ud.timestampList));
     ud.timestampList = JSON.parse(readFromStorage(keyOfLocalStorage, '[]'));
-}
-function clearEmpty() {
-    appThree.group.children.forEach(mesh=>{
-        mesh.geometry.dispose();
-        mesh.material.dispose();
-    });
-    appThree.empty();
 }
 function selectTimestamp() {
     const { tmpDir, tid } = ud.selTimestamp || {};
@@ -359,6 +353,7 @@ async function handleSelectFile(event) {
             appThree.loading(false);
             addGeotoScene(geo, filename);
         }
+        emptyTrackFile();
     } else if (ud.type == 2) {
         // 上传文件
         if (!ud.timestamp || ud.timestamp.length < 1) {

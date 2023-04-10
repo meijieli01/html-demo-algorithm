@@ -1,4 +1,4 @@
-import { FileType, toFileType } from './utils/modelfile'
+import { FileType, toFileType } from './utils/modelfile';
 import {
   Color,
   MeshPhongMaterial,
@@ -7,11 +7,11 @@ import {
   ObjectSpaceNormalMap,
   Mesh,
   Float32BufferAttribute,
-} from 'three'
-import { PLYLoader } from 'three/examples/jsm/loaders/PLYLoader'
-import { STLLoader } from 'three/examples/jsm/loaders/STLLoader'
-import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader'
-import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader'
+} from 'three';
+import { PLYLoader } from 'three/examples/jsm/loaders/PLYLoader';
+import { STLLoader } from 'three/examples/jsm/loaders/STLLoader';
+import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader';
+import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader';
 
 function setLoaderType(ftype, options={}) {
   let loader = null;
@@ -67,13 +67,31 @@ export class PathLoader extends CommonLoader {
     }
   }
 }
-
+class TrackFile {
+  constructor() {
+    this.fileUrlSet = new Set();
+  }
+  add(url) {
+    this.fileUrlSet.add(url);
+  }
+  free() {
+    for(const url of this.fileUrlSet) {
+      URL.revokeObjectURL(url);
+    }
+    this.fileUrlSet.clear();
+  }
+}
+const trackFileUrl = new TrackFile();
+export function emptyTrackFile() {
+  trackFileUrl.free();
+}
 export class FilePathLoader extends PathLoader {
   constructor(filename, drcPath) {
     super(filename, drcPath);
   }
   load(file, cb = () => {}) {
     const url = URL.createObjectURL(file);
+    trackFileUrl.add(url);
     return super.load(url, cb);
   }
 }

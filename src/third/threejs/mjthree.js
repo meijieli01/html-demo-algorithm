@@ -516,6 +516,10 @@ export class mqThree {
   empty() {
     const {group, track} = this;
     track.dispose();
+    group.children.forEach(child=>{
+      if (child.geometry) child.geometry.dispose();
+      if (child.material) child.material.dispose();
+    })
     group.clear()
     this.updateFrame()
   }

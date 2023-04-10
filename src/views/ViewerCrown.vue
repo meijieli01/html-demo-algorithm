@@ -207,9 +207,9 @@ function clickLoadShowData(type) {
 }
 function updateTimestampData(tmpDir, tid, isNew) {
     // 更新进去
-    const tmp = ud.timestampList.filter(e=>e.tmpDir==m1.tempDir)[0];
+    const tmp = ud.timestampList.filter(e=>e.tmpDir==tmpDir)[0];
     if (tmp) {
-        tmp.tid = m1.missId;
+        tmp.tid = tid;
     } else {
         if (isNew) {
             ud.timestampList.push({

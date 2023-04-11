@@ -194,6 +194,8 @@ function clickLoadShowData(type) {
             tid: '',
         });
     } else if (type == 5) {
+        // 删除
+        ud.timestampList = [];
         getHistoryCrown().then(res=>{
             if (res.code ==200) {
                 res.data.forEach(e=>{

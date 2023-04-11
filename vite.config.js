@@ -17,7 +17,7 @@ export default defineConfig(({mode}) => {
       html({
         inject: {
           injectData: {
-            title: '管理系统',
+            title: 'Viewer',
             iconPath: `${configure.parsed.VITE_APP_ICON}`,
           }
         },

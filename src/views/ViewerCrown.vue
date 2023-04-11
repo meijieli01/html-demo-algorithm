@@ -358,8 +358,9 @@ async function handleSelectFile(event) {
                 appThree.loading(false);
                 return null;
             });
-            const filename = FilePathLoader.getName(file.name);
             ud.fetchCount++;
+            if (!geo) return;
+            const filename = FilePathLoader.getName(file.name);
             appThree.loading(false);
             addGeotoScene(geo, filename);
         }

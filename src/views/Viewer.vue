@@ -346,8 +346,19 @@ async function handleSelectFile(event) {
             const geo = await new FilePathLoader(file.name, drcPathPrefix).load(file, (event)=>{
                 // console.log('progress', event.loaded/event.total)
             }).catch(err=>{
-
+                if (err instanceof ProgressEvent) {
+                    if (err.total==0) {
+                        ud.countError++;
+                        ud.errorList.push({
+                            name: filename,
+                        })
+                    }   
+                }
+                msg.value = '文件加载失败';
+                appThree.loading(false);
+                return null;
             })
+            if (!geo) return;
             const filename = FilePathLoader.getName(file.name);
             ud.fetchCount++;
             appThree.loading(false);

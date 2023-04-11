@@ -78,7 +78,7 @@ export class mqThree {
       }
       // 存在大量创建canvas使用webgl来动态截取模型的图像，会在代码层强行退出
       this.renderer.domElement.addEventListener('webglcontextlost', (event) => {        
-        console.error(event)
+        // console.error(event)
         // location.reload()
       })
     } else {

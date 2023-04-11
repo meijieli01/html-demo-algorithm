@@ -1,7 +1,7 @@
 <template>
     <div class="layout-topbar">
         <span class="flex-grow-1" v-html="store.getters['title']"></span>
-        <div class="flex-grow-1 d-flex">
+        <div class="flex-grow-1 d-flex route-list">
             <div class="my-auto mx-3" v-for="(sub,i) in viewerInfo" :key="i">
                 <router-link :to="sub.path" class="" :class="{ active: $route.path === sub.path }" v-html="sub.name"></router-link>
             </div>
@@ -38,7 +38,6 @@ viewerList.forEach(e=>{
         })
     })
 })
-console.log('22', viewerList, viewerInfo)
 const userName = store.getters['user/info'].userName;
 async function logout() {
     await store.dispatch('user/logout');

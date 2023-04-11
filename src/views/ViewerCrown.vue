@@ -100,6 +100,7 @@ const ud = reactive({
     calling: false,
     lockCall: true,
     selTimestamp: {},
+    script: null,
 });
 const m1 = reactive({
     missId: '',
@@ -109,10 +110,10 @@ const appThree = new mqThree();
 const keyOfLocalStorage = 'keyOfLocalStorage4Crown';
 const drcPathPrefix = `${getBaseRoot()}js/libs/draco/`;
 onMounted(() => {
-    const elScript = document.createElement('script');
-    elScript.type = 'text/javascript';
-    elScript.src = `${drcPathPrefix}draco_encoder.js`;
-    document.body.appendChild(elScript);
+    ud.script = document.createElement('script');
+    ud.script.type = 'text/javascript';
+    ud.script.src = `${drcPathPrefix}draco_encoder.js`;
+    document.body.appendChild(ud.script);
     
     let el = document.getElementById('id3DContainer')
     let rect = el.getBoundingClientRect()
@@ -137,6 +138,7 @@ onMounted(() => {
     ud.timestampList = JSON.parse(readFromStorage(keyOfLocalStorage, '[]'));
 })
 onBeforeUnmount(() => {
+    document.body.removeChild(ud.script);
     appThree.empty();
     appThree.dispose();
 })

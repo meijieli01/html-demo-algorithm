@@ -33,6 +33,15 @@ $heightTopBar: 50px!default;
         margin: 0 10px 0 0;
       }
     }
+    .route-list {
+      a {
+        color: lightgray;
+        text-decoration: none;
+        &.active {
+          color: $primary;
+        }
+      }
+    }
 }
 
 body {

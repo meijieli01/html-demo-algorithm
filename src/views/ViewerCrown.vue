@@ -184,7 +184,7 @@ function clickLoadShowData(type) {
                 if (m1.type == 1) {           
                     updateTimestampData(m1.tempDir, m1.missId, false);
                 }
-                ud.pathList = res.data;                
+                ud.pathList = res.data.filter(e=>!e.endsWith('.json'));                
                 updateByPath();
             } else {
                 msg.value = res.message;

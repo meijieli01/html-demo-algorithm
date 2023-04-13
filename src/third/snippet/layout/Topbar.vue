@@ -11,8 +11,8 @@
                 <i class="el-icon-s-custom"></i>
                 {{ userName }}
             </div>
-            欢迎登录 <em>|</em>
-            <div @click="logout">退出</div>
+            Welcome To AI <em>|</em>
+            <div @click="logout">Log out</div>
         </div>
     </div>
 </template>

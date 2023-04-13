@@ -5,39 +5,38 @@
         </div>
         <div class="content-toolbar d-flex flex-column">
             <div class="d-flex flex-wrap">
-                <button class="btn btn-primary m-1 btn-sm" @click="clickLoadShowData(1)" v-if="isDev">测试本地结果-展示模型</button>
-                <button class="btn btn-primary m-1 btn-sm" @click="clickLoadShowData(4)">创建时间戳</button>
-                <button class="btn btn-primary m-1 btn-sm" @click="clickLoadShowData(5)">加载历史记录</button>
+                <button class="btn btn-primary m-1 btn-sm" @click="clickLoadShowData(1)" v-if="isDev" v-html="'Local Test to Show'"></button>
+                <button class="btn btn-primary m-1 btn-sm" @click="clickLoadShowData(4)" v-html="'New Timestamp'"></button>
+                <button class="btn btn-primary m-1 btn-sm" @click="clickLoadShowData(5)" v-html="'Load historical Data'"></button>
             </div>
             <div v-if="ud.timestampList.length > 0">
                 <div>
                     <div class="d-flex flex-wrap">                
-                        <div class="alert alert-warning m-1 p-0" role="alert">上传文件时间戳，区分未调用与调用历史记录</div>
+                        <div class="alert alert-warning m-1 p-0" role="alert" v-html="'Use the timestamp to differentiate processed and un-processed data'"></div>
                         <select class="form-select" v-model="ud.selTimestamp" @change="selectTimestamp">
                             <option v-for="(item,i) in ud.timestampList" :key="i" :value="item" v-html="parseTime(item)"></option>
                         </select>
                     </div>
                     <div class="d-flex flex-wrap">
-                        <!-- <div class="alert alert-warning m-1 p-0" role="alert">注意，读取大量文件，会卡顿一下，请耐心等待</div> -->
-                        <button class="btn btn-primary m-1 btn-sm" @click="clickLoadShowData(2)" :disabled="getState()">1.导入上下颌数据</button>
+                        <button class="btn btn-primary m-1 btn-sm" @click="clickLoadShowData(2)" :disabled="getState()" v-html="'Upload the upper and lower scanned meshes'"></button>
                     </div>
                 </div>
                 <div class="d-flex flex-wrap">                
-                    <div class="alert alert-warning m-1 p-0" role="alert">调用AI时要传入生成的备用牙号</div>
+                    <div class="alert alert-warning m-1 p-0" role="alert" v-html="'Enter the prep tooth id'"></div>
                     <select class="form-select" v-model="m1.missId" @change="selectMissingTid" :disabled="getState()">
                         <option v-for="(tid,i) in ud.tidList" :key="i" :value="tid" v-html="tid"></option>
                     </select>
                 </div>
                 <div class="d-flex flex-wrap">                
-                    <button class="btn btn-primary m-1" @click="clickLoadShowData(3)" :disabled="ud.lockCall">2.调用AI</button>
+                    <button class="btn btn-primary m-1" @click="clickLoadShowData(3)" :disabled="ud.lockCall" v-html="'Call the AI Algorithm'"></button>
                     <div class="h-100 m-auto d-flex flex-column justify-content-center">
                         <div class="spinner-border text-primary" role="status" v-if="ud.calling"></div>
                     </div>
-                    <div class="alert alert-warning m-1 p-0 my-auto" role="alert">整个过程计算耗时较长，需要等待！</div>
+                    <div class="alert alert-warning m-1 p-0 my-auto" role="alert" v-html="'Now wait for the AI Algorithm to process'"></div>
                 </div>
             </div>
             <div class="d-flex flex-column py-3">
-                <div class="alert alert-warning text-center m-1 p-0" role="alert">当前进度</div>
+                <div class="alert alert-warning text-center m-1 p-0" role="alert" v-html="'progress bar'"></div>
                 <div class="progress w-100" v-if="ud.uploading">
                     <div class="progress-bar" role="progressbar" :style="`width: ${getPer()}%;`" :aria-valuenow="getPer()" aria-valuemin="0" aria-valuemax="100" v-html="getPer()+'%'"></div>
                 </div>
@@ -172,7 +171,7 @@ function clickLoadShowData(type) {
         refFile.value.dispatchEvent(new MouseEvent('click'))
     } else if (type == 3) {
         if (!m1.missId) {
-            msg.value = '需要选择一个缺少牙号';
+            msg.value = 'Must select a teeth id to continue';
             return;
         }
         ud.calling = true;
@@ -260,7 +259,7 @@ function updateByPath() {
                     })
                 }   
             }
-            msg.value = '文件加载失败';
+            msg.value = 'File Load failure';
             appThree.loading(false);
             return null;
         })
@@ -358,7 +357,7 @@ async function handleSelectFile(event) {
                         })
                     }   
                 }
-                msg.value = '文件加载失败';
+                msg.value = 'File Load failure';
                 appThree.loading(false);
                 return null;
             });
@@ -372,7 +371,7 @@ async function handleSelectFile(event) {
     } else if (ud.type == 2) {
         // 上传文件
         if (!ud.timestamp || ud.timestamp.length < 1) {
-            msg.value = '请勾选时间戳';
+            msg.value = 'Please Select Timestamp to Continue';
             return;
         }
         ud.uploading = true;
@@ -384,7 +383,7 @@ async function handleSelectFile(event) {
             const formData = new FormData();
             const tmp = ud.cacheList[ud.timestamp][file.name];
             if (tmp && tmp.size > 0 && tmp.loading == false) {
-                msg.value += `重复上传${file.name}`;
+                msg.value += `Repeat upload ${file.name}`;
                 // 已经上传了的文件，退出
                 return;
             } else {
@@ -402,7 +401,7 @@ async function handleSelectFile(event) {
                 if (ud.count + ud.countError == ud.total) {                    
                     ud.uploading = false;
                     if (ud.countError > 0) {
-                        msg.value = '以上文件上传失败';
+                        msg.value = 'The above file failed to upload';
                         ud.errorList = [];
                         for (let k in ud.cacheList[ud.timestamp]) {
                             if (k && k.loading) ud.errorList.push(k);
@@ -413,7 +412,7 @@ async function handleSelectFile(event) {
                 }
             } else {
                 ud.countError++;
-                msg.value += `文件${file.name}上传失败`;
+                msg.value += `File ${file.name} upload failed`;
             }
         }
         for (let i = 0; i < files.length; i++) {

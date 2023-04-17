@@ -31,6 +31,7 @@ export default defineConfig(({mode}) => {
       ],
     },
     base: getBaseRoot(),
+    publicDir: './public/',
     build: {
       outDir: buildPath,
       cssCodeSplit: false,
@@ -43,9 +44,6 @@ export default defineConfig(({mode}) => {
         output: {
           compact: true,
           sourcemap: false,
-          entryFileNames: 'assets/js/[hash].js',
-          chunkFileNames: 'assets/js/[hash].js',
-          assetFileNames: 'assets/[ext]/[name]-[hash][extname]',
         },
       },
     },

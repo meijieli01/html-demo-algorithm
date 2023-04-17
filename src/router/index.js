@@ -22,6 +22,18 @@ export const mapComponent2LocalFile = {
     functionCode: 'ViewerCrown',
     functionId: '102',
   },
+  'NIGHT': {
+    component: () => import('../views/NightGuard.vue'),
+    functionName: 'NightGuard',
+    functionCode: 'ViewerCrown',
+    functionId: '103',
+  },
+  'BRACKER': {
+    component: () => import('../views/BrackerRemove.vue'),
+    functionName: 'BrackerRemove',
+    functionCode: 'ViewerCrown',
+    functionId: '104',
+  },
 }
 
 const router = createRouter({

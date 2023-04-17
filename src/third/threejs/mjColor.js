@@ -86,3 +86,18 @@ export function getCrownMeshMaterialByName(name) {
     }
     return info;
 }
+
+export function getMeshMaterialByName(name, tag) {
+    const info = {
+        color: colorModelDefault,
+        opacity: opacityOfDefault,
+    }
+    if (tag == 'AI_NightGuard' && name.indexOf('nng') > -1) {        
+        info.color = colorTidOdd;
+        return info;
+    } else if (tag == 'AI_BracketRemove' && name.indexOf('mesh') > -1) {        
+        info.color = colorTidOdd;
+        return info;
+    }
+    return info;
+}

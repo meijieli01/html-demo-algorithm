@@ -30,7 +30,7 @@ export const mapComponent2LocalFile = {
   },
   'BRACKER': {
     component: () => import('../views/BrackerRemove.vue'),
-    functionName: 'BrackerRemove',
+    functionName: 'BracketRemove',
     functionCode: 'ViewerCrown',
     functionId: '104',
   },

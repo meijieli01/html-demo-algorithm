@@ -18,11 +18,10 @@ export function upload(data) {
  */
 export function callAi(data) {
   return request({
-    // url: '/admin/callAiRequest',
-    url: '/admin/callAiReuqest',
+    url: '/admin/callAiRequest',
     headers: { 'content-type': 'application/x-www-form-urlencoded' },
     method: 'POST',
-    timecount: 1000*60*5, // 五分钟
+    timecount: 1000*60*10, // 十分钟
     data: qs.stringify(data),
   })
 }

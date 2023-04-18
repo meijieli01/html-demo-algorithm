@@ -18,7 +18,7 @@
                         </select>
                     </div>
                     <div class="d-flex flex-wrap">
-                        <button class="btn btn-primary m-1 btn-sm" @click="clickLoadShowData(2)" :disabled="getState()" v-html="'Upload the upper and lower scanned meshes'"></button>
+                        <button class="btn btn-primary m-1 btn-sm" @click="clickLoadShowData(2)" :disabled="getState()" v-html="info.btn1Label[tag]"></button>
                     </div>
                 </div>
                 <div class="d-flex flex-wrap">                
@@ -78,6 +78,12 @@ const props = defineProps({
 const refFile = ref(null);
 const isDev = ref(import.meta.env.DEV);
 const msg = ref('');
+const info = reactive({
+    btn1Label: {
+        'AI_NightGuard': 'Upload the upper and lower scanned meshes',
+        'AI_BracketRemove': 'Upload the upper or lower scanned mesh',
+    }
+});
 const ud = reactive({
     type: 0,
     total: 0,
@@ -143,7 +149,7 @@ onBeforeUnmount(() => {
 })
 function parseTime(timestamp) {
     const date = new Date(parseInt(timestamp.tmpDir));
-    const strTid = timestamp.tid ? `${timestamp.tid} ---  ` : '';
+    const strTid = timestamp.tid ? `${ timestamp.tid} ---  ` : '';
     return `${strTid}${date.getFullYear()}-${date.getMonth()+1}-${date.getDate()} ${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`;
 }
 function getState() {
@@ -211,7 +217,8 @@ function updateTimestampData(tmpDir, tid, isNew) {
     } else {
         if (isNew) {
             ud.timestampList.push({
-                tmpDir: tmpDir
+                tmpDir: tmpDir,
+                tid: 'history',
             });
         }
     }

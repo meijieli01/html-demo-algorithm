@@ -38,3 +38,14 @@ export function adminLogout(data) {
     data: data,
   })
 }
+
+/**
+ * @description oss 认证相关信息
+ */
+export function getOssAuth(data) {
+  return request({
+      url: '/admin/authorize',
+      method: 'POST',
+      data: data,
+  });
+}

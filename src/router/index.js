@@ -25,14 +25,20 @@ export const mapComponent2LocalFile = {
   'NIGHT': {
     component: () => import('../views/NightGuard.vue'),
     functionName: 'NightGuard',
-    functionCode: 'ViewerCrown',
+    functionCode: 'ViewerNight',
     functionId: '103',
   },
   'BRACKER': {
     component: () => import('../views/BrackerRemove.vue'),
     functionName: 'BracketRemove',
-    functionCode: 'ViewerCrown',
+    functionCode: 'ViewerBracket',
     functionId: '104',
+  },
+  'RETAINER': {
+    component: () => import('../views/Retainer.vue'),
+    functionName: 'Retainer',
+    functionCode: 'ViewerRetainer',
+    functionId: '105',
   },
 }
 

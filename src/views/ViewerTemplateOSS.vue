@@ -63,25 +63,27 @@
 
 <script setup>
 import { ref, reactive, onMounted, onBeforeUnmount } from 'vue';
+import { useStore } from 'vuex';
 import { mqThree } from '../third/threejs/mjthree';
 import { getMeshMaterialByName } from '../third/threejs/mjColor';
 import { readFromStorage, writeToStorage } from '../third/snippet/tool/storage';
 import { addColor2Mesh, PathLoader, updateMeshColor, updateMeshOpacity, FilePathLoader, emptyTrackFile } from '../third/threejs/mjLoader';
 import { upload, getHistory, callAi } from '../api/all';
+import { getOssAuth } from '../api/admin';
 import { getBaseRoot } from '../../config';
 const props = defineProps({
     tag: {
         type:String,
         require: true,
     }
-})
+});
+const store = useStore();
 const refFile = ref(null);
 const isDev = ref(import.meta.env.DEV);
 const msg = ref('');
 const info = reactive({
     btn1Label: {
-        'AI_NightGuard': 'Upload the upper and lower scanned meshes',
-        'AI_BracketRemove': 'Upload the upper or lower scanned mesh',
+        'Retainer': 'Upload the upper and lower scanned meshes',
     }
 });
 const ud = reactive({
@@ -141,6 +143,8 @@ onMounted(() => {
 
     // 缓存上传文件的时间点
     ud.timestampList = JSON.parse(readFromStorage(keyOfLocalStorage, '[]'));
+    // 
+    store.dispatch('auth/getAuth').then(()=>{});
 })
 onBeforeUnmount(() => {
     document.body.removeChild(ud.script);
@@ -241,8 +245,15 @@ function updateByPath() {
     appThree.loading(true);
     ud.uploading = true;
     ud.fetching = true;
-    ud.fetchTotal = ud.pathList.length;
+    ud.fetchTotal = ud.pathList.length || 0;
     ud.fetchCount = 0;
+    if (ud.fetchTotal == ud.fetchCount) {
+        ud.uploading = false;
+        ud.fetching = false;
+        appThree.updateFrame();
+        appThree.loading(false);
+        return;
+    }
     const fetchSinglePath = async (path) => {
         const filename = PathLoader.getName(path);
         const validPath = `${import.meta.env.VITE_APP_FILE_PREFIX}/${path}`;
@@ -270,6 +281,7 @@ function updateByPath() {
         fetchSinglePath(path);
     })
     appThree.updateFrame();
+    appThree.loading(false);
 }
 function addGeotoScene(geo, filename) {
     if (geo.type == 'BufferGeometry' && geo.attributes.position.count < 1) {
@@ -378,25 +390,27 @@ async function handleSelectFile(event) {
         ud.total = files.length;
         ud.cacheList[ud.timestamp] = {};
         const uploadSingleFile = async (file) => {
-            const formData = new FormData();
-            const tmp = ud.cacheList[ud.timestamp][file.name];
+            const filename = file.name;
+            const tmp = ud.cacheList[ud.timestamp][filename];
             if (tmp && tmp.size > 0 && tmp.loading == false) {
-                msg.value += `Repeat upload ${file.name}`;
+                msg.value += `Repeat upload ${filename}`;
                 // 已经上传了的文件，退出
                 return;
             } else {
             }
-            ud.cacheList[ud.timestamp][file.name] = {
-                name: file.name,
+            const path = `retainer/${ud.timestamp}/input/${filename}`;
+            ud.cacheList[ud.timestamp][filename] = {
+                name: filename,
                 size: file.size,
                 loading: true,
-            };
-            formData.append("files", file, file.name);
-            formData.append("tempDir", ud.timestamp); 
-            formData.append("tag", props.tag); 
-            const res = await upload(formData)
-            if (res.code == 200) {
-                ud.cacheList[ud.timestamp][res.data[0]].loading = false;
+                path: path,
+            };            
+            const res = await store.dispatch('auth/putFile', {
+                file, path,
+            });
+            if (res.res.status == 200) {
+                ud.cacheList[ud.timestamp][filename].path = res.name;
+                ud.cacheList[ud.timestamp][filename].loading = false;
                 if (ud.count + ud.countError == ud.total) {                    
                     ud.uploading = false;
                     if (ud.countError > 0) {

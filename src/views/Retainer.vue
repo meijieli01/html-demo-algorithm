@@ -177,6 +177,10 @@ function clickLoadShowData(type) {
         emptyTrackFile();
         refFile.value.dispatchEvent(new MouseEvent('click'))
     } else if (type == 3) {
+        if (!m1.upper || !m1.lower) {
+            msg.value = 'Please wait patiently for the upload to complete';
+            return;
+        }
         ud.calling = true;
         callAiRetainer(m1).then(res=>{
             ud.calling = false;
@@ -235,6 +239,8 @@ function selectTimestamp() {
         m1.type = 2;
     } else {
         m1.type = 1;
+        m1.upper = null;
+        m1.lower = null;
         ud.timestamp = tmpDir;
     }
 }

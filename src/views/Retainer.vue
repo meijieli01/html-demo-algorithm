@@ -70,6 +70,7 @@ import { mqThree } from '../third/threejs/mjthree';
 import { getMeshMaterialByName } from '../third/threejs/mjColor';
 import { readFromStorage, writeToStorage } from '../third/snippet/tool/storage';
 import { addColor2Mesh, PathLoader, updateMeshColor, updateMeshOpacity, FilePathLoader, emptyTrackFile } from '../third/threejs/mjLoader';
+import { export2drc } from '../third/threejs/threeExporter';
 import { upload, getHistory, callAiRetainer } from '../api/all';
 import { getOssAuth } from '../api/admin';
 import { getBaseRoot, vInfo } from '../../config';
@@ -345,7 +346,7 @@ function getPer() {
     if (ud.fetching) {
         return Math.round(100 * ud.fetchCount / ud.fetchTotal).toFixed(0);     
     }
-    return Math.round(100 * ud.count / ud.total).toFixed(0); 
+    return Math.round(50).toFixed(0); 
 }
 async function handleSelectFile(event) {
     const files = event.target.files;
@@ -383,59 +384,49 @@ async function handleSelectFile(event) {
         emptyTrackFile();
     } else if ([2,6].includes(ud.type)) {
         // 上传文件
+        ud.fetching = false;
         if (!ud.timestamp || ud.timestamp.length < 1) {
             msg.value = 'Please Select Timestamp to Continue';
             return;
         }
         ud.uploading = true;
-        ud.countError = 0;
-        ud.count = 1;
-        ud.total = files.length;
-        ud.cacheList[ud.timestamp] = {};
-        const uploadSingleFile = async (file) => {
-            const filename = file.name;
-            const tmp = ud.cacheList[ud.timestamp][filename];
-            if (tmp && tmp.size > 0 && tmp.loading == false) {
-                msg.value += `Repeat upload ${filename}`;
-                // 已经上传了的文件，退出
-                return;
-            } else {
-            }
+        const file = files[0];
+        const filename = file.name;
+        if (filename.endsWith('.drc') || filename.endsWith('.mq')) {
             const path = `retainer/${ud.timestamp}/input/${filename}`;
-            ud.cacheList[ud.timestamp][filename] = {
-                name: filename,
-                size: file.size,
-                loading: true,
-                path: path,
-            };            
             const res = await store.dispatch('auth/putFile', {
                 file, path,
             });
             if (res.res.status == 200) {
                 if (ud.type == 6) m1.upper = res.name;
                 else if (ud.type == 2) m1.lower = res.name;
-                ud.cacheList[ud.timestamp][filename].path = res.name;
-                ud.cacheList[ud.timestamp][filename].loading = false;
-                if (ud.count + ud.countError == ud.total) {                    
-                    ud.uploading = false;
-                    if (ud.countError > 0) {
-                        msg.value = 'The above file failed to upload';
-                        ud.errorList = [];
-                        for (let k in ud.cacheList[ud.timestamp]) {
-                            if (k && k.loading) ud.errorList.push(k);
-                        }
-                    }
-                } else {
-                    ud.count++;
+            }
+        } else {
+            //  其他格式转换一下
+            try {
+                const noExtFilename = filename.substr(0, filename.lastIndexOf('.'));
+                const geo = await new FilePathLoader(filename, drcPathPrefix).load(file)
+                .catch(err=>{
+                    msg.value = 'File Load failure';
+                    return null;
+                })
+                if (!geo) return;            
+                const path = `retainer/${ud.timestamp}/input/${noExtFilename}.mq`;
+                const mesh = await addColor2Mesh(geo);
+                const buffer = await export2drc(mesh);
+                const res = await store.dispatch('auth/putFile', {
+                    file: new Blob([buffer.buffer], { type: 'application/octet-stream',}),
+                    path: path,
+                })
+                if (res.res.status == 200) {
+                    if (ud.type == 6) m1.upper = res.name;
+                    else if (ud.type == 2) m1.lower = res.name;
                 }
-            } else {
-                ud.countError++;
-                msg.value += `File ${file.name} upload failed`;
+            } catch(err){
+                msg.value = 'File Load failure';
             }
         }
-        for (let i = 0; i < files.length; i++) {
-            uploadSingleFile(files[i]);
-        }
+        ud.uploading = false;
     }
 }
 </script>

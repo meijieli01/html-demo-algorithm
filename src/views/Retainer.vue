@@ -412,8 +412,8 @@ async function handleSelectFile(event) {
                 file, path,
             });
             if (res.res.status == 200) {
-                if (ud.type == 6) m1.upper = path;
-                else if (ud.type == 2) m1.lower = path;
+                if (ud.type == 6) m1.upper = res.name;
+                else if (ud.type == 2) m1.lower = res.name;
                 ud.cacheList[ud.timestamp][filename].path = res.name;
                 ud.cacheList[ud.timestamp][filename].loading = false;
                 if (ud.count + ud.countError == ud.total) {                    

@@ -238,6 +238,8 @@ function selectTimestamp() {
     if (tid) {
         // 历史记录
         m1.type = 2;
+        m1.upper = 'history';
+        m1.lower = 'history';
     } else {
         m1.type = 1;
         m1.upper = null;

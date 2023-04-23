@@ -8,6 +8,7 @@
                 <button class="btn btn-primary m-1 btn-sm" @click="clickLoadShowData(1)" v-if="isDev" v-html="'Local Test to Show'"></button>
                 <button class="btn btn-primary m-1 btn-sm" @click="clickLoadShowData(4)" v-html="'New Timestamp'"></button>
                 <button class="btn btn-primary m-1 btn-sm" @click="clickLoadShowData(5)" v-html="'Load historical Data'"></button>
+                <SubVersion :tag="tag" />
             </div>
             <div v-if="ud.timestampList.length > 0">
                 <div>
@@ -49,9 +50,7 @@
                     <div class="alert alert-danger p-1 m-1" role="alert" v-html="item.name"></div>
                 </div>
             </div>
-            <div>
-                
-            </div>
+            <SubChangeLog :tag="tag" />
             <div class="overflow-auto">
                 <div class="d-flex" v-for="(item,i) in ud.infoList" :key="i">
                     <input type="color" class="form-control" :value="item.color" @change="inputChangeColorUpdate($event,item)" style="width:60px;" />
@@ -71,12 +70,21 @@
 
 <script setup>
 import { ref, reactive, onMounted, onBeforeUnmount } from 'vue';
+import SubChangeLog from './SubChangeLog.vue';
+import SubVersion from './SubVersion.vue';
 import { mqThree } from '../third/threejs/mjthree';
 import { getCtMeshMaterialByName } from '../third/threejs/mjColor';
 import { readFromStorage, writeToStorage } from '../third/snippet/tool/storage';
 import { FilePathLoader, addColor2Mesh, PathLoader, updateMeshColor, updateMeshOpacity, emptyTrackFile } from '../third/threejs/mjLoader';
 import { upload, callAi, getHistory } from '../api/ct';
-import { getBaseRoot } from '../../config';
+import { getBaseRoot, vInfo } from '../../config';
+const props = defineProps({
+    tag: {
+        type:String,
+        default: 'CT',
+        // require: true,
+    }
+});
 const refFile = ref(null);
 const isDev = ref(import.meta.env.DEV);
 const msg = ref('');

@@ -26,6 +26,21 @@ export function callAi(data) {
   })
 }
 
+
+/**
+ * @description 调用AI
+ */
+export function callAiRetainer(data) {
+  return request({
+    url: '/admin/retainerRequest',
+    headers: { 'content-type': 'application/x-www-form-urlencoded' },
+    method: 'POST',
+    timecount: 1000*60*10, // 十分钟
+    data: qs.stringify(data),
+  })
+}
+
+
 /**
  * @description 加载调用成功历史记录
  */

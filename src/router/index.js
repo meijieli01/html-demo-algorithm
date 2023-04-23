@@ -12,7 +12,7 @@ const routes = [
 export const mapComponent2LocalFile = {
   'CT': {
     component: () => import('../views/Viewer.vue'),
-    functionName: 'CT',
+    functionName: 'Implant',
     functionCode: 'ViewerCT',
     functionId: '101',
   },
@@ -30,7 +30,7 @@ export const mapComponent2LocalFile = {
   },
   'BRACKER': {
     component: () => import('../views/BrackerRemove.vue'),
-    functionName: 'BracketRemove',
+    functionName: 'BracketRemoval',
     functionCode: 'ViewerBracket',
     functionId: '104',
   },

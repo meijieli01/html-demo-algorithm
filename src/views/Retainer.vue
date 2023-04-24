@@ -18,6 +18,10 @@
                             <option v-for="(item,i) in ud.timestampList" :key="i" :value="item" v-html="parseTime(item)"></option>
                         </select>
                     </div>
+                    <div>
+                        <div class="alert alert-info m-1 p-0 my-auto" role="alert" v-html="'Custom ID'"></div>
+                        <input class="form-control" v-model="ud.customId" type="text" />
+                    </div>
                     <div class="d-flex flex-wrap">
                         <button class="btn btn-primary m-1 btn-sm" @click="clickLoadShowData(6)" :disabled="getState()" >Upload the upper scanned meshes</button>
                         <button class="btn btn-primary m-1 btn-sm" @click="clickLoadShowData(2)" :disabled="getState()" >Upload the lower scanned meshes</button>
@@ -95,6 +99,7 @@ const ud = reactive({
     pathList: [],
     timestampList: [],
     timestamp: '1680514251226',
+    customId: 'A',
     tidList: [
         18,17,16,15,14,13,12,11,21,22,23,24,25,26,27,28,
         48,47,46,45,44,43,42,41,31,32,33,34,35,36,37,38,
@@ -208,8 +213,9 @@ function clickLoadShowData(type) {
             if (res.code ==200) {
                 res.data.forEach(e=>{
                     const strList = e.split(' ');
-                    const tmpDir = parseInt(strList[0].split('=').pop());
-                    updateTimestampData(tmpDir, 'history', true);
+                    const tmpDir = strList[0].split('=').pop();
+                    const t1 = tmpDir.split('_');
+                    updateTimestampData(parseInt(t1[0]), t1[1] || 'history', true);
                 })
             }
         })
@@ -224,7 +230,7 @@ function updateTimestampData(tmpDir, tid, isNew) {
         if (isNew) {
             ud.timestampList.push({
                 tmpDir: tmpDir,
-                tid: 'history',
+                tid: tid,
             });
         }
     }
@@ -234,7 +240,7 @@ function updateTimestampData(tmpDir, tid, isNew) {
 function selectTimestamp() {
     const { tmpDir, tid } = ud.selTimestamp || {};
     ud.lockCall = false;
-    m1.tempDir = tmpDir;
+    m1.tempDir = `${tmpDir}_${ud.customId}`;
     if (tid) {
         // 历史记录
         m1.type = 2;
@@ -395,7 +401,7 @@ async function handleSelectFile(event) {
         const file = files[0];
         const filename = file.name;
         if (filename.endsWith('.drc') || filename.endsWith('.mq')) {
-            const path = `retainer/${ud.timestamp}/input/${filename}`;
+            const path = `retainer/${ud.timestamp}_${ud.customId}/input/${filename}`;
             const res = await store.dispatch('auth/putFile', {
                 file, path,
             });
@@ -413,7 +419,7 @@ async function handleSelectFile(event) {
                     return null;
                 })
                 if (!geo) return;            
-                const path = `retainer/${ud.timestamp}/input/${noExtFilename}.mq`;
+                const path = `retainer/${ud.timestamp}_${ud.customId}/input/${noExtFilename}.mq`;
                 const mesh = await addColor2Mesh(geo);
                 const buffer = await export2drc(mesh);
                 const res = await store.dispatch('auth/putFile', {

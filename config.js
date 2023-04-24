@@ -14,9 +14,10 @@ export const vInfo = {
         ],
     },
     'CROWN': {
-        version: '',
+        version: '0.2.0',
         changelog: [
-
+            'Now supports crown generation for tooth 14 and 15 (in FDI)',
+            'Fix bugs',
         ],
     },
     'AI_NightGuard': {

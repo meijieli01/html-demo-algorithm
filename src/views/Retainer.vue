@@ -4,6 +4,10 @@
           
         </div>
         <div class="content-toolbar d-flex flex-column">
+            <div>
+                <div class="alert alert-info m-1 p-0 my-auto" role="alert" v-html="'Custom ID'"></div>
+                <input class="form-control" v-model="ud.customId" type="text" />
+            </div>  
             <div class="d-flex flex-wrap">
                 <button class="btn btn-primary m-1 btn-sm" @click="clickLoadShowData(1)" v-if="isDev" v-html="'Local Test to Show'"></button>
                 <button class="btn btn-primary m-1 btn-sm" @click="clickLoadShowData(4)" v-html="'New Timestamp'"></button>
@@ -17,10 +21,6 @@
                         <select class="form-select" v-model="ud.selTimestamp" @change="selectTimestamp">
                             <option v-for="(item,i) in ud.timestampList" :key="i" :value="item" v-html="parseTime(item)"></option>
                         </select>
-                    </div>
-                    <div>
-                        <div class="alert alert-info m-1 p-0 my-auto" role="alert" v-html="'Custom ID'"></div>
-                        <input class="form-control" v-model="ud.customId" type="text" />
                     </div>
                     <div class="d-flex flex-wrap">
                         <button class="btn btn-primary m-1 btn-sm" @click="clickLoadShowData(6)" :disabled="getState()" >Upload the upper scanned meshes</button>
@@ -203,10 +203,16 @@ function clickLoadShowData(type) {
             }
         })
     } else if (type == 4) {
-        ud.timestampList.push({
+        if (!ud.customId) ud.customId = 'A';
+        ud.timestampList.unshift({
             tmpDir: Date.now(),
             tid: '',
         });
+        // 添加时自动第一个
+        ud.selTimestamp = ud.timestampList[0];
+        ud.lockCall = false;
+        m1.type = 1;
+        m1.tempDir = `${ud.selTimestamp.tmpDir}_${ud.customId}`;
     } else if (type == 5) {
         ud.timestampList = [];
         getHistory(m1).then(res=>{
@@ -239,13 +245,15 @@ function updateTimestampData(tmpDir, tid, isNew) {
 }
 function selectTimestamp() {
     const { tmpDir, tid } = ud.selTimestamp || {};
+    ud.customId = '';
     ud.lockCall = false;
-    m1.tempDir = `${tmpDir}_${ud.customId}`;
+    if (tid == 'history') m1.tempDir = `${tmpDir}`; // 旧数据，未添加自定义
+    else m1.tempDir = `${tmpDir}_${tid}`; // 有自定义ID的
     if (tid) {
         // 历史记录
         m1.type = 2;
-        m1.upper = 'history';
-        m1.lower = 'history';
+        m1.upper = 'no upper path';
+        m1.lower = 'no lower path';
     } else {
         m1.type = 1;
         m1.upper = null;

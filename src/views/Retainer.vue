@@ -22,7 +22,8 @@
                             <option v-for="(item,i) in ud.timestampList" :key="i" :value="item" v-html="parseTime(item)"></option>
                         </select>
                     </div>
-                    <div class="d-flex flex-wrap">
+                    <div class="d-flex flex-column flex-wrap">
+                        <div class="alert alert-info m-1 p-0 my-auto" role="alert">Current is {{msg1}}</div>
                         <button class="btn btn-primary m-1 btn-sm" @click="clickLoadShowData(6)" :disabled="getState()" >Upload the upper scanned meshes</button>
                         <button class="btn btn-primary m-1 btn-sm" @click="clickLoadShowData(2)" :disabled="getState()" >Upload the lower scanned meshes</button>
                     </div>
@@ -88,6 +89,7 @@ const store = useStore();
 const refFile = ref(null);
 const isDev = ref(import.meta.env.DEV);
 const msg = ref('');
+const msg1 = ref('');
 const ud = reactive({
     type: 0,
     total: 0,
@@ -154,10 +156,14 @@ onBeforeUnmount(() => {
     appThree.empty();
     appThree.dispose();
 })
+function toYYMMDDHHMMSS(timestamp) {
+    const date = new Date(parseInt(timestamp));
+    return `${date.getFullYear()}-${date.getMonth()+1}-${date.getDate()} ${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`;
+}
 function parseTime(timestamp) {
-    const date = new Date(parseInt(timestamp.tmpDir));
+    const ymdhms = toYYMMDDHHMMSS(timestamp.tmpDir);    
     const strTid = timestamp.tid ? `${ timestamp.tid} ---  ` : '';
-    return `${strTid}${date.getFullYear()}-${date.getMonth()+1}-${date.getDate()} ${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`;
+    return `${strTid}${ymdhms}`;
 }
 function getState() {
     const {tmpDir, tid} = ud.selTimestamp || {};
@@ -203,6 +209,7 @@ function clickLoadShowData(type) {
             }
         })
     } else if (type == 4) {
+        // 
         if (!ud.customId) ud.customId = 'A';
         ud.timestampList.unshift({
             tmpDir: Date.now(),
@@ -210,9 +217,11 @@ function clickLoadShowData(type) {
         });
         // 添加时自动第一个
         ud.selTimestamp = ud.timestampList[0];
+        ud.timestamp = ud.selTimestamp.tmpDir;
         ud.lockCall = false;
-        m1.type = 1;
-        m1.tempDir = `${ud.selTimestamp.tmpDir}_${ud.customId}`;
+        m1.type = 1;        
+        m1.tempDir = `${ud.selTimestamp.tmpDir}_${ud.customId}`;      
+        msg1.value = `${toYYMMDDHHMMSS(ud.selTimestamp.tmpDir)}_${ud.customId}`;
     } else if (type == 5) {
         ud.timestampList = [];
         getHistory(m1).then(res=>{
@@ -260,6 +269,7 @@ function selectTimestamp() {
         m1.lower = null;
         ud.timestamp = tmpDir;
     }
+    msg1.value = `${toYYMMDDHHMMSS(tmpDir)}_${tid}`;
 }
 function updateByPath() {
     appThree.loading(true);

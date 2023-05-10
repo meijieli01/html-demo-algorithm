@@ -29,7 +29,7 @@
                     </div>
                 </div>
                 <div class="d-flex flex-wrap">                
-                    <button class="btn btn-primary m-1" @click="clickLoadShowData(3)" :disabled="ud.lockCall" v-html="'Call the AI Algorithm'"></button>
+                    <button class="btn btn-primary m-1" @click="clickLoadShowData(3)" :disabled="ud.lockUpload==1?false:(ud.lockBtn !== 6)" v-html="'Call the AI Algorithm'"></button>
                     <div class="h-100 m-auto d-flex flex-column justify-content-center">
                         <div class="spinner-border text-primary" role="status" v-if="ud.calling"></div>
                     </div>
@@ -111,7 +111,8 @@ const ud = reactive({
     fetchCount: 0,
     fetching: false,
     calling: false,
-    lockCall: true,
+    lockBtn: 0,
+    lockUpload: 0, // 控制上传逻辑
     selTimestamp: {},
     script: null,
 });
@@ -172,6 +173,8 @@ function parseTime(timestamp) {
 }
 function getState() {
     const {tmpDir, tid} = ud.selTimestamp || {};
+    if (ud.lockUpload==1) return true;
+    if (ud.lockBtn==0) return true;
     if (!tmpDir && !tid) {
         // 未选中时，禁用
         return true;
@@ -203,7 +206,7 @@ function clickLoadShowData(type) {
             ud.calling = false;
             const {code, message, data} = res;
             if (code == 200) {
-                ud.lockCall = true;
+                ud.lockUpload = 0;
                 // 新的调用需要缓存记录
                 if (m1.type == 1) {           
                     updateTimestampData(m1.tempDir, 'history', false);
@@ -226,10 +229,11 @@ function clickLoadShowData(type) {
         // 添加时自动第一个
         ud.selTimestamp = ud.timestampList[0];
         ud.timestamp = ud.selTimestamp.tmpDir;
-        ud.lockCall = false;
         m1.type = 1;        
         m1.tempDir = `${ud.selTimestamp.tmpDir}_${ud.customId}`;      
         msg1.value = `${toYYMMDDHHMMSS(ud.selTimestamp.tmpDir)}_${ud.customId}`;
+        ud.lockUpload = 0;
+        ud.lockBtn = 1;
     } else if (type == 5) {
         ud.timestampList = [];
         getHistory(m1).then(res=>{
@@ -263,7 +267,7 @@ function updateTimestampData(tmpDir, tid, isNew) {
 function selectTimestamp() {
     const { tmpDir, tid } = ud.selTimestamp || {};
     ud.customId = '';
-    ud.lockCall = false;
+    ud.lockBtn = 0;
     if (tid == 'history') m1.tempDir = `${tmpDir}`; // 旧数据，未添加自定义
     else m1.tempDir = `${tmpDir}_${tid}`; // 有自定义ID的
     if (tid) {
@@ -271,11 +275,13 @@ function selectTimestamp() {
         m1.type = 2;
         m1.upper = 'no upper path';
         m1.lower = 'no lower path';
+        ud.lockUpload = 1;
     } else {
         m1.type = 1;
         m1.upper = null;
         m1.lower = null;
         ud.timestamp = tmpDir;
+        ud.lockUpload = 0;
     }
     msg1.value = `${toYYMMDDHHMMSS(tmpDir)}_${tid}`;
 }
@@ -436,15 +442,12 @@ async function handleSelectFile(event) {
         ud.uploading = true;
         const file = files[0];
         const filename = file.name;
+        let res = null;
         if (filename.endsWith('.drc') || filename.endsWith('.mq')) {
             const path = `retainer/${ud.timestamp}_${ud.customId}/input/${auxiliary}/${filename}`;
-            const res = await store.dispatch('auth/putFile', {
+            res = await store.dispatch('auth/putFile', {
                 file, path,
             });
-            if (res.res.status == 200) {
-                if (ud.type == 6) m1.upper = res.name;
-                else if (ud.type == 2) m1.lower = res.name;
-            }
         } else {
             //  其他格式转换一下
             try {
@@ -458,16 +461,22 @@ async function handleSelectFile(event) {
                 const path = `retainer/${ud.timestamp}_${ud.customId}/input/${auxiliary}/${noExtFilename}.mq`;
                 const mesh = await addColor2Mesh(geo);
                 const buffer = await export2drc(mesh);
-                const res = await store.dispatch('auth/putFile', {
+                res = await store.dispatch('auth/putFile', {
                     file: new Blob([buffer.buffer], { type: 'application/octet-stream',}),
                     path: path,
                 })
-                if (res.res.status == 200) {
-                    if (ud.type == 6) m1.upper = res.name;
-                    else if (ud.type == 2) m1.lower = res.name;
-                }
             } catch(err){
+                console.log(err);
                 msg.value = 'File Load failure';
+            }
+        }
+        if (res && res.res.status == 200) {
+            if (ud.type == 6) {
+                m1.upper = res.name;
+                ud.lockBtn |= 2;
+            } else if (ud.type == 2) {
+                m1.lower = res.name;
+                ud.lockBtn |= 4;
             }
         }
         ud.uploading = false;

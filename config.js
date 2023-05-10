@@ -7,10 +7,10 @@ export function getFavicon() {
 }
 
 export const vInfo = {
-    'CT': {
-        version: '0.1.0',
+    'IMPLANT': {
+        version: '0.2.0',
         changelog: [
-
+            'Adding the ability to predict the position of multiple single tooth implants',
         ],
     },
     'CROWN': {
@@ -38,3 +38,5 @@ export const vInfo = {
         ],
     },
 }
+
+export const drcPathPrefix = `${getBaseRoot()}js/libs/draco/`;

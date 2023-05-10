@@ -10,8 +10,8 @@ const routes = [
 ]
 
 export const mapComponent2LocalFile = {
-  'CT': {
-    component: () => import('../views/Viewer.vue'),
+  'IMPLANT': {
+    component: () => import('../views/ViewerImplant.vue'),
     functionName: 'Implant',
     functionCode: 'ViewerCT',
     functionId: '101',
@@ -35,7 +35,7 @@ export const mapComponent2LocalFile = {
     functionId: '104',
   },
   'RETAINER': {
-    component: () => import('../views/Retainer.vue'),
+    component: () => import('../views/ViewerRetainer.vue'),
     functionName: 'Retainer',
     functionCode: 'ViewerRetainer',
     functionId: '105',

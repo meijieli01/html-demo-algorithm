@@ -26,9 +26,7 @@
                 </div>
                 <div class="d-flex flex-wrap">                
                     <div class="alert alert-warning m-1 p-0" role="alert" v-html="'Enter the tooth id that needs implant for the AI Algorithm'"></div>
-                    <select class="form-select" v-model="m1.missId" @change="selectMissingTid" :disabled="getState()">
-                        <option v-for="(tid,i) in ud.tidList" :key="i" :value="tid" v-html="tid"></option>
-                    </select>
+                    <SubSelection class="w-100" id="missId" :value="ud.tidList" :list="selList" :disable="getState()" @update="e=>m1.missTids=`[${e.join(',')}]`" />
                 </div>
                 <div class="d-flex flex-wrap">                
                     <button class="btn btn-primary m-1" @click="clickLoadShowData(3)" :disabled="ud.lockCall" v-html="'Call the AI Algorithm'"></button>
@@ -72,22 +70,24 @@
 import { ref, reactive, onMounted, onBeforeUnmount } from 'vue';
 import SubChangeLog from './SubChangeLog.vue';
 import SubVersion from './SubVersion.vue';
+import SubSelection from './SubSelection.vue';
 import { mqThree } from '../third/threejs/mjthree';
 import { getCtMeshMaterialByName } from '../third/threejs/mjColor';
 import { readFromStorage, writeToStorage } from '../third/snippet/tool/storage';
 import { FilePathLoader, addColor2Mesh, PathLoader, updateMeshColor, updateMeshOpacity, emptyTrackFile } from '../third/threejs/mjLoader';
 import { upload, callAi, getHistory } from '../api/ct';
 import { getBaseRoot, vInfo } from '../../config';
+import { calcPer } from '../utils/util';
 const props = defineProps({
     tag: {
         type:String,
-        default: 'CT',
-        // require: true,
+        default: 'IMPLANT',
     }
 });
 const refFile = ref(null);
 const isDev = ref(import.meta.env.DEV);
 const msg = ref('');
+const selList = ref([]);
 const ud = reactive({
     type: 0,
     total: 0,
@@ -98,11 +98,11 @@ const ud = reactive({
     errorList: [],
     pathList: [],
     timestampList: [],
-    timestamp: '1680514251226',
+    timestamp: '1683618615792',
     tidList: [
         18,17,16,15,14,13,12,11,21,22,23,24,25,26,27,28,
         48,47,46,45,44,43,42,41,31,32,33,34,35,36,37,38,
-    ],
+    ].map(e=>({id:e,name:e})),
     fetchTotal: 0,
     fetchCount: 0,
     fetching: false,
@@ -112,7 +112,7 @@ const ud = reactive({
     script: null,
 });
 const m1 = reactive({
-    missId: '',
+    missTids: '',
     tempDir: '',
 });
 const appThree = new mqThree();
@@ -180,9 +180,18 @@ function clickLoadShowData(type) {
         emptyTrackFile();
         refFile.value.dispatchEvent(new MouseEvent('click'))
     } else if (type == 3) {
-        if (!m1.missId) {
-            msg.value = 'Must select a missing teeth id';
-            return;
+        const { tmpDir, tid } = ud.selTimestamp || {};
+        // 兼容历史数据
+        if (typeof tid == 'string') {
+            if (!m1 || m1.missTids.length < 1) {
+                msg.value = 'Must select some missing teeth id';
+                return;
+            }
+        } else {
+            if (!m1.missId) {
+                msg.value = 'Must select a missing teeth id';
+                return;
+            }
         }
         ud.calling = true;
         callAi(m1).then(res=>{
@@ -191,19 +200,26 @@ function clickLoadShowData(type) {
                 ud.lockCall = true;
                 // 新的调用需要缓存记录
                 if (m1.type == 1) {           
-                    updateTimestampData(m1.tempDir, m1.missId, false);
+                    updateTimestampData(m1.tempDir, m1.missTids, false);
                 }
-                ud.pathList = res.data.filter(e=>!e.endsWith('.json'));
+                ud.pathList = res.data.filter(e=>!e.endsWith('.json') || !e.endsWith('.gz'));
                 updateByPath();
             } else {
                 msg.value = res.message;
             }
         })
     } else if (type == 4) {
-        ud.timestampList.push({
+        ud.timestampList.unshift({
             tmpDir: Date.now(),
+            // tmpDir: 1683618615792,
             tid: '',
         });
+        // 添加时自动第一个
+        ud.selTimestamp = ud.timestampList[0];
+        ud.timestamp = ud.selTimestamp.tmpDir;
+        ud.lockCall = false;
+        m1.type = 1;
+        m1.tempDir = ud.timestamp;
     } else if (type == 5) {
         // 删除
         ud.timestampList = [];
@@ -212,8 +228,8 @@ function clickLoadShowData(type) {
                 res.data.forEach(e=>{
                     const strList = e.split(' ');
                     const tmpDir = parseInt(strList[0].split('=').pop());
-                    const tid = parseInt(strList[1].split('=').pop());
-                    updateTimestampData(tmpDir, tid, true);
+                    const idInfo = strList[1].split('=').pop();
+                    updateTimestampData(tmpDir, idInfo.startsWith('[') ? idInfo : parseInt(idInfo), true);
                 })
             }
         })
@@ -241,10 +257,17 @@ function selectTimestamp() {
     m1.tempDir = tmpDir;
     if (tid) {
         // 历史记录
-        m1.missId = tid;
+        if (typeof tid == 'string' && tid.startsWith('[')) {
+            m1.missTids = tid;
+            m1.missId = null;
+        } else {
+            // 兼容之前的单颗数据
+            m1.missId = tid;
+            m1.missTids = null;
+        }
         m1.type = 2;
     } else {
-        m1.missId = '';
+        m1.missTids = [];
         m1.type = 1;
         ud.timestamp = tmpDir;
     }
@@ -339,10 +362,8 @@ function inputChangeOpacityUpdate(event, item) {
     }
 }
 function getPer() {
-    if (ud.fetching) {
-        return Math.round(100 * ud.fetchCount / ud.fetchTotal).toFixed(0);     
-    }
-    return Math.round(100 * ud.count / ud.total).toFixed(0); 
+    if (ud.fetching) return calcPer(ud.fetchCount, ud.fetchTotal);
+    return calcPer(ud.count, ud.total);
 }
 async function handleSelectFile(event) {
     const files = event.target.files;

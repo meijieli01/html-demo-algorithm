@@ -76,6 +76,7 @@ import { getMeshMaterialByName } from '../third/threejs/mjColor';
 import { readFromStorage, writeToStorage } from '../third/snippet/tool/storage';
 import { addColor2Mesh, PathLoader, updateMeshColor, updateMeshOpacity, FilePathLoader, emptyTrackFile } from '../third/threejs/mjLoader';
 import { export2drc } from '../third/threejs/threeExporter';
+import { arrayVectorToMatrix } from '../third/threejs/mjUtil';
 import { upload, getHistory, callAiRetainer } from '../api/all';
 import { getOssAuth } from '../api/admin';
 import { getBaseRoot, vInfo } from '../../config';
@@ -113,6 +114,10 @@ const ud = reactive({
     lockCall: true,
     selTimestamp: {},
     script: null,
+});
+const mat = reactive({
+    upper: null,
+    lower: null,
 });
 const m1 = reactive({
     tempDir: '',
@@ -196,16 +201,19 @@ function clickLoadShowData(type) {
         ud.calling = true;
         callAiRetainer(m1).then(res=>{
             ud.calling = false;
-            if (res.code == 200) {
+            const {code, message, data} = res;
+            if (code == 200) {
                 ud.lockCall = true;
                 // 新的调用需要缓存记录
                 if (m1.type == 1) {           
                     updateTimestampData(m1.tempDir, 'history', false);
                 }
-                ud.pathList = res.data.filter(e=>!e.endsWith('.json'));                
+                ud.pathList = data.files.filter(e=>!e.endsWith('.json'));
+                if (data.lowerMat) mat.lower = arrayVectorToMatrix(data.lowerMat);
+                if (data.upperMat) mat.upper = arrayVectorToMatrix(data.upperMat);
                 updateByPath();
             } else {
-                msg.value = res.message;
+                msg.value = message;
             }
         })
     } else if (type == 4) {
@@ -305,7 +313,7 @@ function updateByPath() {
         ud.fetchCount++;
         if (!geo) return;
         appThree.loading(false);
-        addGeotoScene(geo, filename);
+        addGeotoScene(geo, filename, path);
     }
     ud.pathList.forEach(path=>{
         fetchSinglePath(path);
@@ -313,7 +321,7 @@ function updateByPath() {
     appThree.updateFrame();
     appThree.loading(false);
 }
-function addGeotoScene(geo, filename) {
+function addGeotoScene(geo, filename, path) {
     if (geo.type == 'BufferGeometry' && geo.attributes.position.count < 1) {
         console.warn('empty BufferGeometry');
         return;
@@ -334,6 +342,15 @@ function addGeotoScene(geo, filename) {
     }
     const tmp = ud.infoList.sort(compare('filename'));
     addColor2Mesh(geo, {name:filename, color:info.color, opacity: info.opacity}).then(mesh=>{
+        if (path && path.indexOf('/input/') > 0) {
+            const str = path.toLowerCase();
+            if (str.indexOf('/input/lower/') > 0 && mat.lower) {
+                mesh.applyMatrix4(mat.lower);
+            } else if (str.indexOf('/input/upper/') > 0 && mat.upper) {
+                mesh.applyMatrix4(mat.upper);
+            }
+            mesh.matrixWorldNeedsUpdate = true;
+        }
         appThree.add(mesh);
         appThree.updateFrame();
     })
@@ -415,11 +432,12 @@ async function handleSelectFile(event) {
             msg.value = 'Please Select Timestamp to Continue';
             return;
         }
+        const auxiliary = ud.type == 6 ? 'upper' : 'lower';
         ud.uploading = true;
         const file = files[0];
         const filename = file.name;
         if (filename.endsWith('.drc') || filename.endsWith('.mq')) {
-            const path = `retainer/${ud.timestamp}_${ud.customId}/input/${filename}`;
+            const path = `retainer/${ud.timestamp}_${ud.customId}/input/${auxiliary}/${filename}`;
             const res = await store.dispatch('auth/putFile', {
                 file, path,
             });
@@ -437,7 +455,7 @@ async function handleSelectFile(event) {
                     return null;
                 })
                 if (!geo) return;            
-                const path = `retainer/${ud.timestamp}_${ud.customId}/input/${noExtFilename}.mq`;
+                const path = `retainer/${ud.timestamp}_${ud.customId}/input/${auxiliary}/${noExtFilename}.mq`;
                 const mesh = await addColor2Mesh(geo);
                 const buffer = await export2drc(mesh);
                 const res = await store.dispatch('auth/putFile', {

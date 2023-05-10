@@ -29,7 +29,7 @@
                     </div>
                 </div>
                 <div class="d-flex flex-wrap">                
-                    <button class="btn btn-primary m-1" @click="clickLoadShowData(3)" :disabled="ud.lockUpload==1?false:(ud.lockBtn !== 6)" v-html="'Call the AI Algorithm'"></button>
+                    <button class="btn btn-primary m-1" @click="clickLoadShowData(3)" :disabled="ud.lockUpload==1?false: ud.lockBtn !== 7" v-html="'Call the AI Algorithm'"></button>
                     <div class="h-100 m-auto d-flex flex-column justify-content-center">
                         <div class="spinner-border text-primary" role="status" v-if="ud.calling"></div>
                     </div>
@@ -478,6 +478,8 @@ async function handleSelectFile(event) {
                 m1.lower = res.name;
                 ud.lockBtn |= 4;
             }
+            // 0x1 | 0x2 | 0x4 can call Ai
+            console.log('lock btn', ud.lockBtn)
         }
         ud.uploading = false;
     }

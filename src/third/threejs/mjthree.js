@@ -95,7 +95,9 @@ export class mqThree {
     this.updateFrame();
     
     const winResize = () => {
-      this.resize();
+      const {domElement} = this.renderer;
+      const {clientWidth, clientHeight} = domElement.parentElement;
+      this.resize(clientWidth, clientHeight);
     }
     window.removeEventListener('resize', winResize);
     window.addEventListener('resize', winResize);

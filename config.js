@@ -18,8 +18,12 @@ export const vInfo = {
         ],
     },
     'CROWN': {
-        version: '0.2.0',
+        version: '0.3.0',
         changelog: [
+            '2023-5-12',
+            '1. Optimize the distance between the crown with adjacent teeth, prepared teeth, and opposing teeth',
+            '2. Optimize the neck line of the crown',
+            '3. Supports crown generation for tooth 14,15,16,24,25,26,34,35,36,44,45,46',
             '2023-4-23',
             '1. Now supports crown generation for tooth 14 and 15 (in FDI)',
             '2. Fix bugs',

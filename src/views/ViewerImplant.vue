@@ -42,14 +42,14 @@
                     <div class="progress-bar" role="progressbar" :style="`width: ${getPer()}%;`" :aria-valuenow="getPer()" aria-valuemin="0" aria-valuemax="100" v-html="getPer()+'%'"></div>
                 </div>
             </div>
-            <div class="d-flex flex-column overflow-auto">
+            <div class="d-flex flex-column">
                 <div class="alert alert-danger p-1 m-1" role="alert" v-if="msg.length > 0" v-html="msg"></div>
                 <div v-for="(item,i) in ud.errorList" :key="i">
                     <div class="alert alert-danger p-1 m-1" role="alert" v-html="item.name"></div>
                 </div>
             </div>
             <SubChangeLog :tag="tag" />
-            <div class="overflow-auto">
+            <div class="">
                 <div class="d-flex" v-for="(item,i) in ud.infoList" :key="i">
                     <input type="color" class="form-control" :value="item.color" @change="inputChangeColorUpdate($event,item)" style="width:60px;" />
                     <input type="range" class="form-control" min="0" max="1" step="0.01" :value="item.opacity" @change="inputChangeOpacityUpdate($event,item)" style="width:160px;" />

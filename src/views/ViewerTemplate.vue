@@ -20,6 +20,7 @@
                     </div>
                     <div class="d-flex flex-wrap">
                         <button class="btn btn-primary m-1 btn-sm" @click="clickLoadShowData(2)" :disabled="getState()" v-html="info.btn1Label[tag]"></button>
+                        <button class="btn btn-primary m-1 btn-sm" v-if="tag=='AI_NightGuard'" @click="clickLoadShowData(6)" :disabled="getState()">Upload the lower scanned meshes</button>
                     </div>
                 </div>
                 <div class="d-flex flex-wrap">                
@@ -55,8 +56,8 @@
             </div>
         </div>
         <!-- <input type="file" webkitdirectory ref="refFile" @change="handleSelectFile($event)" hidden /> -->
-        <!-- <input type="file" ref="refFile" @change="handleSelectFile($event)" hidden /> -->
-        <input type="file" multiple ref="refFile" @change="handleSelectFile($event)" hidden />
+        <input type="file" ref="refFile" @change="handleSelectFile($event)" hidden />
+        <!-- <input type="file" multiple ref="refFile" @change="handleSelectFile($event)" hidden /> -->
     </div>
 </template>
 
@@ -70,6 +71,7 @@ import { readFromStorage, writeToStorage } from '../third/snippet/tool/storage';
 import { addColor2Mesh, PathLoader, updateMeshColor, updateMeshOpacity, FilePathLoader, emptyTrackFile } from '../third/threejs/mjLoader';
 import { upload, getHistory, callAi } from '../api/all';
 import { getBaseRoot, vInfo } from '../../config';
+import { ext } from '../utils/util';
 const props = defineProps({
     tag: {
         type:String,
@@ -81,7 +83,7 @@ const isDev = ref(import.meta.env.DEV);
 const msg = ref('');
 const info = reactive({
     btn1Label: {
-        'AI_NightGuard': 'Upload the upper and lower scanned meshes',
+        'AI_NightGuard': 'Upload the upper scanned meshes',
         'AI_BracketRemove': 'Upload the upper or lower scanned mesh',
     }
 });
@@ -91,7 +93,6 @@ const ud = reactive({
     count: 0,
     countError: 0,
     uploading:false,
-    cacheList: {},
     errorList: [],
     pathList: [],
     timestampList: [],
@@ -173,7 +174,7 @@ function clickLoadShowData(type) {
     msg.countError = 0;
     ud.type = type;
     appThree.empty();
-    if ([1,2].includes(type)) {
+    if ([1,2,6].includes(type)) {
         emptyTrackFile();
         refFile.value.dispatchEvent(new MouseEvent('click'))
     } else if (type == 3) {
@@ -193,10 +194,15 @@ function clickLoadShowData(type) {
             }
         })
     } else if (type == 4) {
-        ud.timestampList.push({
+        ud.timestampList.unshift({
             tmpDir: Date.now(),
             tid: '',
         });
+        ud.selTimestamp = ud.timestampList[0];
+        ud.timestamp = ud.selTimestamp.tmpDir;
+        m1.type = 1;        
+        m1.tempDir = `${ud.selTimestamp.tmpDir}`;
+        ud.lockCall = false;
     } else if (type == 5) {
         ud.timestampList = [];
         getHistory(m1).then(res=>{
@@ -367,56 +373,35 @@ async function handleSelectFile(event) {
             addGeotoScene(geo, filename);
         }
         emptyTrackFile();
-    } else if (ud.type == 2) {
+    } else if ([2,6].includes(ud.type)) {
         // 上传文件
         if (!ud.timestamp || ud.timestamp.length < 1) {
             msg.value = 'Please Select Timestamp to Continue';
             return;
         }
+        const { tag } = props;
+        const file = files[0];
         ud.uploading = true;
         ud.countError = 0;
-        ud.count = 1;
+        ud.count = 0.5;
         ud.total = files.length;
-        ud.cacheList[ud.timestamp] = {};
-        const uploadSingleFile = async (file) => {
-            const formData = new FormData();
-            const tmp = ud.cacheList[ud.timestamp][file.name];
-            if (tmp && tmp.size > 0 && tmp.loading == false) {
-                msg.value += `Repeat upload ${file.name}`;
-                // 已经上传了的文件，退出
-                return;
-            } else {
-            }
-            ud.cacheList[ud.timestamp][file.name] = {
-                name: file.name,
-                size: file.size,
-                loading: true,
-            };
+        const formData = new FormData();
+        if (tag == 'AI_NightGuard') {
+            const auxiliary = ud.type == 2 ? 'upper' : 'lower';    
+            const filename = `${auxiliary}${ext(file.name)}`;
+            formData.append("files", file, filename);
+        } else {
             formData.append("files", file, file.name);
-            formData.append("tempDir", ud.timestamp); 
-            formData.append("tag", props.tag); 
-            const res = await upload(formData)
-            if (res.code == 200) {
-                ud.cacheList[ud.timestamp][res.data[0]].loading = false;
-                if (ud.count + ud.countError == ud.total) {                    
-                    ud.uploading = false;
-                    if (ud.countError > 0) {
-                        msg.value = 'The above file failed to upload';
-                        ud.errorList = [];
-                        for (let k in ud.cacheList[ud.timestamp]) {
-                            if (k && k.loading) ud.errorList.push(k);
-                        }
-                    }
-                } else {
-                    ud.count++;
-                }
-            } else {
-                ud.countError++;
-                msg.value += `File ${file.name} upload failed`;
-            }
         }
-        for (let i = 0; i < files.length; i++) {
-            uploadSingleFile(files[i]);
+        formData.append("tempDir", ud.timestamp); 
+        formData.append("tag", tag); 
+        const res = await upload(formData)
+        if (res.code == 200) {
+            ud.count = 1;
+            ud.uploading = false;
+        } else {
+            ud.countError++;
+            msg.value += `File ${file.name} upload failed`;
         }
     }
 }

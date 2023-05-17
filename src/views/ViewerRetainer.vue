@@ -29,7 +29,13 @@
                     </div>
                 </div>
                 <div class="d-flex flex-wrap">                
-                    <button class="btn btn-primary m-1" @click="clickLoadShowData(3)" :disabled="ud.lockUpload==1?false: ud.lockBtn !== 7" v-html="'Call the AI Algorithm'"></button>
+                    <div class="d-flex">
+                        <button class="btn btn-primary m-1" @click="clickLoadShowData(3)" :disabled="ud.lockUpload==1?false: ud.lockBtn !== 7" v-html="'Call the AI Algorithm'"></button>
+                        <div class="d-flex m-auto">
+                            <input class="form-check-input m-1" type="checkbox" v-model="m1.isShell" value="" id="flexCheckDefault">
+                            <label class="form-check-label" for="flexCheckDefault">中空(非实体)</label>
+                        </div>
+                    </div>
                     <div class="h-100 m-auto d-flex flex-column justify-content-center">
                         <div class="spinner-border text-primary" role="status" v-if="ud.calling"></div>
                     </div>
@@ -80,6 +86,7 @@ import { arrayVectorToMatrix } from '../third/threejs/mjUtil';
 import { upload, getHistory, callAiRetainer } from '../api/all';
 import { getOssAuth } from '../api/admin';
 import { getBaseRoot, vInfo } from '../../config';
+import { toYYMMDDHHmmss } from '../utils/util';
 const props = defineProps({
     tag: {
         type:String,
@@ -123,6 +130,7 @@ const mat = reactive({
 const m1 = reactive({
     tempDir: '',
     tag: props.tag,
+    isShell: true,
 });
 const appThree = new mqThree();
 const keyOfLocalStorage = `keyOfLocalStorage${props.tag}`;
@@ -162,14 +170,10 @@ onBeforeUnmount(() => {
     appThree.empty();
     appThree.dispose();
 })
-function toYYMMDDHHMMSS(timestamp) {
-    const date = new Date(parseInt(timestamp));
-    return `${date.getFullYear()}-${date.getMonth()+1}-${date.getDate()} ${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`;
-}
 function parseTime(timestamp) {
-    const ymdhms = toYYMMDDHHMMSS(timestamp.tmpDir);    
-    const strTid = timestamp.tid ? `${ timestamp.tid} ---  ` : '';
-    return `${strTid}${ymdhms}`;
+    console.log('22', timestamp)
+    const ymdhms = toYYMMDDHHmmss(timestamp.tmpDir);
+    return `${timestamp.isShell} --- ${ymdhms} --- ${timestamp.tid}`;
 }
 function getState() {
     const {tmpDir, tid} = ud.selTimestamp || {};
@@ -209,7 +213,7 @@ function clickLoadShowData(type) {
                 ud.lockUpload = 0;
                 // 新的调用需要缓存记录
                 if (m1.type == 1) {           
-                    updateTimestampData(m1.tempDir, 'history', false);
+                    updateTimestampData(m1.tempDir, 'history', m1.isShell, false);
                 }
                 ud.pathList = data.files.filter(e=>!e.endsWith('.json'));
                 if (data.lowerMat) mat.lower = arrayVectorToMatrix(data.lowerMat);
@@ -229,9 +233,10 @@ function clickLoadShowData(type) {
         // 添加时自动第一个
         ud.selTimestamp = ud.timestampList[0];
         ud.timestamp = ud.selTimestamp.tmpDir;
-        m1.type = 1;        
+        m1.type = 1;
+        m1.isShell = true;        
         m1.tempDir = `${ud.selTimestamp.tmpDir}_${ud.customId}`;      
-        msg1.value = `${toYYMMDDHHMMSS(ud.selTimestamp.tmpDir)}_${ud.customId}`;
+        msg1.value = `${toYYMMDDHHmmss(ud.selTimestamp.tmpDir)}_${ud.customId}`;
         ud.lockUpload = 0;
         ud.lockBtn = 1;
     } else if (type == 5) {
@@ -242,22 +247,28 @@ function clickLoadShowData(type) {
                     const strList = e.split(' ');
                     const tmpDir = strList[0].split('=').pop();
                     const t1 = tmpDir.split('_');
-                    updateTimestampData(parseInt(t1[0]), t1[1] || 'history', true);
+                    let isShell = true;
+                    if (strList.length > 1) {
+                        isShell = strList[1].split('=').pop() == 'true';
+                    }
+                    updateTimestampData(parseInt(t1[0]), t1[1] || 'history', isShell, true);
                 })
             }
         })
     }
 }
-function updateTimestampData(tmpDir, tid, isNew) {
+function updateTimestampData(tmpDir, tid, isShell, isNew) {
     // 更新进去
     const tmp = ud.timestampList.filter(e=>e.tmpDir==tmpDir)[0];
     if (tmp) {
         tmp.tid = tid;
+        tmp.isShell = isShell;
     } else {
         if (isNew) {
             ud.timestampList.push({
                 tmpDir: tmpDir,
                 tid: tid,
+                isShell: isShell,
             });
         }
     }
@@ -265,9 +276,10 @@ function updateTimestampData(tmpDir, tid, isNew) {
     ud.timestampList = JSON.parse(readFromStorage(keyOfLocalStorage, '[]'));
 }
 function selectTimestamp() {
-    const { tmpDir, tid } = ud.selTimestamp || {};
+    const { tmpDir, tid, isShell } = ud.selTimestamp || {};
     ud.customId = '';
     ud.lockBtn = 0;
+    m1.isShell = isShell;
     if (tid == 'history') m1.tempDir = `${tmpDir}`; // 旧数据，未添加自定义
     else m1.tempDir = `${tmpDir}_${tid}`; // 有自定义ID的
     if (tid) {
@@ -283,7 +295,7 @@ function selectTimestamp() {
         ud.timestamp = tmpDir;
         ud.lockUpload = 0;
     }
-    msg1.value = `${toYYMMDDHHMMSS(tmpDir)}_${tid}`;
+    msg1.value = `${toYYMMDDHHmmss(tmpDir)}_${tid}`;
 }
 function updateByPath() {
     appThree.loading(true);

@@ -5,3 +5,8 @@ export function calcPer(count, total) {
 export function ext(filename) {
     return filename.substr(filename.lastIndexOf('.'));
 }
+
+export function toYYMMDDHHmmss(timestamp) {
+    const date = new Date(parseInt(timestamp));
+    return `${date.getFullYear()}-${date.getMonth()+1}-${date.getDate()} ${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`;
+}

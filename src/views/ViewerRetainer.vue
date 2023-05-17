@@ -32,8 +32,8 @@
                     <div class="d-flex">
                         <button class="btn btn-primary m-1" @click="clickLoadShowData(3)" :disabled="ud.lockUpload==1?false: ud.lockBtn !== 7" v-html="'Call the AI Algorithm'"></button>
                         <div class="d-flex m-auto">
-                            <input class="form-check-input m-1" type="checkbox" v-model="m1.isShell" value="" id="flexCheckDefault">
-                            <label class="form-check-label" for="flexCheckDefault">中空(非实体)</label>
+                            <input class="form-check-input m-1" type="checkbox" v-model="m1.isShell" value="" id="shellHollow">
+                            <label class="form-check-label" for="shellHollow">Hollow</label>
                         </div>
                     </div>
                     <div class="h-100 m-auto d-flex flex-column justify-content-center">
@@ -85,7 +85,7 @@ import { export2drc } from '../third/threejs/threeExporter';
 import { arrayVectorToMatrix } from '../third/threejs/mjUtil';
 import { upload, getHistory, callAiRetainer } from '../api/all';
 import { getOssAuth } from '../api/admin';
-import { getBaseRoot, vInfo } from '../../config';
+import { getBaseRoot, vInfo, configRetainer } from '../../config';
 import { toYYMMDDHHmmss } from '../utils/util';
 const props = defineProps({
     tag: {
@@ -130,7 +130,7 @@ const mat = reactive({
 const m1 = reactive({
     tempDir: '',
     tag: props.tag,
-    isShell: true,
+    isShell: configRetainer.isShell,
 });
 const appThree = new mqThree();
 const keyOfLocalStorage = `keyOfLocalStorage${props.tag}`;
@@ -229,12 +229,13 @@ function clickLoadShowData(type) {
         ud.timestampList.unshift({
             tmpDir: Date.now(),
             tid: '',
+            isShell: configRetainer.isShell,
         });
         // 添加时自动第一个
         ud.selTimestamp = ud.timestampList[0];
         ud.timestamp = ud.selTimestamp.tmpDir;
         m1.type = 1;
-        m1.isShell = true;        
+        m1.isShell = configRetainer.isShell;        
         m1.tempDir = `${ud.selTimestamp.tmpDir}_${ud.customId}`;      
         msg1.value = `${toYYMMDDHHmmss(ud.selTimestamp.tmpDir)}_${ud.customId}`;
         ud.lockUpload = 0;
@@ -247,7 +248,7 @@ function clickLoadShowData(type) {
                     const strList = e.split(' ');
                     const tmpDir = strList[0].split('=').pop();
                     const t1 = tmpDir.split('_');
-                    let isShell = true;
+                    let isShell = configRetainer.isShell;
                     if (strList.length > 1) {
                         isShell = strList[1].split('=').pop() == 'true';
                     }

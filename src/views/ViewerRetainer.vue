@@ -47,6 +47,7 @@
                 <div class="progress w-100" v-if="ud.uploading">
                     <div class="progress-bar" role="progressbar" :style="`width: ${getPer()}%;`" :aria-valuenow="getPer()" aria-valuemin="0" aria-valuemax="100" v-html="getPer()+'%'"></div>
                 </div>
+                <SubProgress :show="ud.uploading" v-if="ud.total == 1 || ud.fetchTotal == 1" />
             </div>
             <div class="d-flex flex-column">
                 <div class="alert alert-danger p-1 m-1" role="alert" v-if="msg.length > 0" v-html="msg"></div>
@@ -77,6 +78,7 @@ import { ref, reactive, onMounted, onBeforeUnmount } from 'vue';
 import { useStore } from 'vuex';
 import SubChangeLog from './SubChangeLog.vue';
 import SubVersion from './SubVersion.vue';
+import SubProgress from './SubProgress.vue';
 import { mqThree } from '../third/threejs/mjthree';
 import { getMeshMaterialByName } from '../third/threejs/mjColor';
 import { readFromStorage, writeToStorage } from '../third/snippet/tool/storage';
@@ -86,7 +88,7 @@ import { arrayVectorToMatrix } from '../third/threejs/mjUtil';
 import { upload, getHistory, callAiRetainer } from '../api/all';
 import { getOssAuth } from '../api/admin';
 import { getBaseRoot, vInfo, configRetainer } from '../../config';
-import { toYYMMDDHHmmss } from '../utils/util';
+import { filterFile, toYYMMDDHHmmss } from '../utils/util';
 const props = defineProps({
     tag: {
         type:String,
@@ -215,7 +217,7 @@ function clickLoadShowData(type) {
                 if (m1.type == 1) {           
                     updateTimestampData(m1.tempDir, 'history', m1.isShell, false);
                 }
-                ud.pathList = data.files.filter(e=>!e.endsWith('.json'));
+                ud.pathList = data.files.filter(e=>filterFile(e));
                 if (data.lowerMat) mat.lower = arrayVectorToMatrix(data.lowerMat);
                 if (data.upperMat) mat.upper = arrayVectorToMatrix(data.upperMat);
                 updateByPath();

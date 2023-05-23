@@ -41,6 +41,7 @@
                 <div class="progress w-100" v-if="ud.uploading">
                     <div class="progress-bar" role="progressbar" :style="`width: ${getPer()}%;`" :aria-valuenow="getPer()" aria-valuemin="0" aria-valuemax="100" v-html="getPer()+'%'"></div>
                 </div>
+                <SubProgress :show="ud.uploading" v-if="ud.total == 1 || ud.fetchTotal == 1" />
             </div>
             <div class="d-flex flex-column">
                 <div class="alert alert-danger p-1 m-1" role="alert" v-if="msg.length > 0" v-html="msg"></div>
@@ -71,13 +72,14 @@ import { ref, reactive, onMounted, onBeforeUnmount } from 'vue';
 import SubChangeLog from './SubChangeLog.vue';
 import SubVersion from './SubVersion.vue';
 import SubSelection from './SubSelection.vue';
+import SubProgress from './SubProgress.vue';
 import { mqThree } from '../third/threejs/mjthree';
 import { getCtMeshMaterialByName } from '../third/threejs/mjColor';
 import { readFromStorage, writeToStorage } from '../third/snippet/tool/storage';
 import { FilePathLoader, addColor2Mesh, PathLoader, updateMeshColor, updateMeshOpacity, emptyTrackFile } from '../third/threejs/mjLoader';
 import { upload, callAi, getHistory } from '../api/ct';
 import { getBaseRoot, vInfo } from '../../config';
-import { calcPer } from '../utils/util';
+import { calcPer, filterFile } from '../utils/util';
 const props = defineProps({
     tag: {
         type:String,
@@ -202,7 +204,7 @@ function clickLoadShowData(type) {
                 if (m1.type == 1) {           
                     updateTimestampData(m1.tempDir, m1.missTids, false);
                 }
-                ud.pathList = res.data.filter(e=>!e.endsWith('.json') || !e.endsWith('.gz'));
+                ud.pathList = res.data.filter(e=>filterFile(e));
                 updateByPath();
             } else {
                 msg.value = res.message;

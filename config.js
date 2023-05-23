@@ -32,6 +32,10 @@ export const vInfo = {
     'AI_NightGuard': {
         version: '1.5.0',
         changelog: [
+            '2023-5-19',
+            '1. solve the sharp edge problem',
+            '2. fix the problem that loose teeth part need extra long time',
+            '3. fix the problem that some case has hole in the generation result',
             '2023-4-23',
             '1. Updated with loose teeth problem Improvement.',
         ],

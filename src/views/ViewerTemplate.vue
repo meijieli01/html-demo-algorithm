@@ -20,7 +20,7 @@
                     </div>
                     <div class="d-flex flex-wrap">
                         <button class="btn btn-primary m-1 btn-sm" @click="clickLoadShowData(2)" :disabled="getState()" v-html="info.btn1Label[tag]"></button>
-                        <button class="btn btn-primary m-1 btn-sm" v-if="tag=='AI_NightGuard'" @click="clickLoadShowData(6)" :disabled="getState()">Upload the lower scanned meshes</button>
+                        <button class="btn btn-primary m-1 btn-sm" v-if="['AI_NightGuard','AI_OpenBite'].includes(tag)" @click="clickLoadShowData(6)" :disabled="getState()">Upload the lower scanned meshes</button>
                     </div>
                 </div>
                 <div class="d-flex flex-wrap">                
@@ -64,9 +64,9 @@
 
 <script setup>
 import { ref, reactive, onMounted, onBeforeUnmount } from 'vue';
-import SubChangeLog from './SubChangeLog.vue';
-import SubVersion from './SubVersion.vue';
-import SubProgress from './SubProgress.vue';
+import SubChangeLog from './sub/SubChangeLog.vue';
+import SubVersion from './sub/SubVersion.vue';
+import SubProgress from './sub/SubProgress.vue';
 import { mqThree } from '../third/threejs/mjthree';
 import { getMeshMaterialByName } from '../third/threejs/mjColor';
 import { readFromStorage, writeToStorage } from '../third/snippet/tool/storage';
@@ -87,6 +87,7 @@ const info = reactive({
     btn1Label: {
         'AI_NightGuard': 'Upload the upper scanned meshes',
         'AI_BracketRemove': 'Upload the upper or lower scanned mesh',
+        'AI_OpenBite': 'Upload the upper scanned meshes',
     }
 });
 const ud = reactive({

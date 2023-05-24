@@ -7,7 +7,7 @@
     </div>  
 </template>
 <script setup>
-import { vInfo } from '../../config';
+import { vInfo } from '../../../config';
 const props = defineProps({
     tag: {
         type: String,

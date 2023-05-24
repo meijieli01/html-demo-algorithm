@@ -76,9 +76,9 @@
 <script setup>
 import { ref, reactive, onMounted, onBeforeUnmount } from 'vue';
 import { useStore } from 'vuex';
-import SubChangeLog from './SubChangeLog.vue';
-import SubVersion from './SubVersion.vue';
-import SubProgress from './SubProgress.vue';
+import SubChangeLog from './sub/SubChangeLog.vue';
+import SubVersion from './sub/SubVersion.vue';
+import SubProgress from './sub/SubProgress.vue';
 import { mqThree } from '../third/threejs/mjthree';
 import { getMeshMaterialByName } from '../third/threejs/mjColor';
 import { readFromStorage, writeToStorage } from '../third/snippet/tool/storage';

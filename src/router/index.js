@@ -23,13 +23,13 @@ export const mapComponent2LocalFile = {
     functionId: '102',
   },
   'NIGHT': {
-    component: () => import('../views/NightGuard.vue'),
+    component: () => import('../views/one/NightGuard.vue'),
     functionName: 'NightGuard',
     functionCode: 'ViewerNight',
     functionId: '103',
   },
   'BRACKER': {
-    component: () => import('../views/BrackerRemove.vue'),
+    component: () => import('../views/one/BrackerRemove.vue'),
     functionName: 'BracketRemoval',
     functionCode: 'ViewerBracket',
     functionId: '104',
@@ -39,6 +39,12 @@ export const mapComponent2LocalFile = {
     functionName: 'Retainer',
     functionCode: 'ViewerRetainer',
     functionId: '105',
+  },
+  'OPENBITE': {
+    component: () => import('../views/one/OpenBite.vue'),
+    functionName: 'OpenBite',
+    functionCode: 'ViewerOpenBite',
+    functionId: '106',
   },
 }
 

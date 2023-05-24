@@ -30,7 +30,7 @@ export const vInfo = {
         ],
     },
     'AI_NightGuard': {
-        version: '1.5.0',
+        version: '1.6.0',
         changelog: [
             '2023-5-19',
             '1. solve the sharp edge problem',
@@ -48,6 +48,11 @@ export const vInfo = {
         ],
     },
     'pmp_retainer': {
+        version: '',
+        changelog: [
+        ],
+    },
+    'AI_OpenBite': {
         version: '',
         changelog: [
         ],

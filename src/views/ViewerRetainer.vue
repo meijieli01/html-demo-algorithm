@@ -85,7 +85,7 @@ import { readFromStorage, writeToStorage } from '../third/snippet/tool/storage';
 import { addColor2Mesh, PathLoader, updateMeshColor, updateMeshOpacity, FilePathLoader, emptyTrackFile } from '../third/threejs/mjLoader';
 import { export2drc } from '../third/threejs/threeExporter';
 import { arrayVectorToMatrix } from '../third/threejs/mjUtil';
-import { upload, getHistory, callAiRetainer } from '../api/all';
+import { upload, getHistory, callAiRetainer, callAiRetainerNew } from '../api/all';
 import { getOssAuth } from '../api/admin';
 import { getBaseRoot, vInfo, configRetainer } from '../../config';
 import { filterFile, toYYMMDDHHmmss } from '../utils/util';
@@ -208,7 +208,8 @@ function clickLoadShowData(type) {
             return;
         }
         ud.calling = true;
-        callAiRetainer(m1).then(res=>{
+        // callAiRetainer(m1).then(res=>{
+        callAiRetainerNew(m1).then(res=>{
             ud.calling = false;
             const {code, message, data} = res;
             if (code == 200) {
@@ -314,9 +315,11 @@ function updateByPath() {
         return;
     }
     const fetchSinglePath = async (path) => {
-        const filename = PathLoader.getName(path);        
-        const url = await store.dispatch('auth/getUrl', path);
-        const geo = await new PathLoader(path, drcPathPrefix).load(url, (e)=>{
+        // const filename = PathLoader.getName(path);        
+        // const url = await store.dispatch('auth/getUrl', path);
+        const filename = PathLoader.getName(path);
+        const validPath = `${import.meta.env.VITE_APP_FILE_PREFIX}/${path}`;
+        const geo = await new PathLoader(path, drcPathPrefix).load(validPath, (e)=>{
             // console.log('progress', e.loaded/e.total)
         }).catch(err=>{
             if (err instanceof ProgressEvent) {
@@ -456,45 +459,89 @@ async function handleSelectFile(event) {
         const auxiliary = ud.type == 6 ? 'upper' : 'lower';
         ud.uploading = true;
         const file = files[0];
-        const filename = file.name;
-        let res = null;
-        if (filename.endsWith('.drc') || filename.endsWith('.mq')) {
-            const path = `retainer/${ud.timestamp}_${ud.customId}/input/${auxiliary}/${filename}`;
-            res = await store.dispatch('auth/putFile', {
-                file, path,
-            });
-        } else {
-            //  其他格式转换一下
-            try {
-                const noExtFilename = filename.substr(0, filename.lastIndexOf('.'));
-                const geo = await new FilePathLoader(filename, drcPathPrefix).load(file)
-                .catch(err=>{
+        let filename = file.name;
+        const { tag } = props;
+        if (true) {
+            const formData = new FormData();
+            if (filename.endsWith('.drc') || filename.endsWith('.mq')) {
+                formData.append("files", file, file.name);
+            } else {
+                //  其他格式转换一下
+                try {
+                    const geo = await new FilePathLoader(filename, drcPathPrefix).load(file)
+                    .catch(err=>{
+                        msg.value = 'File Load failure';
+                        console.error(err);
+                        return null;
+                    })
+                    if (!geo) return;            
+                    const mesh = await addColor2Mesh(geo);
+                    const buffer = await export2drc(mesh);
+                    const noExtFilename = filename.substr(0, filename.lastIndexOf('.'));
+                    filename = `${noExtFilename}.mq`;
+                    formData.append("files", new Blob([buffer.buffer], { type: 'application/octet-stream',}), filename);
+                } catch(err){
+                    console.log(err);
                     msg.value = 'File Load failure';
-                    return null;
-                })
-                if (!geo) return;            
-                const path = `retainer/${ud.timestamp}_${ud.customId}/input/${auxiliary}/${noExtFilename}.mq`;
-                const mesh = await addColor2Mesh(geo);
-                const buffer = await export2drc(mesh);
+                }
+            }
+            formData.append("tempDir", `${ud.timestamp}_${ud.customId}`); 
+            formData.append("tag", tag); 
+            const res = await upload(formData)
+            if (res.code == 200) {
+                if (ud.type == 6) {
+                    m1.upper = filename;
+                    ud.lockBtn |= 2;
+                } else if (ud.type == 2) {
+                    m1.lower = filename;
+                    ud.lockBtn |= 4;
+                }
+                // 0x1 | 0x2 | 0x4 can call Ai
+                console.log('lock btn', ud.lockBtn)
+            } else {
+                console.error(res.message);
+                msg.value = res.message;
+            }
+        } else {
+            let res = null;
+            if (filename.endsWith('.drc') || filename.endsWith('.mq')) {
+                const path = `retainer/${ud.timestamp}_${ud.customId}/input/${auxiliary}/${filename}`;
                 res = await store.dispatch('auth/putFile', {
-                    file: new Blob([buffer.buffer], { type: 'application/octet-stream',}),
-                    path: path,
-                })
-            } catch(err){
-                console.log(err);
-                msg.value = 'File Load failure';
+                    file, path,
+                });
+            } else {
+                //  其他格式转换一下
+                try {
+                    const noExtFilename = filename.substr(0, filename.lastIndexOf('.'));
+                    const geo = await new FilePathLoader(filename, drcPathPrefix).load(file)
+                    .catch(err=>{
+                        msg.value = 'File Load failure';
+                        return null;
+                    })
+                    if (!geo) return;            
+                    const path = `retainer/${ud.timestamp}_${ud.customId}/input/${auxiliary}/${noExtFilename}.mq`;
+                    const mesh = await addColor2Mesh(geo);
+                    const buffer = await export2drc(mesh);
+                    res = await store.dispatch('auth/putFile', {
+                        file: new Blob([buffer.buffer], { type: 'application/octet-stream',}),
+                        path: path,
+                    })
+                } catch(err){
+                    console.log(err);
+                    msg.value = 'File Load failure';
+                }
             }
-        }
-        if (res && res.res.status == 200) {
-            if (ud.type == 6) {
-                m1.upper = res.name;
-                ud.lockBtn |= 2;
-            } else if (ud.type == 2) {
-                m1.lower = res.name;
-                ud.lockBtn |= 4;
+            if (res && res.res.status == 200) {
+                if (ud.type == 6) {
+                    m1.upper = res.name;
+                    ud.lockBtn |= 2;
+                } else if (ud.type == 2) {
+                    m1.lower = res.name;
+                    ud.lockBtn |= 4;
+                }
+                // 0x1 | 0x2 | 0x4 can call Ai
+                console.log('lock btn', ud.lockBtn)
             }
-            // 0x1 | 0x2 | 0x4 can call Ai
-            console.log('lock btn', ud.lockBtn)
         }
         ud.uploading = false;
     }

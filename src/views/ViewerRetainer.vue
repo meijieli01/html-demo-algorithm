@@ -478,7 +478,8 @@ async function handleSelectFile(event) {
                     const mesh = await addColor2Mesh(geo);
                     const buffer = await export2drc(mesh);
                     const noExtFilename = filename.substr(0, filename.lastIndexOf('.'));
-                    filename = `${noExtFilename}.mq`;
+                    // filename =  `${noExtFilename}.mq`;
+                    filename =  ud.type == 6 ? 'cleaned_upper.mq' : 'cleaned_lower.mq';
                     formData.append("files", new Blob([buffer.buffer], { type: 'application/octet-stream',}), filename);
                 } catch(err){
                     console.log(err);

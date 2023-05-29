@@ -368,9 +368,9 @@ function addGeotoScene(geo, filename, path) {
     addColor2Mesh(geo, {name:filename, color:info.color, opacity: info.opacity}).then(mesh=>{
         if (path && path.indexOf('/input/') > 0) {
             const str = path.toLowerCase();
-            if (str.indexOf('/input/lower/') > 0 && mat.lower) {
+            if (str.indexOf('/input/cleaned_lower.mq') > 0 && mat.lower) {
                 mesh.applyMatrix4(mat.lower);
-            } else if (str.indexOf('/input/upper/') > 0 && mat.upper) {
+            } else if (str.indexOf('/input/cleaned_upper.mq') > 0 && mat.upper) {
                 mesh.applyMatrix4(mat.upper);
             }
             mesh.matrixWorldNeedsUpdate = true;
@@ -464,7 +464,8 @@ async function handleSelectFile(event) {
         if (true) {
             const formData = new FormData();
             if (filename.endsWith('.drc') || filename.endsWith('.mq')) {
-                formData.append("files", file, file.name);
+                filename =  ud.type == 6 ? 'cleaned_upper.mq' : 'cleaned_lower.mq';
+                formData.append("files", file, filename);
             } else {
                 //  其他格式转换一下
                 try {

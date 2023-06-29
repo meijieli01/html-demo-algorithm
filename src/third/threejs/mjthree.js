@@ -424,7 +424,7 @@ export class mqThree {
     elContainer.appendChild(elLoading)
     elLoading.style = `position: absolute;left: 0px;top: 0px;width: 100%;height: 100%;z-index: 55; display: flex; flex-direction: column;background-color: rgba(0,0,0,0.2);`
     elLoading.innerHTML = `
-      <div style="width: 100px; margin: auto; text-align: center;"><div id="idMqLoadingText">${this.loadingMsg}</div><img src='/images/loading.svg' dragable="false" /></div>
+      <div style="width: 100px; margin: auto; text-align: center;"><div id="idMqLoadingText">${this.loadingMsg}</div><img src='${import.meta.env.DEV?'':'/web'}/images/loading.svg' dragable="false" /></div>
       <div id="close" style="width: 60px; font-size: 2rem; top: 0; right: 0;position: absolute;">x</div>
     `
     elLoading.addEventListener('click', (event) => {

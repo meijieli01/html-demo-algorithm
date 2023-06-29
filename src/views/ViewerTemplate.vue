@@ -23,6 +23,12 @@
                         <button class="btn btn-primary m-1 btn-sm" v-if="['AI_NightGuard','AI_OpenBite'].includes(tag)" @click="clickLoadShowData(6)" :disabled="getState()">Upload the lower scanned meshes</button>
                     </div>
                 </div>
+                <div class="d-flex flex-wrap" v-if="tag=='AI_NightGuard'">                
+                    <div class="alert alert-info m-1 p-0" role="alert">Bite Open</div>
+                    <select class="form-select" v-model="ud.selOpenbite" @change="selectTimestamp">
+                        <option v-for="(item,i) in info.openBiteList" :key="i" :value="item.value" v-html="item.label"></option>
+                    </select>
+                </div>
                 <div class="d-flex flex-wrap">                
                     <button class="btn btn-primary m-1" @click="clickLoadShowData(3)" :disabled="ud.lockCall" v-html="'Call the AI Algorithm'"></button>
                     <div class="h-100 m-auto d-flex flex-column justify-content-center">
@@ -88,7 +94,12 @@ const info = reactive({
         'AI_NightGuard': 'Upload the upper scanned meshes',
         'AI_BracketRemove': 'Upload the upper or lower scanned mesh',
         'AI_OpenBite': 'Upload the upper scanned meshes',
-    }
+    },
+    openBiteList: [
+        { id: 1, value: '1.0mm', label: '1.0mm' },
+        { id: 2, value: '1.5mm', label: '1.5mm' },
+        { id: 3, value: '4.0mm', label: '4.0mm' },
+    ],
 });
 const ud = reactive({
     type: 0,
@@ -111,6 +122,7 @@ const ud = reactive({
     lockCall: true,
     selTimestamp: {},
     script: null,
+    selOpenbite: '1.5mm',
 });
 const m1 = reactive({
     tempDir: '',
@@ -154,7 +166,10 @@ onBeforeUnmount(() => {
 })
 function parseTime(timestamp) {
     const date = new Date(parseInt(timestamp.tmpDir));
-    const strTid = timestamp.tid ? `${ timestamp.tid} ---  ` : '';
+    let strTid = timestamp.tid ? `${ timestamp.tid}--` : '';
+    if (props.tag == 'AI_NightGuard') {
+        if (timestamp.openBite) strTid += `${timestamp.openBite}--`;
+    }
     return `${strTid}${date.getFullYear()}-${date.getMonth()+1}-${date.getDate()} ${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`;
 }
 function getState() {
@@ -182,13 +197,18 @@ function clickLoadShowData(type) {
         refFile.value.dispatchEvent(new MouseEvent('click'))
     } else if (type == 3) {
         ud.calling = true;
+        const tmp = {tid:'history',needAdd:false};
+        if (props.tag == 'AI_NightGuard') {
+            m1.openBite = ud.selOpenbite;
+            tmp.openBite = ud.selOpenbite;
+        }
         callAi(m1).then(res=>{
             ud.calling = false;
             if (res.code == 200) {
                 ud.lockCall = true;
                 // 新的调用需要缓存记录
-                if (m1.type == 1) {           
-                    updateTimestampData(m1.tempDir, 'history', false);
+                if (m1.type == 1) {                               
+                    updateTimestampData(m1.tempDir, tmp);
                 }
                 ud.pathList = res.data.filter(e=>filterFile(e));
                 updateByPath();
@@ -199,7 +219,8 @@ function clickLoadShowData(type) {
     } else if (type == 4) {
         ud.timestampList.unshift({
             tmpDir: Date.now(),
-            tid: '',
+            tid: null, // 出生时默认为空
+            openBite: null,
         });
         ud.selTimestamp = ud.timestampList[0];
         ud.timestamp = ud.selTimestamp.tmpDir;
@@ -213,22 +234,29 @@ function clickLoadShowData(type) {
                 res.data.forEach(e=>{
                     const strList = e.split(' ');
                     const tmpDir = parseInt(strList[0].split('=').pop());
-                    updateTimestampData(tmpDir, 'history', true);
+                    const t1 = {tid: 'history', needAdd: true};
+                    if (props.tag == 'AI_NightGuard') {
+                        const tmp = strList.filter(e=>e.startsWith('openBite'))[0];
+                        if (tmp) t1.openBite = tmp.split('=')[1];
+                    }
+                    updateTimestampData(tmpDir, t1);
                 })
             }
         })
     }
 }
-function updateTimestampData(tmpDir, tid, isNew) {
+function updateTimestampData(tmpDir, options) {
     // 更新进去
     const tmp = ud.timestampList.filter(e=>e.tmpDir==tmpDir)[0];
     if (tmp) {
-        tmp.tid = tid;
+        tmp.tid = options.tid;
+        tmp.openBite = options.openBite;
     } else {
-        if (isNew) {
+        if (options.needAdd) {
             ud.timestampList.push({
                 tmpDir: tmpDir,
-                tid: 'history',
+                tid: options.tid,
+                openBite: options.openBite,
             });
         }
     }
@@ -236,15 +264,20 @@ function updateTimestampData(tmpDir, tid, isNew) {
     ud.timestampList = JSON.parse(readFromStorage(keyOfLocalStorage, '[]'));
 }
 function selectTimestamp() {
-    const { tmpDir, tid } = ud.selTimestamp || {};
+    const { tmpDir, tid, openBite } = ud.selTimestamp || {};
     ud.lockCall = false;
     m1.tempDir = tmpDir;
+    // 只有新建的tid为空，其他都是历史记录
     if (tid) {
         // 历史记录
         m1.type = 2;
     } else {
         m1.type = 1;
         ud.timestamp = tmpDir;
+    }
+    if (props.tag == 'AI_NightGuard') {
+        m1.openBite = openBite;
+        ud.selOpenbite = openBite;
     }
 }
 function updateByPath() {

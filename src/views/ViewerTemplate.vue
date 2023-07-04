@@ -200,7 +200,14 @@ function parseTime(timestamp) {
     const date = new Date(parseInt(timestamp.tmpDir));
     let strTid = timestamp.tid ? `${ timestamp.tid}--` : '';
     if (props.tag == 'AI_NightGuard') {
-        if (timestamp.param) strTid += `${'xx'}--`;
+        if (timestamp.param) {
+            strTid = '';
+            const t2 = timestamp.param;
+            strTid += `${t2.move_distance}--`;
+            strTid += `${t2.mode}--`;
+            strTid += `${t2.openbite}--`;
+            strTid += `${t2.occ_thickness}--`;
+        }
     }
     return `${strTid}${date.getFullYear()}-${date.getMonth()+1}-${date.getDate()} ${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`;
 }
@@ -265,10 +272,10 @@ function clickLoadShowData(type) {
                 res.data.forEach(e=>{
                     const strList = e.split(' ');
                     const tmpDir = parseInt(strList[0].split('=').pop());
-                    const t1 = {tid: 'history', needAdd: true};
+                    const t1 = { tid: 'history', needAdd: true, param: null };
                     if (props.tag == 'AI_NightGuard') {
-                        const tmp = strList.filter(e=>e.startsWith('param'))[0];
-                        if (tmp) t1.param = JSON.parse(tmp.split('=')[1]);
+                        const t2 = strList.filter(e=>e.startsWith('param'))[0];
+                        if (t2 && t2.length > 6) t1.param = JSON.parse(t2.split('=')[1]);
                     }
                     updateTimestampData(tmpDir, t1);
                 })
@@ -308,6 +315,7 @@ function selectTimestamp() {
     }
     if (props.tag == 'AI_NightGuard') {
         for (let k in param) {
+            console.log('22aa', k, param[k])
             if (m1a[k]) m1a[k] = param[k];
         }
     }

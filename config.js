@@ -31,12 +31,13 @@ export const vInfo = {
         ],
     },
     'AI_NightGuard': {
-        version: '1.6.1',
+        version: '1.6.2',
         changelog: [
-            '2023-6-28',
-            '1. add movedown mode test (for now, it is movedown mode).',
-            '2. the movedown mode set as move down 4mm.',
-            '3. if you want to change back to close bite mode , please slack me or send email to  yangjingtao@soonsolid.com.',
+            '2023-7-4',
+            '1. add parameter option for test.',
+            '2. combine the openbite mode in this part.',
+            '3. change showing lowerjaw to openlower, improve the showing result.',
+            '4. improve the error msg show.',
             '2023-5-19',
             '1. solve the sharp edge problem',
             '2. fix the problem that loose teeth part need extra long time',

@@ -158,7 +158,7 @@ const m1a = reactive({
     move_distance: '0.0',
     mode: '0',
     openbite: '0',
-    occ_thickness: '1.0',
+    occ_thickness: '1.5',
 });
 const appThree = new mqThree();
 const keyOfLocalStorage = `keyOfLocalStorage${props.tag}`;

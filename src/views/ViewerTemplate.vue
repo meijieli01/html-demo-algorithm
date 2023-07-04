@@ -24,9 +24,21 @@
                     </div>
                 </div>
                 <div class="d-flex flex-wrap" v-if="tag=='AI_NightGuard'">                
-                    <div class="alert alert-info m-1 p-0" role="alert">Bite Open</div>
-                    <select class="form-select" v-model="ud.selOpenbite" @change="selectTimestamp">
-                        <option v-for="(item,i) in info.openBiteList" :key="i" :value="item.value" v-html="item.label"></option>
+                    <div class="alert alert-info m-1 p-0" role="alert">Move Down</div>
+                    <select class="form-select" v-model="m1a.move_distance">
+                        <option v-for="(item,i) in info.moveDownList" :key="i" :value="item.value" v-html="item.label"></option>
+                    </select>
+                    <div class="alert alert-info m-1 p-0" role="alert">Model Choose</div>
+                    <select class="form-select" v-model="m1a.mode">
+                        <option v-for="(item,i) in info.modelList" :key="i" :value="item.value" v-html="item.label"></option>
+                    </select>
+                    <div class="alert alert-info m-1 p-0" role="alert">Openbite or Closebite</div>
+                    <select class="form-select" v-model="m1a.openbite">
+                        <option v-for="(item,i) in info.biteList" :key="i" :value="item.value" v-html="item.label"></option>
+                    </select>
+                    <div class="alert alert-info m-1 p-0" role="alert">Occlusion Thickness</div>
+                    <select class="form-select" v-model="m1a.occ_thickness">
+                        <option v-for="(item,i) in info.thicknessList" :key="i" :value="item.value" v-html="item.label"></option>
                     </select>
                 </div>
                 <div class="d-flex flex-wrap">                
@@ -95,10 +107,24 @@ const info = reactive({
         'AI_BracketRemove': 'Upload the upper or lower scanned mesh',
         'AI_OpenBite': 'Upload the upper scanned meshes',
     },
-    openBiteList: [
-        { id: 1, value: '1.0mm', label: '1.0mm' },
-        { id: 2, value: '1.5mm', label: '1.5mm' },
-        { id: 3, value: '4.0mm', label: '4.0mm' },
+    moveDownList: [
+        { id: 0, value: '0.0', label: '0.0mm' },
+        { id: 1, value: '1.0', label: '1.0mm' },
+        { id: 2, value: '1.5', label: '1.5mm' },
+        { id: 3, value: '4.0', label: '4.0mm' },
+    ],
+    modelList: [
+        { id: 0, value: '0', label: 'upper smooth' },
+        { id: 1, value: '1', label: 'upper occlusion' },
+    ],
+    biteList: [
+        { id: 0, value: '0', label: 'Closebite' },
+        { id: 1, value: '1', label: 'Openbite' },
+    ],
+    thicknessList: [
+        { id: 1, value: '1.0', label: '1.0mm' },
+        { id: 2, value: '1.5', label: '1.5mm' },
+        { id: 3, value: '2.0', label: '2.0mm' },
     ],
 });
 const ud = reactive({
@@ -122,11 +148,17 @@ const ud = reactive({
     lockCall: true,
     selTimestamp: {},
     script: null,
-    selOpenbite: '1.5mm',
 });
 const m1 = reactive({
     tempDir: '',
     tag: props.tag,
+    param: '', // 
+});
+const m1a = reactive({
+    move_distance: '0.0',
+    mode: '0',
+    openbite: '0',
+    occ_thickness: '1.0',
 });
 const appThree = new mqThree();
 const keyOfLocalStorage = `keyOfLocalStorage${props.tag}`;
@@ -168,7 +200,7 @@ function parseTime(timestamp) {
     const date = new Date(parseInt(timestamp.tmpDir));
     let strTid = timestamp.tid ? `${ timestamp.tid}--` : '';
     if (props.tag == 'AI_NightGuard') {
-        if (timestamp.openBite) strTid += `${timestamp.openBite}--`;
+        if (timestamp.param) strTid += `${'xx'}--`;
     }
     return `${strTid}${date.getFullYear()}-${date.getMonth()+1}-${date.getDate()} ${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`;
 }
@@ -199,8 +231,7 @@ function clickLoadShowData(type) {
         ud.calling = true;
         const tmp = {tid:'history',needAdd:false};
         if (props.tag == 'AI_NightGuard') {
-            m1.openBite = ud.selOpenbite;
-            tmp.openBite = ud.selOpenbite;
+            m1.param = JSON.stringify(m1a);
         }
         callAi(m1).then(res=>{
             ud.calling = false;
@@ -220,7 +251,7 @@ function clickLoadShowData(type) {
         ud.timestampList.unshift({
             tmpDir: Date.now(),
             tid: null, // 出生时默认为空
-            openBite: null,
+            param: null,
         });
         ud.selTimestamp = ud.timestampList[0];
         ud.timestamp = ud.selTimestamp.tmpDir;
@@ -236,8 +267,8 @@ function clickLoadShowData(type) {
                     const tmpDir = parseInt(strList[0].split('=').pop());
                     const t1 = {tid: 'history', needAdd: true};
                     if (props.tag == 'AI_NightGuard') {
-                        const tmp = strList.filter(e=>e.startsWith('openBite'))[0];
-                        if (tmp) t1.openBite = tmp.split('=')[1];
+                        const tmp = strList.filter(e=>e.startsWith('param'))[0];
+                        if (tmp) t1.param = JSON.parse(tmp.split('=')[1]);
                     }
                     updateTimestampData(tmpDir, t1);
                 })
@@ -250,13 +281,13 @@ function updateTimestampData(tmpDir, options) {
     const tmp = ud.timestampList.filter(e=>e.tmpDir==tmpDir)[0];
     if (tmp) {
         tmp.tid = options.tid;
-        tmp.openBite = options.openBite;
+        tmp.param = options.param;
     } else {
         if (options.needAdd) {
             ud.timestampList.push({
                 tmpDir: tmpDir,
                 tid: options.tid,
-                openBite: options.openBite,
+                param: options.param,
             });
         }
     }
@@ -264,7 +295,7 @@ function updateTimestampData(tmpDir, options) {
     ud.timestampList = JSON.parse(readFromStorage(keyOfLocalStorage, '[]'));
 }
 function selectTimestamp() {
-    const { tmpDir, tid, openBite } = ud.selTimestamp || {};
+    const { tmpDir, tid, param } = ud.selTimestamp || {};
     ud.lockCall = false;
     m1.tempDir = tmpDir;
     // 只有新建的tid为空，其他都是历史记录
@@ -276,8 +307,9 @@ function selectTimestamp() {
         ud.timestamp = tmpDir;
     }
     if (props.tag == 'AI_NightGuard') {
-        m1.openBite = openBite;
-        ud.selOpenbite = openBite;
+        for (let k in param) {
+            if (m1a[k]) m1a[k] = param[k];
+        }
     }
 }
 function updateByPath() {

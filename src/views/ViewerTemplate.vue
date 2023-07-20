@@ -24,10 +24,10 @@
                     </div>
                 </div>
                 <div class="d-flex flex-wrap" v-if="tag=='AI_NightGuard'">                
-                    <div class="alert alert-info m-1 p-0" role="alert">Move Down</div>
+                    <!-- <div class="alert alert-info m-1 p-0" role="alert">Move Down</div>
                     <select class="form-select" v-model="m1a.move_distance">
                         <option v-for="(item,i) in info.moveDownList" :key="i" :value="item.value" v-html="item.label"></option>
-                    </select>
+                    </select> -->
                     <div class="alert alert-info m-1 p-0" role="alert">Model Choose</div>
                     <select class="form-select" v-model="m1a.mode">
                         <option v-for="(item,i) in info.modelList" :key="i" :value="item.value" v-html="item.label"></option>
@@ -203,7 +203,7 @@ function parseTime(timestamp) {
         if (timestamp.param) {
             strTid = '';
             const t2 = timestamp.param;
-            strTid += `${t2.move_distance}--`;
+            // strTid += `${t2.move_distance}--`;
             strTid += `${t2.mode}--`;
             strTid += `${t2.openbite}--`;
             strTid += `${t2.occ_thickness}--`;

@@ -8,8 +8,10 @@ export function getFavicon() {
 
 export const vInfo = {
     'IMPLANT': {
-        version: '0.4.0',
+        version: '0.5.0',
         changelog: [
+            '2023-8-2',
+            '1. Optimized guide details including windows, orientation, and edges.',
             '2023-6-5',
             '1. Adding the ability to generate implant guides. (Limited to cases with one missing tooth).',
             '2023-5-10',

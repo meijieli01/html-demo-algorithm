@@ -33,8 +33,13 @@ export const vInfo = {
         ],
     },
     'AI_NightGuard': {
-        version: '1.6.2',
+        version: '1.6.3',
         changelog: [
+            '2023-9-7',
+            '1. Add Lower NightGuard generate part.',
+            '2. Lower NightGuard control in Model Choose.',
+            '3. It contains lower smooth and lower occlusion.',
+            '4. Add corresponding openbite output view.',
             '2023-7-4',
             '1. add parameter option for test.',
             '2. combine the openbite mode in this part.',

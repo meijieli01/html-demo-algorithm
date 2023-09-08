@@ -116,6 +116,8 @@ const info = reactive({
     modelList: [
         { id: 0, value: '0', label: 'upper smooth' },
         { id: 1, value: '1', label: 'upper occlusion' },
+        { id: 2, value: '2', label: 'lower smooth' },
+        { id: 3, value: '3', label: 'lower occlusion' },
     ],
     biteList: [
         { id: 0, value: '0', label: 'Closebite' },

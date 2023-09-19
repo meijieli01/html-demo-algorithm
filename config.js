@@ -10,6 +10,8 @@ export const vInfo = {
     'IMPLANT': {
         version: '0.5.0',
         changelog: [
+            '2023-9-14',
+            '1. Optimized implant orientation and guide details.',
             '2023-8-2',
             '1. Optimized guide details including windows, orientation, and edges.',
             '2023-6-5',

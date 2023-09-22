@@ -18,9 +18,9 @@ const primaryTeethList = [
 export const colorTidEven = '#C41773';
 export const colorTidOdd = '#20CB3C';
 const colorCrown = '#808080';
-const colorTransXXX = '#34B249';
-const colorImplantGuid = '#C62A2A';
-const colorNerve = '#891FA6';
+const colorTransXXX = '#A3A8A7';
+const colorImplantGuid = '#635DB1';
+const colorNerve = '#C000F5';
 const colorOfTeethList = {
     '18': '#80561e',
     '17': '#438299',

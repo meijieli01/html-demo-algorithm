@@ -27,11 +27,14 @@ const actions = {
     return new Promise((resolve, reject) => {
       adminLogin(loginForm)
         .then((res) => {
-          commit('setToken', res.data)
-          sessionStorage.setItem('token', res.data)
-          resolve()
-        })
-        .catch((error) => {
+          if (res.code == 200) {
+              commit('setToken', res.data)
+              sessionStorage.setItem('token', res.data)
+              resolve()
+          } else {
+            reject(res.message);
+          }
+        }).catch((error) => {
           reject(error)
         })
     })
@@ -93,6 +96,7 @@ const actions = {
       sessionStorage.removeItem('token')
       commit('setToken', '')
       commit('setInfo', {})
+      router.push({path:'/login'});
       resolve()
     })
   },

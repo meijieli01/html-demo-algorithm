@@ -23,8 +23,13 @@ export const vInfo = {
         ],
     },
     'CROWN': {
-        version: '0.3.0',
+        version: '0.6.0',
         changelog: [
+            '2023-10-23',
+            '1. Supports crown generation for tooth 17,27,37,47',
+            '2. Optimize crown form by adding tooth feature points',
+            '3. Optimize crown margins',
+            '4. Fine-tune the occlusion, adjacent tooth relationship, thickness, etc',
             '2023-5-12',
             '1. Optimize the distance between the crown with adjacent teeth, prepared teeth, and opposing teeth',
             '2. Optimize the neck line of the crown',

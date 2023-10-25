@@ -23,7 +23,6 @@ service.interceptors.request.use(
 service.interceptors.response.use(
   (response) => {
     const res = response.data
-    if (res.code !== 200) console.error(res.message);
     return res;
   },
   (error) => {

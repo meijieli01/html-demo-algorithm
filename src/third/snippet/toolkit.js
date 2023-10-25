@@ -23,6 +23,9 @@ export function saveExcel(blob, filename) {
 
 // 时间
 // 获取当前时区时间
+/**
+ * @deprecated moveto toolDatetime
+ */
 export function getLocalNow(timeStamp = Date.now()) {
     let tzOffset = new Date().getTimezoneOffset() * 60000;
     return new Date(timeStamp - tzOffset);
@@ -31,12 +34,18 @@ export function getLocalNow(timeStamp = Date.now()) {
 function formatYyyyMMdd(year, month, date) {
     return `${year.toString()}-${month.toString().padStart(2, '0')}-${date.toString().padStart(2, '0')}`;
 }
+/**
+ * @deprecated moveto toolDatetime
+ */
 export function getYyyyMMDD(timeStamp = Date.now()) {
     const tmp = getLocalNow(timeStamp);
     return formatYyyyMMdd(tmp.getFullYear(), tmp.getMonth()+1, tmp.getDate());
 }
 // for mac, not support new Date(str)
 // 接收str的时间格式是 str 2003-10-15 00:00:00
+/**
+ * @deprecated moveto toolDatetime
+ */
 export function toISODatetime(str) {
     if (navigator.userAgent.includes('Mac OS')) {
         let tmp = getLocalNow();
@@ -56,7 +65,9 @@ function getHHMMSS(strTime) {
     return `${strTime.match(timePattern)[0] || ''}`;
 }
 
-// 
+/**
+ * @deprecated moveto domLib
+ */
 export function dynImportScriptFile(srcPath) {
     let elScript = document.createElement('script');
     elScript.type = 'text/javascript';

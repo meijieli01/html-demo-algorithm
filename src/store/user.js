@@ -1,6 +1,19 @@
 import { adminLogin } from '../api/admin';
 import router, {mapComponent2LocalFile} from '../router';
-import { getRootRouter, emptyRouter } from '../third/snippet/hooks/menuRoute';
+import LayoutViewer from '../views/layout/LayoutViewer.vue';
+export const emptyRouter = {
+  path: '',
+  meta: { },
+  children: [],
+}
+export function getRootRouter() {
+  return {
+    path: '/viewer',
+    component: LayoutViewer,
+    meta: { },
+    children: [],
+  }
+}
 
 const state = {
   token: sessionStorage.getItem('token'),
@@ -27,11 +40,14 @@ const actions = {
     return new Promise((resolve, reject) => {
       adminLogin(loginForm)
         .then((res) => {
-          commit('setToken', res.data)
-          sessionStorage.setItem('token', res.data)
-          resolve()
-        })
-        .catch((error) => {
+          if (res.code == 200) {
+              commit('setToken', res.data)
+              sessionStorage.setItem('token', res.data)
+              resolve()
+          } else {
+            reject(res.message);
+          }
+        }).catch((error) => {
           reject(error)
         })
     })
@@ -40,7 +56,7 @@ const actions = {
   getInfo({ commit, rootGetters  }) {
     return new Promise((resolve, reject) => {
       if (true) {
-        const root = Object.assign({}, getRootRouter('front', 'viewer'), {meta:{},children:[]});
+        const root = Object.assign({}, getRootRouter(), {meta:{},children:[]});
         root.meta.label = 'viewerRoot';
         root.meta.code = '1000';
         root.meta.id = '100';
@@ -93,6 +109,7 @@ const actions = {
       sessionStorage.removeItem('token')
       commit('setToken', '')
       commit('setInfo', {})
+      router.push({path:'/login'});
       resolve()
     })
   },

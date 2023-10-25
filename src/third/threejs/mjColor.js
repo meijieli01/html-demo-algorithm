@@ -18,6 +18,9 @@ const primaryTeethList = [
 export const colorTidEven = '#C41773';
 export const colorTidOdd = '#20CB3C';
 const colorCrown = '#808080';
+const colorTransXXX = '#A3A8A7';
+const colorImplantGuid = '#635DB1';
+const colorNerve = '#C000F5';
 const colorOfTeethList = {
     '18': '#80561e',
     '17': '#438299',
@@ -65,6 +68,18 @@ export function getCtMeshMaterialByName(name) {
     }
     if (name.startsWith('mesh_')) {
         info.color = colorCrown;
+        return info;
+    }
+    if (name.startsWith('trans_')) {
+        info.color = colorTransXXX;
+        return info;
+    }
+    if (name.startsWith('implant_guide')) {
+        info.color = colorImplantGuid;
+        return info;
+    }
+    if (name.startsWith('nerve')) {
+        info.color = colorNerve;
         return info;
     }
     const tid = name.replace(/[^1-9]/gi,'');

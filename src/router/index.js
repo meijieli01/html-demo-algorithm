@@ -10,9 +10,9 @@ const routes = [
 ]
 
 export const mapComponent2LocalFile = {
-  'CT': {
-    component: () => import('../views/Viewer.vue'),
-    functionName: 'CT',
+  'IMPLANT': {
+    component: () => import('../views/ViewerImplant.vue'),
+    functionName: 'Implant',
     functionCode: 'ViewerCT',
     functionId: '101',
   },
@@ -23,16 +23,28 @@ export const mapComponent2LocalFile = {
     functionId: '102',
   },
   'NIGHT': {
-    component: () => import('../views/NightGuard.vue'),
+    component: () => import('../views/one/NightGuard.vue'),
     functionName: 'NightGuard',
-    functionCode: 'ViewerCrown',
+    functionCode: 'ViewerNight',
     functionId: '103',
   },
+  'NGRETAINER': {
+    component: () => import('../views/one/NGRetainer.vue'),
+    functionName: 'NGRetainer',
+    functionCode: 'ViewerNGRetainer',
+    functionId: '106',
+  },
   'BRACKER': {
-    component: () => import('../views/BrackerRemove.vue'),
-    functionName: 'BracketRemove',
-    functionCode: 'ViewerCrown',
+    component: () => import('../views/one/BrackerRemove.vue'),
+    functionName: 'BracketRemoval',
+    functionCode: 'ViewerBracket',
     functionId: '104',
+  },
+  'RETAINER': {
+    component: () => import('../views/ViewerRetainer.vue'),
+    functionName: 'Retainer',
+    functionCode: 'ViewerRetainer',
+    functionId: '105',
   },
 }
 

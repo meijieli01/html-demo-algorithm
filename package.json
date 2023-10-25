@@ -1,6 +1,6 @@
 {
   "name": "viewer",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "scripts": {
     "dev": "vite",
     "test-build": "npm run css && vite build --mode test && node postprocessbuild",
@@ -10,9 +10,10 @@
     "api": "node createapi.js"
   },
   "dependencies": {
+    "ali-oss": "^6.17.1",
     "axios": "^0.21.1",
     "qs": "^6.11.1",
-    "three": "^0.128.0",
+    "three": "^0.151.3",
     "vue": "^3.0.5",
     "vue-router": "^4.0.0",
     "vuex": "^4.0.0"

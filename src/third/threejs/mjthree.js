@@ -15,6 +15,9 @@ import {
   DirectionalLight,
   PointLight,
   Quaternion,
+  Raycaster,
+  Vector2,
+  ArrowHelper,
 } from 'three'
 import { TrackballControls } from 'three/examples/jsm/controls/TrackballControls'
 import { TrackerResource } from './mjTrack';
@@ -38,8 +41,11 @@ function initialSequence() {
 }
 initialSequence()
 
+const mjRayCaster = new Raycaster();
+
 export class mqThree {
   constructor() {
+    this.options = {};
     // 宽高
     this.rc = {
       width: 0,
@@ -58,11 +64,15 @@ export class mqThree {
     this.group = new Group();
     this.group.name = 'group';
     this.scene.add(this.group);
+    this.dpr = window.devicePixelRatio;
   }
   init(options = {}) {
+    this.options = options;
+    this.options.cameraPositionZ = options.cameraPositionZ || 90; // 一般牙颌模型大小在70到80左右
     const {rc} = this;
     rc.width = options.width;
     rc.height = options.height;
+    if (options.devicePixelRatio) this.dpr = options.devicePixelRatio;
     if (options.container instanceof HTMLElement) {
       if (options.container instanceof HTMLCanvasElement) {
         this.renderer = new WebGLRenderer({
@@ -85,7 +95,7 @@ export class mqThree {
       throw new Error('container is not a HTMLElement or Canvas')
     }
     this.resetCamera();
-    this.renderer.setClearColor(new Color(0xffffff), 1)
+    this.renderer.setClearColor(new Color(options.clearColor || 0xffffff), 1)
     if (options.useControl) {
       this.useControl = true;
       this.updateControl();
@@ -95,21 +105,26 @@ export class mqThree {
     this.updateFrame();
     
     const winResize = () => {
-      this.resize();
+      const {domElement} = this.renderer;
+      const {clientWidth, clientHeight} = domElement.parentElement;
+      this.resize(clientWidth, clientHeight);
     }
     window.removeEventListener('resize', winResize);
     window.addEventListener('resize', winResize);
-    this.resize();
+    this.resize(rc.width, rc.height);
     this.initLight();
   }
   initLight() {
-    const {scene} = this;
+    const {scene, options} = this;
+    const pointIntensity = options.pointIntensity || 1;
+    const pointDistance = options.pointDistance || 500;
+    const ambientIntensity = options.ambientIntensity || 0.3;
     // 灯光
-    const ambientLight = new AmbientLight(0xffffff, 0.3)
-    const directionLight = new DirectionalLight(0xffffff, 0.3)
+    const ambientLight = new AmbientLight(0xffffff, ambientIntensity)
+    const directionLight = new DirectionalLight(0xffffff, ambientIntensity)
     // let fog = new Fog(0xffffff, 0, 60)
-    const pointLight1 = new PointLight(0xffffff, 1, 500, 2)
-    const pointLight2 = new PointLight(0xffffff, 1, 500, 2)
+    const pointLight1 = new PointLight(0xffffff, pointIntensity, pointDistance, 2)
+    const pointLight2 = new PointLight(0xffffff, pointIntensity, pointDistance, 2)
     pointLight1.position.set(0, 200, 0)
     pointLight2.position.set(0, -200, 0)
     if (directionLight.isDirectionalLight) {
@@ -149,8 +164,6 @@ export class mqThree {
     const height = h || canvas.height
     const isChange = canvas.width !== width || canvas.height !== height
     if (isChange || force) {
-      rc.width = width
-      rc.height = height
       if (camera) {
         camera.aspect = canvas.width / canvas.height
         camera.updateProjectionMatrix()
@@ -164,7 +177,8 @@ export class mqThree {
   }
   getBox() {
     function getBoundingBox(root, bbx) {
-      if (root.geometry) {
+      // 可见的才计算
+      if (root.geometry && root.visible) {
         root.geometry.computeBoundingBox()
         bbx.union(root.geometry.boundingBox)
       } else {
@@ -185,9 +199,11 @@ export class mqThree {
   updateCameraViewport() {
     const { renderer, group, camera} = this;
     const { size, center } = this.getBox();
-    group.position.set(0, 0, 0)
-    group.position.add(center.multiplyScalar(-1))
-    let maxside = Math.max(size.x, size.y, size.z) / 2
+    group.position.set(0, 0, 0);
+    group.position.add(center.multiplyScalar(-1));
+    // console.log('box', center)
+    // 只需要调整平面的，不是所有轴向的，因为视角的轴向是X0Y平面的
+    let maxside = Math.max(size.x, size.y) / 2;
     let ratio = renderer.domElement.width / renderer.domElement.height;
     let fitSideH = maxside * Math.sqrt(3);
     let fitSideV = fitSideH / ratio;
@@ -226,26 +242,27 @@ export class mqThree {
   }
   updateControl() {
     const {camera, renderer, useControl} = this;
-    if (!useControl) return
+    if (!useControl) return;
     if (!this.control) {
       const control = new TrackballControls(camera, renderer.domElement);
       // control.enabled = false;
-      control.zoomSpeed = 3.5
-      control.panSpeed = 2.5
-      control.rotateSpeed = 2.2
-      control.noZoom = false
-      control.noPan = false
-      control.noRotate = false
-      control.staticMoving = false
-      control.dynamicDampingFactor = 0.3
-      control.keys = [65, 83, 68]
+      control.zoomSpeed = 3.5;
+      control.panSpeed = 2.5;
+      control.rotateSpeed = 2.2;
+      control.noZoom = false;
+      control.noPan = false;
+      control.noRotate = false;
+      control.staticMoving = false;
+      control.dynamicDampingFactor = 0.3;
+      control.keys = [65, 83, 68];
       control.addEventListener('change', () => {
+        // console.log('control update', this.camera)
         this.updateFrame();
-      })
+      });
       this.control = control;
     }
     if (this.control.screen.width < 1 || this.control.screen.height < 1) {
-      this.control.handleResize()
+      this.control.handleResize();
     }
     this.control.update();
   }
@@ -480,13 +497,28 @@ export class mqThree {
   }
   resetCamera() {
     this.camera = new OrthographicCamera(-1, 1, 1, -1, 0.1, 10000);
-    this.camera.position.set(0, 0, 90)
-    // camera.position = new Vector3(0, 0, 90)
-    // camera.quaternion  = new Quaternion(0, 0, 0, 1)
-    // camera.scale = new Vector3(1, 1, 1)
-    // camera.updateMatrix()
-    // camera.updateMatrixWorld()
-    // // console.log('-reset camera-', Date.now())
+    this.camera.position.set(0, 0, this.options.cameraPositionZ);
+  }
+  setCameraType(data) {
+    this.control.reset();
+    this.camera.lookAt(0, 0, 0);
+    this.camera.up.set(0, 1, 0);
+    this.camera.position.set(0, 0, this.options.cameraPositionZ); 
+    this.camera.quaternion.identity();
+    this.camera.scale.set(1,1,1);   
+    const updateField = (field) => {
+      if (data[field]) {
+        if (Array.isArray(data[field])) this.camera[field].set(...data[field]);
+        else this.camera[field].copy(data[field]);
+      }  
+    }
+    updateField('up');
+    updateField('position');
+    updateField('rotation');
+    this.camera.updateProjectionMatrix();	
+    this.updateCameraViewport();
+    this.control.update();
+    this.updateFrame();
   }
   addAxes(size) {
     const {scene, track} = this;
@@ -505,11 +537,28 @@ export class mqThree {
     this.updateCameraViewport();
     this.updateFrame()
   }
+  getByName(meshName) {
+    const {group} = this;
+    const tmpList = group.children.filter((e) => e.name == meshName);
+    if (tmpList.length > 0) return tmpList[0];
+    return null;
+    // throw `not found mesh by ${meshName}`;
+  }
+  getByUuid(uuid) {
+    const {group} = this;
+    const tmpList = group.children.filter((e) => e.uuid == uuid);
+    if (tmpList.length > 0) return tmpList[0];
+    return null;
+  }
+  traverse(cb) {
+    const {group} = this;
+    group.traverse(cb);
+  }
   removeByName(meshName) {
     const {group} = this;
-    let child = group.children.filter((e) => e.name == meshName)
-    if (child.length > 0) {
-      group.remove(child[0]);
+    const tmpList = group.children.filter((e) => e.name == meshName);
+    if (tmpList.length > 0) {
+      group.remove(tmpList[0]);
     }
     this.updateFrame()
   }
@@ -568,5 +617,50 @@ export class mqThree {
         resolve(canvas.toDataURL('image/png', 0.8))
       }
     })
+  }
+  /**
+   * 获取相对的位置
+   */
+  getCanvasRelativePosition(event) {
+    const {domElement} = this.renderer;
+    const rect = domElement.getBoundingClientRect();
+    return {
+      x: (event.clientX - rect.left) * domElement.width  / rect.width,
+      y: (event.clientY - rect.top ) * domElement.height / rect.height,
+    };
+  }
+  pickVisibleMesh({x, y}, options = {}) {
+    const {camera, group, rc, dpr} = this;
+    const pointer = new Vector2();
+    // screen to (-1, 1)
+    pointer.x = (x / rc.width / dpr) * 2 - 1;
+    pointer.y = -(y / rc.height / dpr) * 2 + 1;
+    mjRayCaster.setFromCamera(pointer, camera);
+    const visibleMesh = group.children.filter(e=>e.visible);
+    if (visibleMesh.length > 0) {
+      const intersects = options.all ? mjRayCaster.intersectObjects(visibleMesh) : mjRayCaster.intersectObject(visibleMesh[0]);
+      if (intersects.length > 0) {
+        return intersects;
+      }
+    }
+    return [];
+  }
+  worldToView(pos) {
+    const {group} = this;
+    // this.echoRaycaster();
+    // return pos.clone();
+    return pos.clone().applyMatrix4(group.matrix.clone().invert());
+  }
+  echoRaycaster() {
+    const {scene} = this;
+    const arrowHelper = new ArrowHelper( mjRayCaster.ray.direction, mjRayCaster.ray.origin, 100, 0xff0000);
+    scene.add(arrowHelper)
+  }
+  clearPickPoint() {
+    const {group} = this;
+    const visibleMesh = group.children.filter(e=>e.visible)[0];
+    const childList = visibleMesh.children.filter(e=>e.name.startsWith('pick--'));
+    childList.forEach(e=>visibleMesh.remove(e));
+    this.updateFrame();
   }
 }

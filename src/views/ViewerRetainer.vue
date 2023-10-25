@@ -1,5 +1,9 @@
 <template>
     <ViewerBase ref="elViewer">
+        <div>
+            <div class="alert alert-info m-1 p-0 my-auto" role="alert" v-html="'Custom ID'"></div>
+            <input class="form-control" v-model="ud.customId" type="text" />
+        </div>  
         <div class="d-flex flex-wrap">
             <button class="btn btn-primary m-1 btn-sm" @click="clickLoadShowData(1)" v-if="isDev" v-html="'Local Test to Show'"></button>
             <button class="btn btn-primary m-1 btn-sm" @click="clickLoadShowData(4)" v-html="'New Timestamp'"></button>
@@ -14,41 +18,20 @@
                         <option v-for="(item,i) in ud.timestampList" :key="i" :value="item" v-html="parseTime(item)"></option>
                     </select>
                 </div>
-                <div class="d-flex flex-wrap">
-                    <button class="btn btn-primary m-1 btn-sm" @click="clickLoadShowData(2)" :disabled="getState()" v-html="info.btn1Label[tag]"></button>
-                    <button class="btn btn-primary m-1 btn-sm" v-if="['AI_NightGuard','AI_Retainer'].includes(tag)" @click="clickLoadShowData(6)" :disabled="getState()">Upload the lower scanned meshes</button>
+                <div class="d-flex flex-column flex-wrap">
+                    <div class="alert alert-info m-1 p-0 my-auto" role="alert">Current is {{msg1}}</div>
+                    <button class="btn btn-primary m-1 btn-sm" @click="clickLoadShowData(6)" :disabled="getState()" >Upload the upper scanned meshes</button>
+                    <button class="btn btn-primary m-1 btn-sm" @click="clickLoadShowData(2)" :disabled="getState()" >Upload the lower scanned meshes</button>
                 </div>
             </div>
-            <div class="d-flex flex-wrap" v-if="tag=='AI_NightGuard'">                
-                <!-- <div class="alert alert-info m-1 p-0" role="alert">Move Down</div>
-                <select class="form-select" v-model="m1a.move_distance">
-                    <option v-for="(item,i) in info.moveDownList" :key="i" :value="item.value" v-html="item.label"></option>
-                </select> -->
-                <div class="alert alert-info m-1 p-0" role="alert">Model Choose</div>
-                <select class="form-select" v-model="m1a.mode">
-                    <option v-for="(item,i) in info.modelList" :key="i" :value="item.value" v-html="item.label"></option>
-                </select>
-                <div class="alert alert-info m-1 p-0" role="alert">Openbite or Closebite</div>
-                <select class="form-select" v-model="m1a.openbite">
-                    <option v-for="(item,i) in info.biteList" :key="i" :value="item.value" v-html="item.label"></option>
-                </select>
-                <div class="alert alert-info m-1 p-0" role="alert">Occlusion Thickness</div>
-                <select class="form-select" v-model="m1a.occ_thickness">
-                    <option v-for="(item,i) in info.thicknessList" :key="i" :value="item.value" v-html="item.label"></option>
-                </select>
-            </div>
-            <div class="d-flex flex-wrap" v-if="tag=='AI_Retainer'">                
-                <div class="alert alert-info m-1 p-0" role="alert">Model Choose</div>
-                <select class="form-select" v-model="m1b.mode">
-                    <option v-for="(item,i) in info.modelListRetainer" :key="i" :value="item.value" v-html="item.label"></option>
-                </select>
-                <div class="alert alert-info m-1 p-0" role="alert">Occlusion Thickness</div>
-                <select class="form-select" v-model="m1b.occ_thickness">
-                    <option v-for="(item,i) in info.thicknessListRetainer" :key="i" :value="item.value" v-html="item.label"></option>
-                </select>
-            </div>
             <div class="d-flex flex-wrap">                
-                <button class="btn btn-primary m-1" @click="clickLoadShowData(3)" :disabled="ud.lockCall" v-html="'Call the AI Algorithm'"></button>
+                <div class="d-flex">
+                    <button class="btn btn-primary m-1" @click="clickLoadShowData(3)" :disabled="ud.lockUpload==1?false: ud.lockBtn !== 7" v-html="'Call the AI Algorithm'"></button>
+                    <div class="d-flex m-auto">
+                        <input class="form-check-input m-1" type="checkbox" v-model="m1.isShell" value="" id="shellHollow">
+                        <label class="form-check-label" for="shellHollow">Hollow</label>
+                    </div>
+                </div>
                 <div class="h-100 m-auto d-flex flex-column justify-content-center">
                     <div class="spinner-border text-primary" role="status" v-if="ud.calling"></div>
                 </div>
@@ -68,6 +51,7 @@
                 <div class="alert alert-danger p-1 m-1" role="alert" v-html="item.name"></div>
             </div>
         </div>
+        <SubChangeLog :tag="tag" />
         <div class="">
             <div class="d-flex" v-for="(item,i) in ud.infoList" :key="i">
                 <input type="color" class="form-control" :value="item.color" @change="inputChangeColorUpdate($event,item)" style="width:60px;" />
@@ -76,10 +60,8 @@
                     <input class="form-check-input" type="checkbox" :checked="item.check" @change="inputChangeUpdate(item)" />
                     <label class="form-check-label" for="flexSwitchCheckDefault" v-html="item.filename"></label>
                 </div>
-                <button class="btn btn-primary btn-sm" v-if="showDownload(null, item)" @click="showDownload($event, item, 'download')">Download</button>
             </div>
         </div>
-        <SubChangeLog :tag="tag" />
         <!-- <input type="file" webkitdirectory ref="refFile" @change="handleSelectFile($event)" hidden /> -->
         <input type="file" ref="refFile" @change="handleSelectFile($event)" hidden />
         <!-- <input type="file" multiple ref="refFile" @change="handleSelectFile($event)" hidden /> -->
@@ -87,7 +69,8 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue';
+import { ref, reactive, onMounted, onBeforeUnmount } from 'vue';
+import { useStore } from 'vuex';
 import ViewerBase from './ViewerBase.vue';
 import SubChangeLog from './sub/SubChangeLog.vue';
 import SubVersion from './sub/SubVersion.vue';
@@ -95,67 +78,36 @@ import SubProgress from './sub/SubProgress.vue';
 import { getMeshMaterialByName } from '../third/threejs/mjColor';
 import { readFromStorage, writeToStorage } from '../third/snippet/storage';
 import { addColor2Mesh, PathLoader, updateMeshColor, updateMeshOpacity, FilePathLoader, emptyTrackFile } from '../third/threejs/mjLoader';
-import { upload, getHistory, callAi } from '../api/all';
-import { getBaseRoot, vInfo } from '../../config';
-import { ext, filterFile } from '../utils/util';
+import { mesh2drc } from '../third/threejs/mjExporter';
+import { arrayVectorToMatrix } from '../third/threejs/mjUtil';
+import { upload, getHistory, callAiRetainer, callAiRetainerNew } from '../api/all';
+import { getOssAuth } from '../api/admin';
+import { getBaseRoot, vInfo, configRetainer } from '../../config';
+import { filterFile, toYYMMDDHHmmss } from '../utils/util';
 const props = defineProps({
     tag: {
         type:String,
-        require: true,
+        default: 'pmp_retainer',
     }
-})
-const refFile = ref(null);
+});
+const store = useStore();
 const elViewer = ref(null);
+const refFile = ref(null);
 const isDev = ref(import.meta.env.DEV);
 const msg = ref('');
-const info = reactive({
-    btn1Label: {
-        'AI_NightGuard': 'Upload the upper scanned meshes',
-        'AI_BracketRemove': 'Upload the upper or lower scanned mesh',
-        'AI_Retainer': 'Upload the upper scanned meshes',
-    },
-    moveDownList: [
-        { id: 0, value: '0.0', label: '0.0mm' },
-        { id: 1, value: '1.0', label: '1.0mm' },
-        { id: 2, value: '1.5', label: '1.5mm' },
-        { id: 3, value: '4.0', label: '4.0mm' },
-    ],
-    modelList: [
-        { id: 0, value: '0', label: 'upper smooth' },
-        { id: 1, value: '1', label: 'upper occlusion' },
-        { id: 2, value: '2', label: 'lower smooth' },
-        { id: 3, value: '3', label: 'lower occlusion' },
-    ],
-    biteList: [
-        { id: 0, value: '0', label: 'Closebite' },
-        { id: 1, value: '1', label: 'Openbite' },
-    ],
-    thicknessList: [
-        { id: 1, value: '1.0', label: '1.0mm' },
-        { id: 2, value: '1.5', label: '1.5mm' },
-        { id: 3, value: '2.0', label: '2.0mm' },
-    ],
-    modelListRetainer: [
-        { id: 0, value: '0', label: 'upper' },
-        { id: 2, value: '2', label: 'lower' },
-    ],
-    thicknessListRetainer: [
-        { id: 1, value: '0.5', label: '0.5mm' },
-        { id: 2, value: '0.6', label: '0.6mm' },
-        { id: 3, value: '0.7', label: '0.7mm' },
-        { id: 3, value: '0.8', label: '0.8mm' },
-    ],
-});
+const msg1 = ref('');
 const ud = reactive({
     type: 0,
     total: 0,
     count: 0,
     countError: 0,
     uploading:false,
+    cacheList: {},
     errorList: [],
     pathList: [],
     timestampList: [],
     timestamp: '1680514251226',
+    customId: 'A',
     tidList: [
         18,17,16,15,14,13,12,11,21,22,23,24,25,26,27,28,
         48,47,46,45,44,43,42,41,31,32,33,34,35,36,37,38,
@@ -164,49 +116,38 @@ const ud = reactive({
     fetchCount: 0,
     fetching: false,
     calling: false,
-    lockCall: true,
+    lockBtn: 0,
+    lockUpload: 0, // 控制上传逻辑
     selTimestamp: {},
     script: null,
+});
+const mat = reactive({
+    upper: null,
+    lower: null,
 });
 const m1 = reactive({
     tempDir: '',
     tag: props.tag,
-    param: '', // 
-});
-const m1a = reactive({
-    move_distance: '0.0',
-    mode: '0',
-    openbite: '0',
-    occ_thickness: '1.5',
-});
-const m1b = reactive({
-    mode: '0',
-    occ_thickness: '0.5',
+    isShell: configRetainer.isShell,
 });
 let app3 = null;
 const keyOfLocalStorage = `keyOfLocalStorage${props.tag}`;
 onMounted(() => {
     // 缓存上传文件的时间点
     ud.timestampList = JSON.parse(readFromStorage(keyOfLocalStorage, '[]'));
+    // 
+    store.dispatch('auth/getAuth').then(()=>{});
     app3 = elViewer.value.app3;
 })
 function parseTime(timestamp) {
-    const date = new Date(parseInt(timestamp.tmpDir));
-    let strTid = timestamp.tid ? `${ timestamp.tid}--` : '';
-    if (props.tag == 'AI_NightGuard') {
-        if (timestamp.param) {
-            strTid = '';
-            const t2 = timestamp.param;
-            // strTid += `${t2.move_distance}--`;
-            strTid += `${t2.mode}--`;
-            strTid += `${t2.openbite}--`;
-            strTid += `${t2.occ_thickness}--`;
-        }
-    }
-    return `${strTid}${date.getFullYear()}-${date.getMonth()+1}-${date.getDate()} ${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`;
+    console.log('22', timestamp)
+    const ymdhms = toYYMMDDHHmmss(timestamp.tmpDir);
+    return `${timestamp.isShell} --- ${ymdhms} --- ${timestamp.tid}`;
 }
 function getState() {
     const {tmpDir, tid} = ud.selTimestamp || {};
+    if (ud.lockUpload==1) return true;
+    if (ud.lockBtn==0) return true;
     if (!tmpDir && !tid) {
         // 未选中时，禁用
         return true;
@@ -229,68 +170,76 @@ function clickLoadShowData(type) {
         emptyTrackFile();
         refFile.value.dispatchEvent(new MouseEvent('click'))
     } else if (type == 3) {
-        ud.calling = true;
-        const tmp = {tid:'history',needAdd:false};
-        if (props.tag == 'AI_NightGuard') {
-            m1.param = JSON.stringify(m1a);
-        } else if (props.tag == 'AI_Retainer') {
-            m1.param = JSON.stringify(m1b);
+        if (!m1.upper || !m1.lower) {
+            msg.value = 'Please wait patiently for the upload to complete';
+            return;
         }
-        callAi(m1).then(res=>{
+        ud.calling = true;
+        // callAiRetainer(m1).then(res=>{
+        callAiRetainerNew(m1).then(res=>{
             ud.calling = false;
-            if (res.code == 200) {
-                ud.lockCall = true;
+            const {code, message, data} = res;
+            if (code == 200) {
+                ud.lockUpload = 0;
                 // 新的调用需要缓存记录
-                if (m1.type == 1) {                               
-                    updateTimestampData(m1.tempDir, tmp);
+                if (m1.type == 1) {           
+                    updateTimestampData(m1.tempDir, 'history', m1.isShell, false);
                 }
-                ud.pathList = res.data.filter(e=>filterFile(e));
+                ud.pathList = data.files.filter(e=>filterFile(e));
+                if (data.lowerMat) mat.lower = arrayVectorToMatrix(data.lowerMat);
+                if (data.upperMat) mat.upper = arrayVectorToMatrix(data.upperMat);
                 updateByPath();
             } else {
-                msg.value = res.message;
+                msg.value = message;
             }
         })
     } else if (type == 4) {
+        // 
+        if (!ud.customId) ud.customId = 'A';
         ud.timestampList.unshift({
             tmpDir: Date.now(),
-            tid: null, // 出生时默认为空
-            param: null,
+            tid: '',
+            isShell: configRetainer.isShell,
         });
+        // 添加时自动第一个
         ud.selTimestamp = ud.timestampList[0];
         ud.timestamp = ud.selTimestamp.tmpDir;
-        m1.type = 1;        
-        m1.tempDir = `${ud.selTimestamp.tmpDir}`;
-        ud.lockCall = false;
+        m1.type = 1;
+        m1.isShell = configRetainer.isShell;        
+        m1.tempDir = `${ud.selTimestamp.tmpDir}_${ud.customId}`;      
+        msg1.value = `${toYYMMDDHHmmss(ud.selTimestamp.tmpDir)}_${ud.customId}`;
+        ud.lockUpload = 0;
+        ud.lockBtn = 1;
     } else if (type == 5) {
         ud.timestampList = [];
         getHistory(m1).then(res=>{
             if (res.code ==200) {
                 res.data.forEach(e=>{
                     const strList = e.split(' ');
-                    const tmpDir = parseInt(strList[0].split('=').pop());
-                    const t1 = { tid: 'history', needAdd: true, param: null };
-                    if (props.tag == 'AI_NightGuard') {
-                        const t2 = strList.filter(e=>e.startsWith('param'))[0];
-                        if (t2 && t2.length > 6) t1.param = JSON.parse(t2.split('=')[1]);
+                    const tmpDir = strList[0].split('=').pop();
+                    const t1 = tmpDir.split('_');
+                    let isShell = configRetainer.isShell;
+                    if (strList.length > 1) {
+                        isShell = strList[1].split('=').pop() == 'true';
                     }
-                    updateTimestampData(tmpDir, t1);
+                    updateTimestampData(parseInt(t1[0]), t1[1] || 'history', isShell, true);
                 })
             }
         })
     }
 }
-function updateTimestampData(tmpDir, options) {
+function updateTimestampData(tmpDir, tid, isShell, isNew) {
     // 更新进去
     const tmp = ud.timestampList.filter(e=>e.tmpDir==tmpDir)[0];
     if (tmp) {
-        tmp.tid = options.tid;
-        tmp.param = options.param;
+        tmp.tid = tid;
+        tmp.isShell = isShell;
     } else {
-        if (options.needAdd) {
+        if (isNew) {
             ud.timestampList.push({
                 tmpDir: tmpDir,
-                tid: options.tid,
-                param: options.param,
+                tid: tid,
+                isShell: isShell,
             });
         }
     }
@@ -298,35 +247,47 @@ function updateTimestampData(tmpDir, options) {
     ud.timestampList = JSON.parse(readFromStorage(keyOfLocalStorage, '[]'));
 }
 function selectTimestamp() {
-    const { tmpDir, tid, param } = ud.selTimestamp || {};
-    ud.lockCall = false;
-    m1.tempDir = tmpDir;
-    // 只有新建的tid为空，其他都是历史记录
+    const { tmpDir, tid, isShell } = ud.selTimestamp || {};
+    ud.customId = '';
+    ud.lockBtn = 0;
+    m1.isShell = isShell;
+    if (tid == 'history') m1.tempDir = `${tmpDir}`; // 旧数据，未添加自定义
+    else m1.tempDir = `${tmpDir}_${tid}`; // 有自定义ID的
     if (tid) {
         // 历史记录
         m1.type = 2;
+        m1.upper = 'no upper path';
+        m1.lower = 'no lower path';
+        ud.lockUpload = 1;
     } else {
         m1.type = 1;
+        m1.upper = null;
+        m1.lower = null;
         ud.timestamp = tmpDir;
+        ud.lockUpload = 0;
     }
-    if (props.tag == 'AI_NightGuard') {
-        for (let k in param) {
-            console.log('22aa', k, param[k])
-            if (m1a[k]) m1a[k] = param[k];
-        }
-    }
+    msg1.value = `${toYYMMDDHHmmss(tmpDir)}_${tid}`;
 }
 function updateByPath() {
     app3.loading(true);
     ud.uploading = true;
     ud.fetching = true;
-    ud.fetchTotal = ud.pathList.length;
+    ud.fetchTotal = ud.pathList.length || 0;
     ud.fetchCount = 0;
+    if (ud.fetchTotal == ud.fetchCount) {
+        ud.uploading = false;
+        ud.fetching = false;
+        app3.updateFrame();
+        app3.loading(false);
+        return;
+    }
     const fetchSinglePath = async (path) => {
+        // const filename = PathLoader.getName(path);        
+        // const url = await store.dispatch('auth/getUrl', path);
         const filename = PathLoader.getName(path);
         const validPath = `${import.meta.env.VITE_APP_FILE_PREFIX}/${path}`;
         const geo = await new PathLoader(path, `https://mydentalx.com/public/draco/`).load(validPath, (e)=>{
-            console.log('progress', e.loaded/e.total)
+            // console.log('progress', e.loaded/e.total)
         }).catch(err=>{
             if (err instanceof ProgressEvent) {
                 if (err.total==0) {
@@ -336,7 +297,6 @@ function updateByPath() {
                     })
                 }   
             }
-            console.log('error', path)
             msg.value = 'File Load failure';
             app3.loading(false);
             return null;
@@ -344,14 +304,15 @@ function updateByPath() {
         ud.fetchCount++;
         if (!geo) return;
         app3.loading(false);
-        addGeotoScene(geo, filename);
+        addGeotoScene(geo, filename, path);
     }
     ud.pathList.forEach(path=>{
         fetchSinglePath(path);
-    })
+    });
     app3.updateFrame();
+    app3.loading(false);
 }
-function addGeotoScene(geo, filename) {
+function addGeotoScene(geo, filename, path) {
     if (geo.type == 'BufferGeometry' && geo.attributes.position.count < 1) {
         console.warn('empty BufferGeometry');
         return;
@@ -372,6 +333,15 @@ function addGeotoScene(geo, filename) {
     }
     const tmp = ud.infoList.sort(compare('filename'));
     addColor2Mesh(geo, {name:filename, color:info.color, opacity: info.opacity}).then(mesh=>{
+        if (path && path.indexOf('/input/') > 0) {
+            const str = path.toLowerCase();
+            if (str.indexOf('/input/cleaned_lower.mq') > 0 && mat.lower) {
+                mesh.applyMatrix4(mat.lower);
+            } else if (str.indexOf('/input/cleaned_upper.mq') > 0 && mat.upper) {
+                mesh.applyMatrix4(mat.upper);
+            }
+            mesh.matrixWorldNeedsUpdate = true;
+        }
         app3.add(mesh);
         app3.updateFrame();
     })
@@ -410,7 +380,7 @@ function getPer() {
     if (ud.fetching) {
         return Math.round(100 * ud.fetchCount / ud.fetchTotal).toFixed(0);     
     }
-    return Math.round(100 * ud.count / ud.total).toFixed(0); 
+    return Math.round(50).toFixed(0); 
 }
 async function handleSelectFile(event) {
     const files = event.target.files;
@@ -448,48 +418,101 @@ async function handleSelectFile(event) {
         emptyTrackFile();
     } else if ([2,6].includes(ud.type)) {
         // 上传文件
+        ud.fetching = false;
         if (!ud.timestamp || ud.timestamp.length < 1) {
             msg.value = 'Please Select Timestamp to Continue';
             return;
         }
-        const { tag } = props;
-        const file = files[0];
+        const auxiliary = ud.type == 6 ? 'upper' : 'lower';
         ud.uploading = true;
-        ud.countError = 0;
-        ud.count = 0.5;
-        ud.total = files.length;
-        const formData = new FormData();
-        if (tag == 'AI_NightGuard') {
-            const auxiliary = ud.type == 2 ? 'upper' : 'lower';    
-            const filename = `${auxiliary}${ext(file.name)}`;
-            formData.append("files", file, filename);
+        const file = files[0];
+        let filename = file.name;
+        const { tag } = props;
+        if (true) {
+            const formData = new FormData();
+            if (filename.endsWith('.drc') || filename.endsWith('.mq')) {
+                filename =  ud.type == 6 ? 'cleaned_upper.mq' : 'cleaned_lower.mq';
+                formData.append("files", file, filename);
+            } else {
+                //  其他格式转换一下
+                try {
+                    const geo = await new FilePathLoader(filename, `https://mydentalx.com/public/draco/`).load(file)
+                    .catch(err=>{
+                        msg.value = 'File Load failure';
+                        console.error(err);
+                        return null;
+                    })
+                    if (!geo) return;            
+                    const mesh = await addColor2Mesh(geo);
+                    const buffer = await mesh2drc(mesh);
+                    const noExtFilename = filename.substr(0, filename.lastIndexOf('.'));
+                    // filename =  `${noExtFilename}.mq`;
+                    filename =  ud.type == 6 ? 'cleaned_upper.mq' : 'cleaned_lower.mq';
+                    formData.append("files", new Blob([buffer.buffer], { type: 'application/octet-stream',}), filename);
+                } catch(err){
+                    console.log(err);
+                    msg.value = 'File Load failure';
+                }
+            }
+            formData.append("tempDir", `${ud.timestamp}_${ud.customId}`); 
+            formData.append("tag", tag); 
+            const res = await upload(formData)
+            if (res.code == 200) {
+                if (ud.type == 6) {
+                    m1.upper = filename;
+                    ud.lockBtn |= 2;
+                } else if (ud.type == 2) {
+                    m1.lower = filename;
+                    ud.lockBtn |= 4;
+                }
+                // 0x1 | 0x2 | 0x4 can call Ai
+                console.log('lock btn', ud.lockBtn)
+            } else {
+                console.error(res.message);
+                msg.value = res.message;
+            }
         } else {
-            formData.append("files", file, file.name);
+            let res = null;
+            if (filename.endsWith('.drc') || filename.endsWith('.mq')) {
+                const path = `retainer/${ud.timestamp}_${ud.customId}/input/${auxiliary}/${filename}`;
+                res = await store.dispatch('auth/putFile', {
+                    file, path,
+                });
+            } else {
+                //  其他格式转换一下
+                try {
+                    const noExtFilename = filename.substr(0, filename.lastIndexOf('.'));
+                    const geo = await new FilePathLoader(filename, `https://mydentalx.com/public/draco/`).load(file)
+                    .catch(err=>{
+                        msg.value = 'File Load failure';
+                        return null;
+                    })
+                    if (!geo) return;            
+                    const path = `retainer/${ud.timestamp}_${ud.customId}/input/${auxiliary}/${noExtFilename}.mq`;
+                    const mesh = await addColor2Mesh(geo);
+                    const buffer = await mesh2drc(mesh);
+                    res = await store.dispatch('auth/putFile', {
+                        file: new Blob([buffer.buffer], { type: 'application/octet-stream',}),
+                        path: path,
+                    })
+                } catch(err){
+                    console.log(err);
+                    msg.value = 'File Load failure';
+                }
+            }
+            if (res && res.res.status == 200) {
+                if (ud.type == 6) {
+                    m1.upper = res.name;
+                    ud.lockBtn |= 2;
+                } else if (ud.type == 2) {
+                    m1.lower = res.name;
+                    ud.lockBtn |= 4;
+                }
+                // 0x1 | 0x2 | 0x4 can call Ai
+                console.log('lock btn', ud.lockBtn)
+            }
         }
-        formData.append("tempDir", ud.timestamp); 
-        formData.append("tag", tag); 
-        const res = await upload(formData)
-        if (res.code == 200) {
-            ud.count = 1;
-            ud.uploading = false;
-        } else {
-            ud.countError++;
-            msg.value += `File ${file.name} upload failed`;
-        }
-    }
-}
-function showDownload(event, item, type) {
-    if (event) {
-        event.preventDefault();
-        event.stopPropagation();
-    } 
-    if (props.tag == 'AI_NightGuard') {        
-        if (type == 'download') {
-            return elViewer.value.donwloadByName(item.filename, {
-                prefix:`NightGuard-nng`
-            });
-        }
-        return item.filename.startsWith('nng');
+        ud.uploading = false;
     }
 }
 </script>

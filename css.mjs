@@ -1,5 +1,5 @@
 import fs from 'fs';
-import { parseFile } from './src/third/snippet/tool/toolCss.mjs';
+import { parseFile } from './src/third/snippet/toolCss.mjs';
 
 const cssFolder = './public/css';
 if (!fs.existsSync(cssFolder)) {

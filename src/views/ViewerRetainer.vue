@@ -1,89 +1,84 @@
 <template>
-    <div class="viewer-ct-container">
-        <div id="id3DContainer" class="content-view">
-          
+    <ViewerBase ref="elViewer">
+        <div>
+            <div class="alert alert-info m-1 p-0 my-auto" role="alert" v-html="'Custom ID'"></div>
+            <input class="form-control" v-model="ud.customId" type="text" />
+        </div>  
+        <div class="d-flex flex-wrap">
+            <button class="btn btn-primary m-1 btn-sm" @click="clickLoadShowData(1)" v-if="isDev" v-html="'Local Test to Show'"></button>
+            <button class="btn btn-primary m-1 btn-sm" @click="clickLoadShowData(4)" v-html="'New Timestamp'"></button>
+            <button class="btn btn-primary m-1 btn-sm" @click="clickLoadShowData(5)" v-html="'Load historical Data'"></button>
+            <SubVersion :tag="tag" />
         </div>
-        <div class="content-toolbar d-flex flex-column">
+        <div v-if="ud.timestampList.length > 0">
             <div>
-                <div class="alert alert-info m-1 p-0 my-auto" role="alert" v-html="'Custom ID'"></div>
-                <input class="form-control" v-model="ud.customId" type="text" />
-            </div>  
-            <div class="d-flex flex-wrap">
-                <button class="btn btn-primary m-1 btn-sm" @click="clickLoadShowData(1)" v-if="isDev" v-html="'Local Test to Show'"></button>
-                <button class="btn btn-primary m-1 btn-sm" @click="clickLoadShowData(4)" v-html="'New Timestamp'"></button>
-                <button class="btn btn-primary m-1 btn-sm" @click="clickLoadShowData(5)" v-html="'Load historical Data'"></button>
-                <SubVersion :tag="tag" />
-            </div>
-            <div v-if="ud.timestampList.length > 0">
-                <div>
-                    <div class="d-flex flex-wrap">                
-                        <div class="alert alert-warning m-1 p-0" role="alert" v-html="'Use the timestamp to differentiate processed and un-processed data'"></div>
-                        <select class="form-select" v-model="ud.selTimestamp" @change="selectTimestamp">
-                            <option v-for="(item,i) in ud.timestampList" :key="i" :value="item" v-html="parseTime(item)"></option>
-                        </select>
-                    </div>
-                    <div class="d-flex flex-column flex-wrap">
-                        <div class="alert alert-info m-1 p-0 my-auto" role="alert">Current is {{msg1}}</div>
-                        <button class="btn btn-primary m-1 btn-sm" @click="clickLoadShowData(6)" :disabled="getState()" >Upload the upper scanned meshes</button>
-                        <button class="btn btn-primary m-1 btn-sm" @click="clickLoadShowData(2)" :disabled="getState()" >Upload the lower scanned meshes</button>
-                    </div>
-                </div>
                 <div class="d-flex flex-wrap">                
-                    <div class="d-flex">
-                        <button class="btn btn-primary m-1" @click="clickLoadShowData(3)" :disabled="ud.lockUpload==1?false: ud.lockBtn !== 7" v-html="'Call the AI Algorithm'"></button>
-                        <div class="d-flex m-auto">
-                            <input class="form-check-input m-1" type="checkbox" v-model="m1.isShell" value="" id="shellHollow">
-                            <label class="form-check-label" for="shellHollow">Hollow</label>
-                        </div>
-                    </div>
-                    <div class="h-100 m-auto d-flex flex-column justify-content-center">
-                        <div class="spinner-border text-primary" role="status" v-if="ud.calling"></div>
-                    </div>
-                    <div class="alert alert-warning m-1 p-0 my-auto" role="alert" v-html="'Now wait for the AI Algorithm to process'"></div>
+                    <div class="alert alert-warning m-1 p-0" role="alert" v-html="'Use the timestamp to differentiate processed and un-processed data'"></div>
+                    <select class="form-select" v-model="ud.selTimestamp" @change="selectTimestamp">
+                        <option v-for="(item,i) in ud.timestampList" :key="i" :value="item" v-html="parseTime(item)"></option>
+                    </select>
+                </div>
+                <div class="d-flex flex-column flex-wrap">
+                    <div class="alert alert-info m-1 p-0 my-auto" role="alert">Current is {{msg1}}</div>
+                    <button class="btn btn-primary m-1 btn-sm" @click="clickLoadShowData(6)" :disabled="getState()" >Upload the upper scanned meshes</button>
+                    <button class="btn btn-primary m-1 btn-sm" @click="clickLoadShowData(2)" :disabled="getState()" >Upload the lower scanned meshes</button>
                 </div>
             </div>
-            <div class="d-flex flex-column py-3">
-                <div class="alert alert-warning text-center m-1 p-0" role="alert" v-html="'progress bar'"></div>
-                <div class="progress w-100" v-if="ud.uploading">
-                    <div class="progress-bar" role="progressbar" :style="`width: ${getPer()}%;`" :aria-valuenow="getPer()" aria-valuemin="0" aria-valuemax="100" v-html="getPer()+'%'"></div>
-                </div>
-                <SubProgress :show="ud.uploading" v-if="ud.total == 1 || ud.fetchTotal == 1" />
-            </div>
-            <div class="d-flex flex-column">
-                <div class="alert alert-danger p-1 m-1" role="alert" v-if="msg.length > 0" v-html="msg"></div>
-                <div v-for="(item,i) in ud.errorList" :key="i">
-                    <div class="alert alert-danger p-1 m-1" role="alert" v-html="item.name"></div>
-                </div>
-            </div>
-            <SubChangeLog :tag="tag" />
-            <div class="">
-                <div class="d-flex" v-for="(item,i) in ud.infoList" :key="i">
-                    <input type="color" class="form-control" :value="item.color" @change="inputChangeColorUpdate($event,item)" style="width:60px;" />
-                    <input type="range" class="form-range" min="0" max="1" step="0.01" :value="item.opacity" @change="inputChangeOpacityUpdate($event,item)" style="width:160px;" />
-                    <div class="form-check form-switch mx-3">
-                        <input class="form-check-input" type="checkbox" :checked="item.check" @change="inputChangeUpdate(item)" />
-                        <label class="form-check-label" for="flexSwitchCheckDefault" v-html="item.filename"></label>
+            <div class="d-flex flex-wrap">                
+                <div class="d-flex">
+                    <button class="btn btn-primary m-1" @click="clickLoadShowData(3)" :disabled="ud.lockUpload==1?false: ud.lockBtn !== 7" v-html="'Call the AI Algorithm'"></button>
+                    <div class="d-flex m-auto">
+                        <input class="form-check-input m-1" type="checkbox" v-model="m1.isShell" value="" id="shellHollow">
+                        <label class="form-check-label" for="shellHollow">Hollow</label>
                     </div>
+                </div>
+                <div class="h-100 m-auto d-flex flex-column justify-content-center">
+                    <div class="spinner-border text-primary" role="status" v-if="ud.calling"></div>
+                </div>
+                <div class="alert alert-warning m-1 p-0 my-auto" role="alert" v-html="'Now wait for the AI Algorithm to process'"></div>
+            </div>
+        </div>
+        <div class="d-flex flex-column py-3">
+            <div class="alert alert-warning text-center m-1 p-0" role="alert" v-html="'progress bar'"></div>
+            <div class="progress w-100" v-if="ud.uploading">
+                <div class="progress-bar" role="progressbar" :style="`width: ${getPer()}%;`" :aria-valuenow="getPer()" aria-valuemin="0" aria-valuemax="100" v-html="getPer()+'%'"></div>
+            </div>
+            <SubProgress :show="ud.uploading" v-if="ud.total == 1 || ud.fetchTotal == 1" />
+        </div>
+        <div class="d-flex flex-column">
+            <div class="alert alert-danger p-1 m-1" role="alert" v-if="msg.length > 0" v-html="msg"></div>
+            <div v-for="(item,i) in ud.errorList" :key="i">
+                <div class="alert alert-danger p-1 m-1" role="alert" v-html="item.name"></div>
+            </div>
+        </div>
+        <SubChangeLog :tag="tag" />
+        <div class="">
+            <div class="d-flex" v-for="(item,i) in ud.infoList" :key="i">
+                <input type="color" class="form-control" :value="item.color" @change="inputChangeColorUpdate($event,item)" style="width:60px;" />
+                <input type="range" class="form-range" min="0" max="1" step="0.01" :value="item.opacity" @change="inputChangeOpacityUpdate($event,item)" style="width:160px;" />
+                <div class="form-check form-switch mx-3">
+                    <input class="form-check-input" type="checkbox" :checked="item.check" @change="inputChangeUpdate(item)" />
+                    <label class="form-check-label" for="flexSwitchCheckDefault" v-html="item.filename"></label>
                 </div>
             </div>
         </div>
         <!-- <input type="file" webkitdirectory ref="refFile" @change="handleSelectFile($event)" hidden /> -->
         <input type="file" ref="refFile" @change="handleSelectFile($event)" hidden />
         <!-- <input type="file" multiple ref="refFile" @change="handleSelectFile($event)" hidden /> -->
-    </div>
+    </ViewerBase>
 </template>
 
 <script setup>
 import { ref, reactive, onMounted, onBeforeUnmount } from 'vue';
 import { useStore } from 'vuex';
+import ViewerBase from './ViewerBase.vue';
 import SubChangeLog from './sub/SubChangeLog.vue';
 import SubVersion from './sub/SubVersion.vue';
 import SubProgress from './sub/SubProgress.vue';
-import { mqThree } from '../third/threejs/mjthree';
 import { getMeshMaterialByName } from '../third/threejs/mjColor';
-import { readFromStorage, writeToStorage } from '../third/snippet/tool/storage';
+import { readFromStorage, writeToStorage } from '../third/snippet/storage';
 import { addColor2Mesh, PathLoader, updateMeshColor, updateMeshOpacity, FilePathLoader, emptyTrackFile } from '../third/threejs/mjLoader';
-import { export2drc } from '../third/threejs/threeExporter';
+import { mesh2drc } from '../third/threejs/mjExporter';
 import { arrayVectorToMatrix } from '../third/threejs/mjUtil';
 import { upload, getHistory, callAiRetainer, callAiRetainerNew } from '../api/all';
 import { getOssAuth } from '../api/admin';
@@ -96,6 +91,7 @@ const props = defineProps({
     }
 });
 const store = useStore();
+const elViewer = ref(null);
 const refFile = ref(null);
 const isDev = ref(import.meta.env.DEV);
 const msg = ref('');
@@ -134,43 +130,14 @@ const m1 = reactive({
     tag: props.tag,
     isShell: configRetainer.isShell,
 });
-const appThree = new mqThree();
+let app3 = null;
 const keyOfLocalStorage = `keyOfLocalStorage${props.tag}`;
-const drcPathPrefix = `${getBaseRoot()}js/libs/draco/`;
 onMounted(() => {
-    ud.script = document.createElement('script');
-    ud.script.type = 'text/javascript';
-    ud.script.src = `${drcPathPrefix}draco_encoder.js`;
-    document.body.appendChild(ud.script);
-    
-    let el = document.getElementById('id3DContainer')
-    let rect = el.getBoundingClientRect()
-    if (import.meta.env.DEV) {        
-        window.mjthree = appThree;
-    }
-    appThree.init({
-        width: rect.width,
-        height: rect.height,
-        container: el,
-        useControl: true,
-    })
-    appThree.setLoadConfig({
-        msg: 'Loading',
-        url: '/web/images/loading.svg',
-    })
-    appThree.eventLoop();
-    appThree.resize();
-    appThree.updateFrame();
-
     // 缓存上传文件的时间点
     ud.timestampList = JSON.parse(readFromStorage(keyOfLocalStorage, '[]'));
     // 
     store.dispatch('auth/getAuth').then(()=>{});
-})
-onBeforeUnmount(() => {
-    document.body.removeChild(ud.script);
-    appThree.empty();
-    appThree.dispose();
+    app3 = elViewer.value.app3;
 })
 function parseTime(timestamp) {
     console.log('22', timestamp)
@@ -198,7 +165,7 @@ function clickLoadShowData(type) {
     msg.errorList = [];
     msg.countError = 0;
     ud.type = type;
-    appThree.empty();
+    app3.empty();
     if ([1,2,6].includes(type)) {
         emptyTrackFile();
         refFile.value.dispatchEvent(new MouseEvent('click'))
@@ -302,7 +269,7 @@ function selectTimestamp() {
     msg1.value = `${toYYMMDDHHmmss(tmpDir)}_${tid}`;
 }
 function updateByPath() {
-    appThree.loading(true);
+    app3.loading(true);
     ud.uploading = true;
     ud.fetching = true;
     ud.fetchTotal = ud.pathList.length || 0;
@@ -310,8 +277,8 @@ function updateByPath() {
     if (ud.fetchTotal == ud.fetchCount) {
         ud.uploading = false;
         ud.fetching = false;
-        appThree.updateFrame();
-        appThree.loading(false);
+        app3.updateFrame();
+        app3.loading(false);
         return;
     }
     const fetchSinglePath = async (path) => {
@@ -319,7 +286,7 @@ function updateByPath() {
         // const url = await store.dispatch('auth/getUrl', path);
         const filename = PathLoader.getName(path);
         const validPath = `${import.meta.env.VITE_APP_FILE_PREFIX}/${path}`;
-        const geo = await new PathLoader(path, drcPathPrefix).load(validPath, (e)=>{
+        const geo = await new PathLoader(path, `https://mydentalx.com/public/draco/`).load(validPath, (e)=>{
             // console.log('progress', e.loaded/e.total)
         }).catch(err=>{
             if (err instanceof ProgressEvent) {
@@ -331,19 +298,19 @@ function updateByPath() {
                 }   
             }
             msg.value = 'File Load failure';
-            appThree.loading(false);
+            app3.loading(false);
             return null;
         })
         ud.fetchCount++;
         if (!geo) return;
-        appThree.loading(false);
+        app3.loading(false);
         addGeotoScene(geo, filename, path);
     }
     ud.pathList.forEach(path=>{
         fetchSinglePath(path);
     });
-    appThree.updateFrame();
-    appThree.loading(false);
+    app3.updateFrame();
+    app3.loading(false);
 }
 function addGeotoScene(geo, filename, path) {
     if (geo.type == 'BufferGeometry' && geo.attributes.position.count < 1) {
@@ -375,38 +342,38 @@ function addGeotoScene(geo, filename, path) {
             }
             mesh.matrixWorldNeedsUpdate = true;
         }
-        appThree.add(mesh);
-        appThree.updateFrame();
+        app3.add(mesh);
+        app3.updateFrame();
     })
     if (ud.fetchTotal == ud.fetchCount) {
         ud.uploading = false;
         ud.fetching = false;
     } else {
-        appThree.updateFrame();
+        app3.updateFrame();
     }
 }
 function inputChangeUpdate(item) {
     item.check = !item.check;
-    const mesh = appThree.group.children.filter(e=>e.name==item.filename)[0];
+    const mesh = app3.group.children.filter(e=>e.name==item.filename)[0];
     if (mesh) {
         mesh.visible = item.check;
-        appThree.updateFrame();
+        app3.updateFrame();
     }
 }
 function inputChangeColorUpdate(event, item) {
     item.color = event.target.value;
-    const mesh = appThree.group.children.filter(e=>e.name==item.filename)[0];
+    const mesh = app3.group.children.filter(e=>e.name==item.filename)[0];
     if (mesh) {
         updateMeshColor(mesh, item.color);
-        appThree.updateFrame();
+        app3.updateFrame();
     }
 }
 function inputChangeOpacityUpdate(event, item) {
     item.opacity = parseFloat(event.target.value);
-    const mesh = appThree.group.children.filter(e=>e.name==item.filename)[0];
+    const mesh = app3.group.children.filter(e=>e.name==item.filename)[0];
     if (mesh) {
         updateMeshOpacity(mesh, item.opacity);
-        appThree.updateFrame();
+        app3.updateFrame();
     }
 }
 function getPer() {
@@ -422,12 +389,12 @@ async function handleSelectFile(event) {
         ud.fetching = true;
         ud.uploading = true;
         ud.infoList = [];
-        appThree.loading(true);
+        app3.loading(true);
         ud.fetchTotal = files.length;
         ud.fetchCount = 0;
         for (let i = 0; i < files.length; i++) {
             const file = files[i];
-            const geo = await new FilePathLoader(file.name, drcPathPrefix).load(file, (event)=>{
+            const geo = await new FilePathLoader(file.name, `https://mydentalx.com/public/draco/`).load(file, (event)=>{
                 // console.log('progress', event.loaded/event.total)
             }).catch(err=>{
                 if (err instanceof ProgressEvent) {
@@ -439,13 +406,13 @@ async function handleSelectFile(event) {
                     }   
                 }
                 msg.value = 'File Load failure';
-                appThree.loading(false);
+                app3.loading(false);
                 return null;
             });
             ud.fetchCount++;
             if (!geo) return;
             const filename = FilePathLoader.getName(file.name);
-            appThree.loading(false);
+            app3.loading(false);
             addGeotoScene(geo, filename);
         }
         emptyTrackFile();
@@ -469,7 +436,7 @@ async function handleSelectFile(event) {
             } else {
                 //  其他格式转换一下
                 try {
-                    const geo = await new FilePathLoader(filename, drcPathPrefix).load(file)
+                    const geo = await new FilePathLoader(filename, `https://mydentalx.com/public/draco/`).load(file)
                     .catch(err=>{
                         msg.value = 'File Load failure';
                         console.error(err);
@@ -477,7 +444,7 @@ async function handleSelectFile(event) {
                     })
                     if (!geo) return;            
                     const mesh = await addColor2Mesh(geo);
-                    const buffer = await export2drc(mesh);
+                    const buffer = await mesh2drc(mesh);
                     const noExtFilename = filename.substr(0, filename.lastIndexOf('.'));
                     // filename =  `${noExtFilename}.mq`;
                     filename =  ud.type == 6 ? 'cleaned_upper.mq' : 'cleaned_lower.mq';
@@ -515,7 +482,7 @@ async function handleSelectFile(event) {
                 //  其他格式转换一下
                 try {
                     const noExtFilename = filename.substr(0, filename.lastIndexOf('.'));
-                    const geo = await new FilePathLoader(filename, drcPathPrefix).load(file)
+                    const geo = await new FilePathLoader(filename, `https://mydentalx.com/public/draco/`).load(file)
                     .catch(err=>{
                         msg.value = 'File Load failure';
                         return null;
@@ -523,7 +490,7 @@ async function handleSelectFile(event) {
                     if (!geo) return;            
                     const path = `retainer/${ud.timestamp}_${ud.customId}/input/${auxiliary}/${noExtFilename}.mq`;
                     const mesh = await addColor2Mesh(geo);
-                    const buffer = await export2drc(mesh);
+                    const buffer = await mesh2drc(mesh);
                     res = await store.dispatch('auth/putFile', {
                         file: new Blob([buffer.buffer], { type: 'application/octet-stream',}),
                         path: path,

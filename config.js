@@ -72,7 +72,7 @@ export const vInfo = {
         changelog: [
         ],
     },
-    'AI_OpenBite': {
+    'AI_Retainer': {
         version: '',
         changelog: [
         ],
@@ -82,5 +82,3 @@ export const vInfo = {
 export const configRetainer = {
     isShell: false, // 生成数据默认是实体的，配置成非实体，中空
 }
-
-export const drcPathPrefix = `${getBaseRoot()}js/libs/draco/`;

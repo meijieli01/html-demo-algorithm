@@ -28,6 +28,12 @@ export const mapComponent2LocalFile = {
     functionCode: 'ViewerNight',
     functionId: '103',
   },
+  'NGRETAINER': {
+    component: () => import('../views/one/NGRetainer.vue'),
+    functionName: 'NGRetainer',
+    functionCode: 'ViewerNGRetainer',
+    functionId: '106',
+  },
   'BRACKER': {
     component: () => import('../views/one/BrackerRemove.vue'),
     functionName: 'BracketRemoval',
@@ -40,13 +46,6 @@ export const mapComponent2LocalFile = {
     functionCode: 'ViewerRetainer',
     functionId: '105',
   },
-  // 是NightGuard的子分类，现在由参数控制了
-  // 'OPENBITE': {
-  //   component: () => import('../views/one/OpenBite.vue'),
-  //   functionName: 'OpenBite',
-  //   functionCode: 'ViewerOpenBite',
-  //   functionId: '106',
-  // },
 }
 
 const router = createRouter({

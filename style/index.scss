@@ -2,7 +2,7 @@
 @import './bootstrap';
 
 
-@import '../src/third/snippet/layout/layout1';
+@import '../src/views/layout/layout1';
 
 $heightTopBar: 50px!default;
 .layout-topbar {
@@ -71,7 +71,6 @@ $widthToolbar: 30%;
   .content-toolbar {
     width: $widthToolbar;
     height: 100%;
-    // border: 1px dashed lightgray;
     overflow-y: auto;
   }
 }

@@ -269,7 +269,7 @@ function clickLoadShowData(type) {
                     const strList = e.split(' ');
                     const tmpDir = parseInt(strList[0].split('=').pop());
                     const t1 = { tid: 'history', needAdd: true, param: null };
-                    if (props.tag == 'AI_NightGuard') {
+                    if (['AI_NightGuard', 'AI_Retainer'].includes(props.tag)) {
                         const t2 = strList.filter(e=>e.startsWith('param'))[0];
                         if (t2 && t2.length > 6) t1.param = JSON.parse(t2.split('=')[1]);
                     }
@@ -310,9 +310,13 @@ function selectTimestamp() {
         ud.timestamp = tmpDir;
     }
     if (props.tag == 'AI_NightGuard') {
-        for (let k in param) {
-            console.log('22aa', k, param[k])
-            if (m1a[k]) m1a[k] = param[k];
+        for (let k in m1a) {
+            if (param[k]) m1a[k] = param[k];
+        }
+    }
+    if (props.tag == 'AI_Retainer') {
+        for (let k in m1b) {
+            if (param[k]) m1b[k] = param[k];
         }
     }
 }

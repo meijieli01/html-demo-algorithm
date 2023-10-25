@@ -129,16 +129,7 @@ export function addColor2Mesh(bufferGeo, options = {}) {
 
 export function updateMeshColor(mesh, strColor) {  
   const color = new Color(strColor);
-  // console.log('replace color', strColor, color)
-  const geo = mesh.geometry;
-  let colors = []
-  for (let i = 0; i < geo.attributes.position.count; i++) {
-    colors.push(color.r)
-    colors.push(color.g)
-    colors.push(color.b)
-  }
-  geo.setAttribute('color', new Float32BufferAttribute(colors, 3))
-  geo.attributes.color.needsUpdate = true;
+  mesh.material.color.copy(color);
 }
 
 export function updateMeshOpacity(mesh, opacity) {

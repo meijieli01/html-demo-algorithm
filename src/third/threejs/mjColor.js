@@ -107,7 +107,7 @@ export function getMeshMaterialByName(name, tag) {
         color: colorModelDefault,
         opacity: opacityOfDefault,
     }
-    if (tag == 'AI_NightGuard' && name.indexOf('nng') > -1) {        
+    if (['AI_NightGuard','AI_Retainer'].includes(tag) && name.indexOf('nng') > -1) {        
         info.color = colorTidOdd;
         return info;
     } else if (tag == 'AI_BracketRemove' && name.indexOf('mesh') > -1) {        

@@ -47,14 +47,14 @@
             </div>
         </div>
         <div class="">
-            <div class="d-flex" v-for="(item,i) in ud.infoList" :key="i">
+            <div class="d-flex my-1" v-for="(item,i) in ud.infoList" :key="i">
                 <input type="color" class="form-control" :value="item.color" @change="inputChangeColorUpdate($event,item)" style="width:60px;" />
                 <input type="range" class="form-range" min="0" max="1" step="0.01" :value="item.opacity" @change="inputChangeOpacityUpdate($event,item)" style="width:160px;" />
                 <div class="form-check form-switch mx-1">
                     <input class="form-check-input" type="checkbox" :checked="item.check" @change="inputChangeUpdate(item)" />
                     <label class="form-check-label" for="flexSwitchCheckDefault" v-html="item.filename"></label>
                 </div>
-                <button class="btn btn-primary btn-sm" v-if="showDownload(null, item)" @click="showDownload($event, item, 'download')">Download</button>
+                <button class="btn btn-primary btn-sm" @click="showDownload($event, item, 'download')">Download</button>
             </div>
         </div>
         <SubChangeLog :tag="tag" />
@@ -382,6 +382,7 @@ function showDownload(event, item, type) {
     if (type == 'download') {
         return elViewer.value.donwloadByName(item.filename, {prefix:'Crown'});
     }
+    // 是否显示
     return item.filename.startsWith('crown');
 }
 </script>

@@ -39,12 +39,12 @@ onBeforeUnmount(() => {
     app3.dispose();
 });
 function donwloadByName(name, options = {}) {
-    console.log(name)
     const prefix = options.prefix || '';
     const mesh = app3.getByName(name);
     console.log(mesh);
     mesh2stl(mesh.clone(), {isBinary:true}).then(buffer=>{
-        saveBinaryFile(buffer, `${prefix?prefix+'-':''}${Date.now()}.stl`);
+        const fName = name.substring(0, name.lastIndexOf('.'));
+        saveBinaryFile(buffer, `${prefix?prefix+'-':''}${fName}-${Date.now()}.stl`);
     })
 }
 defineExpose({

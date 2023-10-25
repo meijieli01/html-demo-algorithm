@@ -44,6 +44,17 @@ function setLoaderType(ftype, options={}) {
   return loader;
 }
 
+/**
+ * 默认现在会传入这个值`https://mydentalx.com/public/draco/draco_encoder.js`
+ * @param {*} drcPath 
+ */
+export function bindDracoEncoder(drcPath) {
+  let elScript = document.createElement('script');
+  elScript.type = 'text/javascript';
+  elScript.src = drcPath || '/js/libs/draco/draco_encoder.js';
+  document.body.appendChild(elScript);
+}
+
 class CommonLoader {
   constructor() {
 
@@ -102,7 +113,7 @@ export function addColor2Mesh(bufferGeo, options = {}) {
     let material = new MeshPhongMaterial({
       color: color,
       specular: 0x111111,
-      reflectivity: 0.1,
+      reflectivity: 0.2,
       shininess: 10,
       normalMapType: ObjectSpaceNormalMap,
       side: DoubleSide,

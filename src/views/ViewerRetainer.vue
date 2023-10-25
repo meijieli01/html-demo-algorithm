@@ -78,7 +78,7 @@ import SubProgress from './sub/SubProgress.vue';
 import { getMeshMaterialByName } from '../third/threejs/mjColor';
 import { readFromStorage, writeToStorage } from '../third/snippet/storage';
 import { addColor2Mesh, PathLoader, updateMeshColor, updateMeshOpacity, FilePathLoader, emptyTrackFile } from '../third/threejs/mjLoader';
-import { mesh2drc } from '../third/threejs/mjExporter';
+import { mesh2drc, bindDracoEncoder } from '../third/threejs/mjExporter';
 import { arrayVectorToMatrix } from '../third/threejs/mjUtil';
 import { upload, getHistory, callAiRetainer, callAiRetainerNew } from '../api/all';
 import { getOssAuth } from '../api/admin';
@@ -136,6 +136,7 @@ onMounted(() => {
     // 缓存上传文件的时间点
     ud.timestampList = JSON.parse(readFromStorage(keyOfLocalStorage, '[]'));
     // 
+    bindDracoEncoder(`https://mydentalx.com/public/draco/draco_encoder.js`);
     store.dispatch('auth/getAuth').then(()=>{});
     app3 = elViewer.value.app3;
 })

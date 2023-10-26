@@ -1,5 +1,6 @@
 // 默认模型颜色
-export const colorModelDefault = '#B38E6B';
+export const colorModelDefault = '#B38E6B'; // 'rgb(179,142,107)'
+export const colorModelSelectDefault = '#d9342a'; // 'rgb(217,52,42)'
 const opacityOfDefault = 1;
 /**
  * /[^\d]/g 去除非数字
@@ -102,17 +103,38 @@ export function getCrownMeshMaterialByName(name) {
     return info;
 }
 
-export function getMeshMaterialByName(name, tag) {
+/**
+ * 获取材质参数
+ * @param {*} name 
+ * @param {*} options 
+ * @returns 
+ */
+export function getMeshMaterialOption(name, options = {}) {
+    const tag = options.tag || '';
     const info = {
         color: colorModelDefault,
         opacity: opacityOfDefault,
     }
+    if (tag)
     if (['AI_NightGuard','AI_Retainer'].includes(tag) && name.indexOf('nng') > -1) {        
         info.color = colorTidOdd;
         return info;
     } else if (tag == 'AI_BracketRemove' && name.indexOf('mesh') > -1) {        
         info.color = colorTidOdd;
         return info;
+    }
+    return info;
+}
+
+/**
+ * @deprecated 使用getMeshMaterialOption
+ * @param {} name 
+ * @returns 
+ */
+export function getMeasureMaterialByName(name) {
+    const info = {
+        color: colorTidOdd,
+        opacity: opacityOfDefault,
     }
     return info;
 }

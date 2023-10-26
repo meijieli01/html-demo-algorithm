@@ -70,7 +70,7 @@ import ViewerBase from './ViewerBase.vue';
 import SubChangeLog from './sub/SubChangeLog.vue';
 import SubVersion from './sub/SubVersion.vue';
 import SubProgress from './sub/SubProgress.vue';
-import { getCrownMeshMaterialByName } from '../third/threejs/mjColor';
+import { getMeshMaterialOption } from '../third/threejs/mjColor';
 import { readFromStorage, writeToStorage } from '../third/snippet/storage';
 import { addColor2Mesh, PathLoader, updateMeshColor, updateMeshOpacity, FilePathLoader, emptyTrackFile } from '../third/threejs/mjLoader';
 import { upload, getHistoryCrown, callAiCrown } from '../api/crown';
@@ -260,7 +260,7 @@ function addGeotoScene(geo, filename) {
         console.warn('empty BufferGeometry');
         return;
     }
-    const info = getCrownMeshMaterialByName(filename);
+    const info = getMeshMaterialOption(filename, {tag:props.tag});
     ud.infoList.push({
         filename:filename,
         check: true,

@@ -69,7 +69,7 @@ import SubChangeLog from './sub/SubChangeLog.vue';
 import SubVersion from './sub/SubVersion.vue';
 import SubSelection from './sub/SubSelection.vue';
 import SubProgress from './sub/SubProgress.vue';
-import { getCtMeshMaterialByName } from '../third/threejs/mjColor';
+import { getMeshMaterialOption } from '../third/threejs/mjColor';
 import { readFromStorage, writeToStorage } from '../third/snippet/storage';
 import { FilePathLoader, addColor2Mesh, PathLoader, updateMeshColor, updateMeshOpacity, emptyTrackFile } from '../third/threejs/mjLoader';
 import { upload, callAi, getHistory } from '../api/ct';
@@ -280,7 +280,7 @@ function addGeotoScene(geo, filename) {
         console.warn('empty BufferGeometry');
         return;
     }
-    const info = getCtMeshMaterialByName(filename);
+    const info = getMeshMaterialOption(filename);
     ud.infoList.push({
         filename:filename,
         check: true,

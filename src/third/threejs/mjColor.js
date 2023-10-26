@@ -60,7 +60,7 @@ const colorOfTeethList = {
 /**
  * 获取材质参数
  * @param {*} name 
- * @param {*} options 
+ * @param {*} options tag是算法AI展示使用
  * @returns 
  */
 export function getMeshMaterialOption(name, options = {}) {
@@ -69,29 +69,30 @@ export function getMeshMaterialOption(name, options = {}) {
         color: colorModelDefault,
         opacity: opacityOfDefault,
     }
-    if (tag)
-    if (['AI_NightGuard','AI_Retainer'].includes(tag) && name.indexOf('nng') > -1) {        
-        info.color = colorTidOdd;
-    } else if (tag == 'AI_BracketRemove' && name.indexOf('mesh') > -1) {        
-        info.color = colorTidOdd;
-    } else if (tag == 'CROWN' && name.indexOf('crown') > -1) {        
-        info.color = colorTidOdd;
-    } else if (tag == 'IMPLANT') {        
-        if (name.indexOf('upper_jaw') > -1 || name.indexOf('lower_jaw') > -1) {        
-            info.opacity = 0.5;
-            info.color = name.indexOf('upper_jaw') > -1 ? '#E23659' : colorTidOdd;
-        } else if (name.startsWith('mesh_')) {
-            info.color = colorCrown;
-        } else if (name.startsWith('trans_')) {
-            info.color = colorTransXXX;
-        } else if (name.startsWith('implant_guide')) {
-            info.color = colorImplantGuid;
-        } else if (name.startsWith('nerve')) {
-            info.color = colorNerve;
-        } else {
-            const tid = name.replace(/[^1-9]/gi,'');
-            if (tid.length > 0) {
-                info.color = colorOfTeethList[tid] || colorModelDefault;
+    if (tag) {
+        if (['AI_NightGuard','AI_Retainer'].includes(tag) && name.indexOf('nng') > -1) {        
+            info.color = colorTidOdd;
+        } else if (tag == 'AI_BracketRemove' && name.indexOf('mesh') > -1) {        
+            info.color = colorTidOdd;
+        } else if (tag == 'CROWN' && name.indexOf('crown') > -1) {        
+            info.color = colorTidOdd;
+        } else if (tag == 'IMPLANT') {        
+            if (name.indexOf('upper_jaw') > -1 || name.indexOf('lower_jaw') > -1) {        
+                info.opacity = 0.5;
+                info.color = name.indexOf('upper_jaw') > -1 ? '#E23659' : colorTidOdd;
+            } else if (name.startsWith('mesh_')) {
+                info.color = colorCrown;
+            } else if (name.startsWith('trans_')) {
+                info.color = colorTransXXX;
+            } else if (name.startsWith('implant_guide')) {
+                info.color = colorImplantGuid;
+            } else if (name.startsWith('nerve')) {
+                info.color = colorNerve;
+            } else {
+                const tid = name.replace(/[^1-9]/gi,'');
+                if (tid.length > 0) {
+                    info.color = colorOfTeethList[tid] || colorModelDefault;
+                }
             }
         }
     }

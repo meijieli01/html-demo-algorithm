@@ -280,7 +280,7 @@ function addGeotoScene(geo, filename) {
         console.warn('empty BufferGeometry');
         return;
     }
-    const info = getMeshMaterialOption(filename);
+    const info = getMeshMaterialOption(filename, {tag:props.tag});
     ud.infoList.push({
         filename:filename,
         check: true,

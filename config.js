@@ -23,8 +23,13 @@ export const vInfo = {
         ],
     },
     'CROWN': {
-        version: '0.6.0',
+        version: '0.6.1',
         changelog: [
+            '2023-11-15',
+            '1. Optimize the occlusion relationship of the dental crown',
+            '2. Optimize the gap between the crown and adjacent teeth',
+            '3. Optimize the shape of the occlusal surface and buccal side of the crown',
+            `4. Enhance AI's capability to detect partial arch data and improve segmentation for prep crowns`,
             '2023-10-23',
             '1. Supports crown generation for tooth 17,27,37,47',
             '2. Optimize crown form by adding tooth feature points',

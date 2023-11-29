@@ -36,6 +36,10 @@
                 <select class="form-select" v-model="m1a.occ_thickness">
                     <option v-for="(item,i) in info.thicknessList" :key="i" :value="item.value" v-html="item.label"></option>
                 </select>
+                <div class="alert alert-info m-1 p-0" role="alert">Minimum Self-Thickness</div>
+                <select class="form-select" v-model="m1a.self_thickness">
+                    <option v-for="(item,i) in info.minimumSelfThickness" :key="i" :value="item.value" v-html="item.label"></option>
+                </select>
             </div>
             <div class="d-flex flex-wrap" v-if="tag=='AI_Retainer'">                
                 <div class="alert alert-info m-1 p-0" role="alert">Model Choose</div>
@@ -145,6 +149,11 @@ const info = reactive({
         { id: 3, value: '0.7', label: '0.7mm' },
         { id: 3, value: '0.8', label: '0.8mm' },
     ],
+    minimumSelfThickness: [
+        { id: 1, value: '0.8', label: '0.8mm' },
+        { id: 2, value: '0.9', label: '0.9mm' },
+        { id: 3, value: '1.0', label: '1.0mm' },
+    ],
 });
 const ud = reactive({
     type: 0,
@@ -178,6 +187,7 @@ const m1a = reactive({
     mode: '0',
     openbite: '0',
     occ_thickness: '1.5',
+    self_thickness: '0.8',
 });
 const m1b = reactive({
     mode: '0',

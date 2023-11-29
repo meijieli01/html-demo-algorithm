@@ -45,8 +45,13 @@ export const vInfo = {
         ],
     },
     'AI_NightGuard': {
-        version: '1.6.3',
+        version: '2.0.0',
         changelog: [
+            '2023-11-28',
+            '1. Adjust edge smooth part to improve NG performance.',
+            '2. Add NG self-thickness check and self-thickness movement to meet the minimum self-thickness  requirement.',
+            '3. Update the segment part algorithm to improve NG shape.',
+            '4. Fix some bug to improve the program robustness.',
             '2023-9-7',
             '1. Add Lower NightGuard generate part.',
             '2. Lower NightGuard control in Model Choose.',

@@ -135,9 +135,9 @@ const info = reactive({
         { id: 1, value: '1', label: 'Openbite' },
     ],
     thicknessList: [
-        { id: 1, value: '1.0', label: '1.0mm' },
-        { id: 2, value: '1.5', label: '1.5mm' },
-        { id: 3, value: '2.0', label: '2.0mm' },
+        { id: 1, value: '1.5', label: '1.5mm' },
+        { id: 2, value: '2.0', label: '2.0mm' },
+        { id: 3, value: '2.5', label: '2.5mm' },
     ],
     modelListRetainer: [
         { id: 0, value: '0', label: 'upper' },

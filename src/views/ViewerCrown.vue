@@ -230,7 +230,7 @@ function updateByPath() {
     const fetchSinglePath = async (path) => {
         const filename = PathLoader.getName(path);
         const validPath = `${import.meta.env.VITE_APP_FILE_PREFIX}/${path}`;
-        const geo = await new PathLoader(path, `https://mydentalx.com/public/draco/`).load(validPath, (e)=>{
+        const geo = await new PathLoader(path, `${import.meta.env.VITE_APP_PREFIX_PUBLIC}/draco/`).load(validPath, (e)=>{
             // console.log('progress', e.loaded/e.total)
         }).catch(err=>{
             if (err instanceof ProgressEvent) {

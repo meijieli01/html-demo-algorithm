@@ -328,7 +328,7 @@ async function handleSelectFile(event) {
         ud.fetchCount = 0;
         for (let i = 0; i < files.length; i++) {
             const file = files[i];
-            const geo = await new FilePathLoader(file.name, `https://mydentalx.com/public/draco/`).load(file, (event)=>{
+            const geo = await new FilePathLoader(file.name, `${import.meta.env.VITE_APP_PREFIX_PUBLIC}/draco/`).load(file, (event)=>{
                 // console.log('progress', event.loaded/event.total)
             }).catch(err=>{
                 if (err instanceof ProgressEvent) {

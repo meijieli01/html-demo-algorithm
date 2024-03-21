@@ -250,7 +250,7 @@ function updateByPath() {
     const fetchSinglePath = async (path) => {
         const filename = PathLoader.getName(path);
         const validPath = `${import.meta.env.VITE_APP_FILE_PREFIX}/${path}`;
-        const geo = await new PathLoader(path, `https://mydentalx.com/public/draco/`).load(validPath, (e)=>{
+        const geo = await new PathLoader(path, `${import.meta.env.VITE_APP_PREFIX_PUBLIC}/draco/`).load(validPath, (e)=>{
             // console.log('progress', e.loaded/e.total)
         }).catch(err=>{
             if (err instanceof ProgressEvent) {
@@ -346,7 +346,7 @@ async function handleSelectFile(event) {
         ud.fetchCount = 0;
         for (let i = 0; i < files.length; i++) {
             const file = files[i];
-            const geo = await new FilePathLoader(file.name, `https://mydentalx.com/public/draco/`).load(file, (event)=>{
+            const geo = await new FilePathLoader(file.name, `${import.meta.env.VITE_APP_PREFIX_PUBLIC}/draco/`).load(file, (event)=>{
                 // console.log('progress', event.loaded/event.total)
             }).catch(err=>{
                 if (err instanceof ProgressEvent) {

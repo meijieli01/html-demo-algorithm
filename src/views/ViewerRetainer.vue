@@ -287,7 +287,7 @@ function updateByPath() {
         // const url = await store.dispatch('auth/getUrl', path);
         const filename = PathLoader.getName(path);
         const validPath = `${import.meta.env.VITE_APP_FILE_PREFIX}/${path}`;
-        const geo = await new PathLoader(path, `https://mydentalx.com/public/draco/`).load(validPath, (e)=>{
+        const geo = await new PathLoader(path, `${import.meta.env.VITE_APP_PREFIX_PUBLIC}/draco/`).load(validPath, (e)=>{
             // console.log('progress', e.loaded/e.total)
         }).catch(err=>{
             if (err instanceof ProgressEvent) {
@@ -395,7 +395,7 @@ async function handleSelectFile(event) {
         ud.fetchCount = 0;
         for (let i = 0; i < files.length; i++) {
             const file = files[i];
-            const geo = await new FilePathLoader(file.name, `https://mydentalx.com/public/draco/`).load(file, (event)=>{
+            const geo = await new FilePathLoader(file.name, `${import.meta.env.VITE_APP_PREFIX_PUBLIC}/draco/`).load(file, (event)=>{
                 // console.log('progress', event.loaded/event.total)
             }).catch(err=>{
                 if (err instanceof ProgressEvent) {
@@ -437,7 +437,7 @@ async function handleSelectFile(event) {
             } else {
                 //  其他格式转换一下
                 try {
-                    const geo = await new FilePathLoader(filename, `https://mydentalx.com/public/draco/`).load(file)
+                    const geo = await new FilePathLoader(filename, `${import.meta.env.VITE_APP_PREFIX_PUBLIC}/draco/`).load(file)
                     .catch(err=>{
                         msg.value = 'File Load failure';
                         console.error(err);
@@ -483,7 +483,7 @@ async function handleSelectFile(event) {
                 //  其他格式转换一下
                 try {
                     const noExtFilename = filename.substr(0, filename.lastIndexOf('.'));
-                    const geo = await new FilePathLoader(filename, `https://mydentalx.com/public/draco/`).load(file)
+                    const geo = await new FilePathLoader(filename, `${import.meta.env.VITE_APP_PREFIX_PUBLIC}/draco/`).load(file)
                     .catch(err=>{
                         msg.value = 'File Load failure';
                         return null;

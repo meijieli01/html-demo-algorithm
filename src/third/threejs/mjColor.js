@@ -76,6 +76,8 @@ export function getMeshMaterialOption(name, options = {}) {
             info.color = colorTidOdd;
         } else if (tag == 'CROWN' && name.indexOf('crown') > -1) {        
             info.color = colorTidOdd;
+        } else if (tag == 'AI_Clean' && name.indexOf('cleaned') > -1) {        
+            info.color = colorTidOdd;
         } else if (tag == 'IMPLANT') {        
             if (name.indexOf('upper_jaw') > -1 || name.indexOf('lower_jaw') > -1) {        
                 info.opacity = 0.5;

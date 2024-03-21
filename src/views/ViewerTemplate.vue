@@ -51,6 +51,12 @@
                     <option v-for="(item,i) in info.thicknessListRetainer" :key="i" :value="item.value" v-html="item.label"></option>
                 </select>
             </div>
+            <div class="d-flex flex-wrap" v-if="tag=='AI_Clean'">                
+                <div class="alert alert-info m-1 p-0" role="alert">Efficient Mode</div>
+                <select class="form-select" v-model="m1c.efficient_mode">
+                    <option v-for="(item,i) in info.efficientModeList" :key="i" :value="item.value" v-html="item.label"></option>
+                </select>
+            </div>
             <div class="d-flex flex-wrap">                
                 <button class="btn btn-primary m-1" @click="clickLoadShowData(3)" :disabled="ud.lockCall" v-html="'Call the AI Algorithm'"></button>
                 <div class="h-100 m-auto d-flex flex-column justify-content-center">
@@ -117,6 +123,7 @@ const info = reactive({
         'AI_NightGuard': 'Upload the upper scanned meshes',
         'AI_BracketRemove': 'Upload the upper or lower scanned mesh',
         'AI_Retainer': 'Upload the upper scanned meshes',
+        'AI_Clean': 'Upload the mesh',
     },
     moveDownList: [
         { id: 0, value: '0.0', label: '0.0mm' },
@@ -153,6 +160,10 @@ const info = reactive({
         { id: 1, value: '0.8', label: '0.8mm' },
         { id: 2, value: '0.9', label: '0.9mm' },
         { id: 3, value: '1.0', label: '1.0mm' },
+    ],
+    efficientModeList: [
+        { id: 0, value: 'true', label: 'True' },
+        { id: 1, value: 'false', label: 'False' },
     ],
 });
 const ud = reactive({
@@ -192,6 +203,9 @@ const m1a = reactive({
 const m1b = reactive({
     mode: '0',
     occ_thickness: '0.6',
+});
+const m1c = reactive({
+    efficient_mode: info['efficientModeList'][1].value,
 });
 let app3 = null;
 const keyOfLocalStorage = `keyOfLocalStorage${props.tag}`;
@@ -245,6 +259,8 @@ function clickLoadShowData(type) {
             m1.param = JSON.stringify(m1a);
         } else if (props.tag == 'AI_Retainer') {
             m1.param = JSON.stringify(m1b);
+        } else if (props.tag == 'AI_Clean') {
+            m1.param = JSON.stringify(m1c);
         }
         callAi(m1).then(res=>{
             ud.calling = false;
@@ -279,7 +295,7 @@ function clickLoadShowData(type) {
                     const strList = e.split(' ');
                     const tmpDir = parseInt(strList[0].split('=').pop());
                     const t1 = { tid: 'history', needAdd: true, param: null };
-                    if (['AI_NightGuard', 'AI_Retainer'].includes(props.tag)) {
+                    if (['AI_NightGuard', 'AI_Retainer', 'AI_Clean'].includes(props.tag)) {
                         const t2 = strList.filter(e=>e.startsWith('param'))[0];
                         if (t2 && t2.length > 6) t1.param = JSON.parse(t2.split('=')[1]);
                     }
@@ -329,6 +345,11 @@ function selectTimestamp() {
             if (param[k]) m1b[k] = param[k];
         }
     }
+    if (props.tag == 'AI_Clean') {
+        for (let k in m1c) {
+            if (param[k]) m1c[k] = param[k];
+        }
+    }
 }
 function updateByPath() {
     app3.loading(true);
@@ -339,7 +360,7 @@ function updateByPath() {
     const fetchSinglePath = async (path) => {
         const filename = PathLoader.getName(path);
         const validPath = `${import.meta.env.VITE_APP_FILE_PREFIX}/${path}`;
-        const geo = await new PathLoader(path, `https://mydentalx.com/public/draco/`).load(validPath, (e)=>{
+        const geo = await new PathLoader(path, `${import.meta.env.VITE_APP_PREFIX_PUBLIC}/draco/`).load(validPath, (e)=>{
             console.log('progress', e.loaded/e.total)
         }).catch(err=>{
             if (err instanceof ProgressEvent) {
@@ -437,7 +458,7 @@ async function handleSelectFile(event) {
         ud.fetchCount = 0;
         for (let i = 0; i < files.length; i++) {
             const file = files[i];
-            const geo = await new FilePathLoader(file.name, `https://mydentalx.com/public/draco/`).load(file, (event)=>{
+            const geo = await new FilePathLoader(file.name, `${import.meta.env.VITE_APP_PREFIX_PUBLIC}/draco/`).load(file, (event)=>{
                 // console.log('progress', event.loaded/event.total)
             }).catch(err=>{
                 if (err instanceof ProgressEvent) {

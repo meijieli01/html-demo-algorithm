@@ -77,6 +77,14 @@ export const vInfo = {
             '1. New orientor and segmentor (trained from 10000 teeth) are deployed now.',
         ],
     },
+    'AI_Clean': {
+        version: '0.1.0',
+        changelog: [
+            '2024-03-20',
+            `1. Support clean the dental model's unnecessary base.`,
+            `2. Support to slice the model on the simplified or on the origianl model.`,
+        ],
+    },
     'pmp_retainer': {
         version: '',
         changelog: [

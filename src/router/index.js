@@ -28,11 +28,17 @@ export const mapComponent2LocalFile = {
     functionCode: 'ViewerNight',
     functionId: '103',
   },
-  'NGRETAINER': {
-    component: () => import('../views/one/NGRetainer.vue'),
-    functionName: 'NGRetainer',
-    functionCode: 'ViewerNGRetainer',
-    functionId: '106',
+  // 'NGRETAINER': {
+  //   component: () => import('../views/one/NGRetainer.vue'),
+  //   functionName: 'NGRetainer',
+  //   functionCode: 'ViewerNGRetainer',
+  //   functionId: '106',
+  // },
+  'AiClean': {
+    component: () => import('../views/one/AiClean.vue'),
+    functionName: 'AiClean',
+    functionCode: 'AiClean',
+    functionId: '107',
   },
   'BRACKER': {
     component: () => import('../views/one/BrackerRemove.vue'),

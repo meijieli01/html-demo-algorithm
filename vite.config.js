@@ -1,4 +1,4 @@
-import { defineConfig } from 'vite'
+import { defineConfig, loadEnv } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import html from 'vite-plugin-html'
 import svgLoader from 'vite-svg-loader';
@@ -8,8 +8,8 @@ import {getBaseRoot} from './config';
 // https://vitejs.dev/config/
 export default defineConfig(({mode}) => {
   const buildPath = `./dist_${mode}`
-  const configure = require('dotenv').config({path: `.env.${mode}`})
-  console.log('-build info-', mode, buildPath, configure)
+  const env = loadEnv(mode, process.cwd(), '');
+  console.log('-build info-', mode, env)
   return {
     plugins: [
       vue(),
@@ -18,7 +18,7 @@ export default defineConfig(({mode}) => {
         inject: {
           injectData: {
             title: 'Viewer',
-            iconPath: `${configure.parsed.VITE_APP_ICON}`,
+            iconPath: `${env.VITE_APP_ICON}`,
           }
         },
         minify: false,
@@ -52,7 +52,7 @@ export default defineConfig(({mode}) => {
       strictPort: true,
       proxy: {
         '/api': {
-          target: configure.parsed.VITE_APP_BASE_API,
+          target: env.VITE_APP_BASE_API,
           changeOrigin: true,
           rewrite: (path) => path.replace(/^\/api/, '')
         }

@@ -16,7 +16,7 @@
                 </div>
                 <div class="d-flex flex-wrap">
                     <button class="btn btn-primary m-1 btn-sm" @click="clickLoadShowData(2)" :disabled="getState()" v-html="info.btn1Label[tag]"></button>
-                    <button class="btn btn-primary m-1 btn-sm" v-if="['AI_NightGuard','AI_Retainer'].includes(tag)" @click="clickLoadShowData(6)" :disabled="getState()">Upload the lower scanned meshes</button>
+                    <button class="btn btn-primary m-1 btn-sm" v-if="['AI_NightGuard','AI_Retainer','AI_Oc_Re'].includes(tag)" @click="clickLoadShowData(6)" :disabled="getState()">Upload the lower scanned meshes</button>
                 </div>
             </div>
             <div class="d-flex flex-wrap" v-if="tag=='AI_NightGuard'">                
@@ -123,6 +123,7 @@ const info = reactive({
         'AI_NightGuard': 'Upload the upper scanned meshes',
         'AI_BracketRemove': 'Upload the upper or lower scanned mesh',
         'AI_Retainer': 'Upload the upper scanned meshes',
+        'AI_Oc_Re': 'Upload the upper scanned meshes',
         'AI_Clean': 'Upload the mesh',
     },
     moveDownList: [
@@ -242,6 +243,7 @@ function getState() {
     return false;
 }
 function clickLoadShowData(type) {
+    const { tag } = props;
     ud.fetching = false;
     msg.value = '';
     ud.infoList = [];
@@ -255,11 +257,11 @@ function clickLoadShowData(type) {
     } else if (type == 3) {
         ud.calling = true;
         const tmp = {tid:'history',needAdd:false};
-        if (props.tag == 'AI_NightGuard') {
+        if (tag == 'AI_NightGuard') {
             m1.param = JSON.stringify(m1a);
-        } else if (props.tag == 'AI_Retainer') {
+        } else if (tag == 'AI_Retainer') {
             m1.param = JSON.stringify(m1b);
-        } else if (props.tag == 'AI_Clean') {
+        } else if (tag == 'AI_Clean') {
             m1.param = JSON.stringify(m1c);
         }
         callAi(m1).then(res=>{
@@ -295,12 +297,14 @@ function clickLoadShowData(type) {
                     const strList = e.split(' ');
                     const tmpDir = parseInt(strList[0].split('=').pop());
                     const t1 = { tid: 'history', needAdd: true, param: null };
-                    if (['AI_NightGuard', 'AI_Retainer', 'AI_Clean'].includes(props.tag)) {
+                    if (['AI_NightGuard', 'AI_Retainer', 'AI_Clean'].includes(tag)) {
                         const t2 = strList.filter(e=>e.startsWith('param'))[0];
                         if (t2 && t2.length > 6) t1.param = JSON.parse(t2.split('=')[1]);
                     }
                     updateTimestampData(tmpDir, t1);
                 })
+            } else {
+                msg.value = res.message;
             }
         })
     }
@@ -324,6 +328,7 @@ function updateTimestampData(tmpDir, options) {
     ud.timestampList = JSON.parse(readFromStorage(keyOfLocalStorage, '[]'));
 }
 function selectTimestamp() {
+    const { tag } = props;
     const { tmpDir, tid, param } = ud.selTimestamp || {};
     ud.lockCall = false;
     m1.tempDir = tmpDir;
@@ -335,17 +340,17 @@ function selectTimestamp() {
         m1.type = 1;
         ud.timestamp = tmpDir;
     }
-    if (props.tag == 'AI_NightGuard') {
+    if (tag == 'AI_NightGuard') {
         for (let k in m1a) {
             if (param[k]) m1a[k] = param[k];
         }
     }
-    if (props.tag == 'AI_Retainer') {
+    if (tag == 'AI_Retainer') {
         for (let k in m1b) {
             if (param[k]) m1b[k] = param[k];
         }
     }
-    if (props.tag == 'AI_Clean') {
+    if (tag == 'AI_Clean') {
         for (let k in m1c) {
             if (param[k]) m1c[k] = param[k];
         }
@@ -390,13 +395,18 @@ function addGeotoScene(geo, filename) {
         console.warn('empty BufferGeometry');
         return;
     }
-    const info = getMeshMaterialOption(filename, {tag:props.tag});
-    ud.infoList.push({
+    const { tag } = props;
+    const info = getMeshMaterialOption(filename, {tag});
+    const oneMesh = {
         filename:filename,
         check: true,
         color: info.color,
         opacity: info.opacity,
-    });
+    };
+    if (tag=='AI_Oc_Re' && filename=='orig_lower.drc') {
+        oneMesh.check = false;
+    }
+    ud.infoList.push(oneMesh);
     function compare(attr) {
         return function(a,b) {
             const t1 = a[attr], t2 = b[attr];
@@ -406,6 +416,7 @@ function addGeotoScene(geo, filename) {
     }
     const tmp = ud.infoList.sort(compare('filename'));
     addColor2Mesh(geo, {name:filename, color:info.color, opacity: info.opacity}).then(mesh=>{
+        mesh.visible = oneMesh.check;
         app3.add(mesh);
         app3.updateFrame();
     })

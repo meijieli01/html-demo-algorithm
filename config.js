@@ -85,6 +85,17 @@ export const vInfo = {
             `2. Support to slice the model on the simplified or on the origianl model.`,
         ],
     },
+    // AI_OcclusionRecovery
+    'AI_Oc_Re': {
+        version: '0.1.0',
+        changelog: [
+            '2024-04-12',
+            `1. This Occlusion Recovery used for Recovery the not correct occlusion relation (such us model bite through).`,
+            `2. It needs the models(upperjaw and lowerjaw) have basic occlusion relation (if not, it will return no relation).`,
+            `3. We will continuous develop no occlusion relation recovery.`,
+            `4. For now, it only support Angle's malocclusion class I. We will develop other class next. (other class will return not class I).`,
+        ],
+    },
     'pmp_retainer': {
         version: '',
         changelog: [

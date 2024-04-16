@@ -40,6 +40,13 @@ export const mapComponent2LocalFile = {
     functionCode: 'AiClean',
     functionId: '107',
   },
+  // 2024-4-16
+  'AiClean': {
+    component: () => import('../views/one/AiOcclusionRecovery.vue'),
+    functionName: 'OcclusionRecovery',
+    functionCode: 'OcclusionRecovery',
+    functionId: '108',
+  },
   'BRACKER': {
     component: () => import('../views/one/BrackerRemove.vue'),
     functionName: 'BracketRemoval',

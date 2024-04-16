@@ -41,7 +41,7 @@ export const mapComponent2LocalFile = {
     functionId: '107',
   },
   // 2024-4-16
-  'AiClean': {
+  'AiOcclusionRecovery': {
     component: () => import('../views/one/AiOcclusionRecovery.vue'),
     functionName: 'OcclusionRecovery',
     functionCode: 'OcclusionRecovery',

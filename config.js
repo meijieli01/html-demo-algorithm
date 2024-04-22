@@ -111,3 +111,12 @@ export const vInfo = {
 export const configRetainer = {
     isShell: false, // 生成数据默认是实体的，配置成非实体，中空
 }
+
+export const vTipInfo = [
+    {
+        begin: '2024-04-22',
+        end: '2024-05-05',
+        msg: 'WebUI will be closded from April 30th to May 5th because of power outage.',
+        type: 'text-danger'
+    }
+]

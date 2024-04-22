@@ -39,7 +39,7 @@ import { reactive, ref, onMounted } from 'vue'
 import { useStore } from 'vuex'
 import { useRouter } from 'vue-router'
 import ResMessage from '../third/snippet/ResMessage.vue';
-import { inTwoDate } from '../utils/helpMoment';
+import { inTwoDate } from '../utils/helpDateTime';
 import { vTipInfo } from '../../config';
 const store = useStore()
 const router = useRouter()
@@ -57,12 +57,13 @@ function btnClickLogin(event) {
     store
         .dispatch('user/login', form)
         .then(() => {
-        router.push({ path: '/' })
+            router.push({ path: '/' })
         }, (err) =>{
-        msg.value = err;
-        console.log(err)
+            msg.value = err;
+            console.log(err)
         }).catch(err => {
-        console.log(err);
+            msg.value = err;
+            console.log(err);
         })
 }
 onMounted(() => {
@@ -72,7 +73,6 @@ onMounted(() => {
         if (one.show) {
             ud.tipList.push(one);
         }
-        console.log(one)
     })
 })
 </script>

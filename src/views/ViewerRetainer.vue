@@ -428,10 +428,11 @@ async function handleSelectFile(event) {
         ud.uploading = true;
         const file = files[0];
         let filename = file.name;
+        const fnameLower = filename.toLowerCase();
         const { tag } = props;
         if (true) {
             const formData = new FormData();
-            if (filename.endsWith('.drc') || filename.endsWith('.mq')) {
+            if (fnameLower.endsWith('.drc') || fnameLower.endsWith('.mq')) {
                 filename =  ud.type == 6 ? 'cleaned_upper.mq' : 'cleaned_lower.mq';
                 formData.append("files", file, filename);
             } else {
@@ -447,7 +448,6 @@ async function handleSelectFile(event) {
                     const mesh = await addColor2Mesh(geo);
                     const buffer = await mesh2drc(mesh);
                     const noExtFilename = filename.substr(0, filename.lastIndexOf('.'));
-                    // filename =  `${noExtFilename}.mq`;
                     filename =  ud.type == 6 ? 'cleaned_upper.mq' : 'cleaned_lower.mq';
                     formData.append("files", new Blob([buffer.buffer], { type: 'application/octet-stream',}), filename);
                 } catch(err){

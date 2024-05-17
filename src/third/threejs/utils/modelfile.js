@@ -24,7 +24,7 @@ function supportExt(nameOrPath) {
   let cleanNameOrPath = nameOrPath.split('?OSSAccessKeyId')[0]
   const pos1 = cleanNameOrPath.lastIndexOf('/')
   const name = cleanNameOrPath.substr(pos1 + 1)
-  const ext = name.substr(name.lastIndexOf('.') + 1)
+  const ext = name.substr(name.lastIndexOf('.') + 1);
   for (let idx = 5; idx > 0; idx--) {
     if (FileType.values[idx].name === ext) {
       return FileType.values[idx].value
@@ -34,11 +34,12 @@ function supportExt(nameOrPath) {
 }
 
 function extFile(path, ftype) {
+  const tmp = path.toLowerCase();
   const ext = FileType.values[ftype].name
   const str1 = `.${ext}`
   const str2 = `.${ext}?`
   // console.log('-ext', path, ftype, str1, str2);
-  return path.endsWith(str1) || path.indexOf(str2) > 0
+  return tmp.endsWith(str1) || tmp.indexOf(str2) > 0
 }
 
 export function isModelFile(name) {
@@ -58,5 +59,6 @@ export function toFileType(path) {
   } else if (extFile(path, FileType.OBJ)) {
     return FileType.OBJ
   }
+  throw new Error(`no support file ${path}`);
   return FileType.UNKNOWN
 }

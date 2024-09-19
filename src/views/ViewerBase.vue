@@ -6,10 +6,21 @@
 </template>
 <script setup>
 import { onMounted, onBeforeUnmount } from 'vue';
-import { mqThree } from '../third/threejs/mjthree';
-import { mesh2stl } from '../third/threejs/mjExporter';
+import { MqMultiViewEditor, Scene, mesh2stl, Color } from '../third/mq-render/viewer.es';
 import { saveBinaryFile } from '../third/snippet/toolkit';
-const app3 = new mqThree();
+const gScene = new Scene();
+const viewState = [
+    {
+        left: 0,
+        bottom: 0,
+        width: 1,
+        height: 1,
+        clearColor: new Color().setRGB(1, 1, 1),     
+        background: new Color().setStyle('#cccccc'),
+        scene: gScene,
+    },
+];
+const app3 = new MqMultiViewEditor();
 onMounted(() => {
     let el = document.getElementById('id3DContainer');
     let rect = el.getBoundingClientRect();
@@ -24,24 +35,17 @@ onMounted(() => {
         pointIntensity: 0.5,
         ambientIntensity: 0.1,
         pointDistance: 1500,
+        viewStateList: viewState,
     });
-    app3.setLoadConfig({
-        msg: 'Loading',
-        url: '/web/images/loading.svg',
-    });
-    app3.eventLoop();
-    app3.resize();
+    app3.callAnimate();
     app3.updateFrame();
 });
 onBeforeUnmount(() => {
-    console.log('unmount')
-    app3.empty();
     app3.dispose();
 });
 function donwloadByName(name, options = {}) {
     const prefix = options.prefix || '';
     const mesh = app3.getByName(name);
-    console.log(mesh);
     mesh2stl(mesh.clone(), {isBinary:true}).then(buffer=>{
         const fName = name.substring(0, name.lastIndexOf('.'));
         saveBinaryFile(buffer, `${prefix?prefix+'-':''}${fName}-${Date.now()}.stl`);
@@ -49,6 +53,7 @@ function donwloadByName(name, options = {}) {
 }
 defineExpose({
     app3,
+    gScene,
     donwloadByName,
 });
 </script>

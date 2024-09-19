@@ -1,6 +1,10 @@
+import { 
+    Mesh, Color, MeshPhongMaterial, Float32BufferAttribute, DoubleSide,
+    ObjectSpaceNormalMap, Matrix4,
+} from './mq-render/viewer.es';
 // 默认模型颜色
-export const colorModelDefault = '#B38E6B'; // 'rgb(179,142,107)'
-export const colorModelSelectDefault = '#d9342a'; // 'rgb(217,52,42)'
+const colorModelDefault = '#B38E6B'; // 'rgb(179,142,107)'
+const colorModelSelectDefault = '#d9342a'; // 'rgb(217,52,42)'
 const opacityOfDefault = 1;
 /**
  * /[^\d]/g 去除非数字
@@ -16,8 +20,8 @@ const primaryTeethList = [
 /**
  * CT牙号的配置颜色
  */
-export const colorTidEven = '#C41773';
-export const colorTidOdd = '#20CB3C';
+const colorTidEven = '#C41773';
+const colorTidOdd = '#20CB3C';
 const colorCrown = '#808080';
 const colorTransXXX = '#A3A8A7';
 const colorImplantGuid = '#635DB1';
@@ -115,3 +119,65 @@ export function getMeasureMaterialByName(name) {
     }
     return info;
 }
+
+export function updateMeshColor(mesh, strColor) {  
+    const color = new Color(strColor);
+    mesh.material.color.copy(color);
+}
+
+export function updateMeshOpacity(mesh, opacity) {
+    mesh.material.opacity = opacity;
+    mesh.material.transparent = !(opacity == 1);
+    mesh.material.needsUpdate = true;
+}
+  
+export function addColor2Mesh(bufferGeo, options = {}) {  
+    const hasColor = typeof options.hasColor == 'boolean' ? options.hasColor : true;
+    return new Promise((resolve)=>{
+      const color = new Color(options.color || 'rgb(179,142,107)');
+      let material = new MeshPhongMaterial({
+        color: color,
+        specular: 0x111111,
+        reflectivity: 0.2,
+        shininess: 10,
+        normalMapType: ObjectSpaceNormalMap,
+        side: DoubleSide,
+        transparent: false,
+      });
+      if (hasColor) {
+        let colors = []
+        for (let i = 0; i < bufferGeo.attributes.position.count; i++) {
+          colors.push(color.r)
+          colors.push(color.g)
+          colors.push(color.b)
+        }
+        bufferGeo.setAttribute('color', new Float32BufferAttribute(colors, 3))
+        bufferGeo.computeVertexNormals()
+        bufferGeo.normalizeNormals()
+        bufferGeo.attributes.color.needsUpdate = true
+      }
+      const mesh = new Mesh(bufferGeo, material)
+      mesh.name = options.name || Date.now().toString();
+      updateMeshOpacity(mesh, options.opacity || 1);
+      resolve(mesh);
+    })
+  }
+  
+  export function arrayVectorToMatrix(arrVector) {
+    const mat = new Matrix4();
+    mat.set(
+        arrVector[0][0], arrVector[0][1], arrVector[0][2], arrVector[0][3], 
+        arrVector[1][0], arrVector[1][1], arrVector[1][2], arrVector[1][3], 
+        arrVector[2][0], arrVector[2][1], arrVector[2][2], arrVector[2][3], 
+        arrVector[3][0], arrVector[3][1], arrVector[3][2], arrVector[3][3], 
+    )
+    return mat;
+}
+
+export function bindDracoEncoder(drcPath) {
+    let elScript = document.createElement('script');
+    elScript.type = 'text/javascript';
+    elScript.src = drcPath || '/js/libs/draco/draco_encoder.js';
+    document.body.appendChild(elScript);
+  }
+  

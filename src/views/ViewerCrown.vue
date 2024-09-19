@@ -70,9 +70,9 @@ import ViewerBase from './ViewerBase.vue';
 import SubChangeLog from './sub/SubChangeLog.vue';
 import SubVersion from './sub/SubVersion.vue';
 import SubProgress from './sub/SubProgress.vue';
-import { getMeshMaterialOption } from '../third/threejs/mjColor';
+import { getMeshMaterialOption, updateMeshColor, updateMeshOpacity, addColor2Mesh } from '../third/auxThree';
 import { readFromStorage, writeToStorage } from '../third/snippet/storage';
-import { addColor2Mesh, PathLoader, updateMeshColor, updateMeshOpacity, FilePathLoader, emptyTrackFile } from '../third/threejs/mjLoader';
+import { FilePathLoader, PathLoader } from '../third/mq-render/viewer.es';
 import { upload, getHistoryCrown, callAiCrown } from '../api/crown';
 import { getBaseRoot, vInfo } from '../../config';
 import { ext, filterFile } from '../utils/util';
@@ -113,10 +113,12 @@ const m1 = reactive({
     tempDir: '',
 });
 let app3 = null;
+let gScene = null;
 const keyOfLocalStorage = 'keyOfLocalStorage4Crown';
 onMounted(() => {
     ud.timestampList = JSON.parse(readFromStorage(keyOfLocalStorage, '[]'));
     app3 = elViewer.value.app3;
+    gScene = elViewer.value.gScene;
 })
 function parseTime(timestamp) {
     const date = new Date(parseInt(timestamp.tmpDir));
@@ -144,7 +146,6 @@ function clickLoadShowData(type, item) {
     ud.type = type;
     app3.empty();
     if ([1,2,6].includes(type)) {
-        emptyTrackFile();
         refFile.value.dispatchEvent(new MouseEvent('click'))
     } else if (type == 3) {
         if (!m1.missId) {
@@ -349,7 +350,6 @@ async function handleSelectFile(event) {
             app3.loading(false);
             addGeotoScene(geo, filename);
         }
-        emptyTrackFile();
     } else if ([2,6].includes(ud.type)) {
         // 上传文件
         if (!ud.timestamp || ud.timestamp.length < 1) {

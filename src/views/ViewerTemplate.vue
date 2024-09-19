@@ -102,9 +102,10 @@ import ViewerBase from './ViewerBase.vue';
 import SubChangeLog from './sub/SubChangeLog.vue';
 import SubVersion from './sub/SubVersion.vue';
 import SubProgress from './sub/SubProgress.vue';
-import { getMeshMaterialOption } from '../third/threejs/mjColor';
+import { getMeshMaterialOption, updateMeshColor, updateMeshOpacity, addColor2Mesh } from '../third/auxThree';
 import { readFromStorage, writeToStorage } from '../third/snippet/storage';
-import { addColor2Mesh, PathLoader, updateMeshColor, updateMeshOpacity, FilePathLoader, emptyTrackFile } from '../third/threejs/mjLoader';
+import elLoading from '../third/snippet/loading';
+import { FilePathLoader, PathLoader } from '../third/mq-render/viewer.es';
 import { upload, getHistory, callAi } from '../api/all';
 import { getBaseRoot, vInfo } from '../../config';
 import { ext, filterFile } from '../utils/util';
@@ -209,11 +210,13 @@ const m1c = reactive({
     efficient_mode: info['efficientModeList'][1].value,
 });
 let app3 = null;
+let gScene = null;
 const keyOfLocalStorage = `keyOfLocalStorage${props.tag}`;
 onMounted(() => {
     // 缓存上传文件的时间点
     ud.timestampList = JSON.parse(readFromStorage(keyOfLocalStorage, '[]'));
     app3 = elViewer.value.app3;
+    gScene = elViewer.value.gScene;
 })
 function parseTime(timestamp) {
     const date = new Date(parseInt(timestamp.tmpDir));
@@ -250,9 +253,8 @@ function clickLoadShowData(type) {
     msg.errorList = [];
     msg.countError = 0;
     ud.type = type;
-    app3.empty();
+    gScene.clear();
     if ([1,2,6].includes(type)) {
-        emptyTrackFile();
         refFile.value.dispatchEvent(new MouseEvent('click'))
     } else if (type == 3) {
         ud.calling = true;
@@ -357,7 +359,7 @@ function selectTimestamp() {
     }
 }
 function updateByPath() {
-    app3.loading(true);
+    elLoading.show(document.body, {message: `加载中...`, zIndex:5000});
     ud.uploading = true;
     ud.fetching = true;
     ud.fetchTotal = ud.pathList.length;
@@ -365,7 +367,7 @@ function updateByPath() {
     const fetchSinglePath = async (path) => {
         const filename = PathLoader.getName(path);
         const validPath = `${import.meta.env.VITE_APP_FILE_PREFIX}/${path}`;
-        const geo = await new PathLoader(path, `${import.meta.env.VITE_APP_PREFIX_PUBLIC}/draco/`).load(validPath, (e)=>{
+        const geo = await new PathLoader(path, {drcPath:`${import.meta.env.VITE_APP_PREFIX_PUBLIC}/draco/`}).load(validPath, (e)=>{
             console.log('progress', e.loaded/e.total)
         }).catch(err=>{
             if (err instanceof ProgressEvent) {
@@ -377,12 +379,12 @@ function updateByPath() {
                 }   
             }
             msg.value = 'File Load failure';
-            app3.loading(false);
+            elLoading.hide();
             return null;
         })
         ud.fetchCount++;
         if (!geo) return;
-        app3.loading(false);
+        elLoading.hide();
         addGeotoScene(geo, filename);
     }
     ud.pathList.forEach(path=>{
@@ -429,7 +431,7 @@ function addGeotoScene(geo, filename) {
 }
 function inputChangeUpdate(item) {
     item.check = !item.check;
-    const mesh = app3.group.children.filter(e=>e.name==item.filename)[0];
+    const mesh = gScene.children.filter(e=>e.name==item.filename)[0];
     if (mesh) {
         mesh.visible = item.check;
         app3.updateFrame();
@@ -437,7 +439,7 @@ function inputChangeUpdate(item) {
 }
 function inputChangeColorUpdate(event, item) {
     item.color = event.target.value;
-    const mesh = app3.group.children.filter(e=>e.name==item.filename)[0];
+    const mesh = gScene.children.filter(e=>e.name==item.filename)[0];
     if (mesh) {
         updateMeshColor(mesh, item.color);
         app3.updateFrame();
@@ -445,7 +447,7 @@ function inputChangeColorUpdate(event, item) {
 }
 function inputChangeOpacityUpdate(event, item) {
     item.opacity = parseFloat(event.target.value);
-    const mesh = app3.group.children.filter(e=>e.name==item.filename)[0];
+    const mesh = gScene.children.filter(e=>e.name==item.filename)[0];
     if (mesh) {
         updateMeshOpacity(mesh, item.opacity);
         app3.updateFrame();
@@ -464,12 +466,12 @@ async function handleSelectFile(event) {
         ud.fetching = true;
         ud.uploading = true;
         ud.infoList = [];
-        app3.loading(true);
+        elLoading.show(document.body, {message: `加载中...`, zIndex:5000});
         ud.fetchTotal = files.length;
         ud.fetchCount = 0;
         for (let i = 0; i < files.length; i++) {
             const file = files[i];
-            const geo = await new FilePathLoader(file.name, `${import.meta.env.VITE_APP_PREFIX_PUBLIC}/draco/`).load(file, (event)=>{
+            const geo = await new FilePathLoader(file.name, {drcPath:`${import.meta.env.VITE_APP_PREFIX_PUBLIC}/draco/`}).load(file, (event)=>{
                 // console.log('progress', event.loaded/event.total)
             }).catch(err=>{
                 if (err instanceof ProgressEvent) {
@@ -481,16 +483,15 @@ async function handleSelectFile(event) {
                     }   
                 }
                 msg.value = 'File Load failure';
-                app3.loading(false);
+                elLoading.hide();
                 return null;
             });
             ud.fetchCount++;
             if (!geo) return;
             const filename = FilePathLoader.getName(file.name);
-            app3.loading(false);
+            elLoading.hide();
             addGeotoScene(geo, filename);
         }
-        emptyTrackFile();
     } else if ([2,6].includes(ud.type)) {
         // 上传文件
         if (!ud.timestamp || ud.timestamp.length < 1) {

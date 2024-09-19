@@ -69,9 +69,9 @@ import SubChangeLog from './sub/SubChangeLog.vue';
 import SubVersion from './sub/SubVersion.vue';
 import SubSelection from './sub/SubSelection.vue';
 import SubProgress from './sub/SubProgress.vue';
-import { getMeshMaterialOption } from '../third/threejs/mjColor';
+import { getMeshMaterialOption, updateMeshColor, updateMeshOpacity, addColor2Mesh } from '../third/auxThree';
 import { readFromStorage, writeToStorage } from '../third/snippet/storage';
-import { FilePathLoader, addColor2Mesh, PathLoader, updateMeshColor, updateMeshOpacity, emptyTrackFile } from '../third/threejs/mjLoader';
+import { FilePathLoader, PathLoader } from '../third/mq-render/viewer.es';
 import { upload, callAi, getHistory } from '../api/ct';
 import { getBaseRoot, vInfo } from '../../config';
 import { calcPer, filterFile } from '../utils/util';
@@ -146,7 +146,6 @@ function clickLoadShowData(type) {
     ud.type = type;
     app3.empty();
     if ([1,2].includes(type)) {
-        emptyTrackFile();
         refFile.value.dispatchEvent(new MouseEvent('click'))
     } else if (type == 3) {
         const { tmpDir, tid } = ud.selTimestamp || {};
@@ -367,7 +366,6 @@ async function handleSelectFile(event) {
             app3.loading(false);
             addGeotoScene(geo, filename);
         }
-        emptyTrackFile();
     } else if (ud.type == 2) {
         // 上传文件
         if (!ud.timestamp || ud.timestamp.length < 1) {

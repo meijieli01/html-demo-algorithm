@@ -75,11 +75,10 @@ import ViewerBase from './ViewerBase.vue';
 import SubChangeLog from './sub/SubChangeLog.vue';
 import SubVersion from './sub/SubVersion.vue';
 import SubProgress from './sub/SubProgress.vue';
-import { getMeshMaterialOption } from '../third/threejs/mjColor';
+import { getMeshMaterialOption, updateMeshColor, updateMeshOpacity, addColor2Mesh, arrayVectorToMatrix, bindDracoEncoder } from '../third/auxThree';
 import { readFromStorage, writeToStorage } from '../third/snippet/storage';
-import { addColor2Mesh, PathLoader, updateMeshColor, updateMeshOpacity, FilePathLoader, emptyTrackFile, bindDracoEncoder } from '../third/threejs/mjLoader';
-import { mesh2drc } from '../third/threejs/mjExporter';
-import { arrayVectorToMatrix } from '../third/threejs/mjUtil';
+import elLoading from '../third/snippet/loading';
+import { FilePathLoader, PathLoader, mesh2drc } from '../third/mq-render/viewer.es';
 import { upload, getHistory, callAiRetainer, callAiRetainerNew } from '../api/all';
 import { getOssAuth } from '../api/admin';
 import { getBaseRoot, vInfo, configRetainer } from '../../config';
@@ -131,6 +130,7 @@ const m1 = reactive({
     isShell: configRetainer.isShell,
 });
 let app3 = null;
+let gScene = null;
 const keyOfLocalStorage = `keyOfLocalStorage${props.tag}`;
 onMounted(() => {
     // 缓存上传文件的时间点
@@ -139,9 +139,15 @@ onMounted(() => {
     bindDracoEncoder(`https://mydentalx.com/public/draco/draco_encoder.js`);
     store.dispatch('auth/getAuth').then(()=>{});
     app3 = elViewer.value.app3;
+    gScene = elViewer.value.gScene;
+    if (import.meta.env.DEV) {
+        window.app = {
+            app3,
+        }
+    }
 })
 function parseTime(timestamp) {
-    console.log('22', timestamp)
+    // console.log('22', timestamp)
     const ymdhms = toYYMMDDHHmmss(timestamp.tmpDir);
     return `${timestamp.isShell} --- ${ymdhms} --- ${timestamp.tid}`;
 }
@@ -166,9 +172,8 @@ function clickLoadShowData(type) {
     msg.errorList = [];
     msg.countError = 0;
     ud.type = type;
-    app3.empty();
+    gScene.clear();
     if ([1,2,6].includes(type)) {
-        emptyTrackFile();
         refFile.value.dispatchEvent(new MouseEvent('click'))
     } else if (type == 3) {
         if (!m1.upper || !m1.lower) {
@@ -270,7 +275,7 @@ function selectTimestamp() {
     msg1.value = `${toYYMMDDHHmmss(tmpDir)}_${tid}`;
 }
 function updateByPath() {
-    app3.loading(true);
+    elLoading.show(document.body, {message: `加载中...`, zIndex:5000});
     ud.uploading = true;
     ud.fetching = true;
     ud.fetchTotal = ud.pathList.length || 0;
@@ -279,7 +284,7 @@ function updateByPath() {
         ud.uploading = false;
         ud.fetching = false;
         app3.updateFrame();
-        app3.loading(false);
+        elLoading.hide();
         return;
     }
     const fetchSinglePath = async (path) => {
@@ -287,7 +292,7 @@ function updateByPath() {
         // const url = await store.dispatch('auth/getUrl', path);
         const filename = PathLoader.getName(path);
         const validPath = `${import.meta.env.VITE_APP_FILE_PREFIX}/${path}`;
-        const geo = await new PathLoader(path, `${import.meta.env.VITE_APP_PREFIX_PUBLIC}/draco/`).load(validPath, (e)=>{
+        const geo = await new PathLoader(path, {drcPath:`${import.meta.env.VITE_APP_PREFIX_PUBLIC}/draco/`}).load(validPath, (e)=>{
             // console.log('progress', e.loaded/e.total)
         }).catch(err=>{
             if (err instanceof ProgressEvent) {
@@ -299,19 +304,19 @@ function updateByPath() {
                 }   
             }
             msg.value = 'File Load failure';
-            app3.loading(false);
+            elLoading.hide();
             return null;
         })
         ud.fetchCount++;
         if (!geo) return;
-        app3.loading(false);
+        elLoading.hide();
         addGeotoScene(geo, filename, path);
     }
     ud.pathList.forEach(path=>{
         fetchSinglePath(path);
     });
     app3.updateFrame();
-    app3.loading(false);
+    elLoading.hide();
 }
 function addGeotoScene(geo, filename, path) {
     if (geo.type == 'BufferGeometry' && geo.attributes.position.count < 1) {
@@ -355,7 +360,7 @@ function addGeotoScene(geo, filename, path) {
 }
 function inputChangeUpdate(item) {
     item.check = !item.check;
-    const mesh = app3.group.children.filter(e=>e.name==item.filename)[0];
+    const mesh = gScene.children.filter(e=>e.name==item.filename)[0];
     if (mesh) {
         mesh.visible = item.check;
         app3.updateFrame();
@@ -363,7 +368,7 @@ function inputChangeUpdate(item) {
 }
 function inputChangeColorUpdate(event, item) {
     item.color = event.target.value;
-    const mesh = app3.group.children.filter(e=>e.name==item.filename)[0];
+    const mesh = gScene.children.filter(e=>e.name==item.filename)[0];
     if (mesh) {
         updateMeshColor(mesh, item.color);
         app3.updateFrame();
@@ -371,7 +376,7 @@ function inputChangeColorUpdate(event, item) {
 }
 function inputChangeOpacityUpdate(event, item) {
     item.opacity = parseFloat(event.target.value);
-    const mesh = app3.group.children.filter(e=>e.name==item.filename)[0];
+    const mesh = gScene.children.filter(e=>e.name==item.filename)[0];
     if (mesh) {
         updateMeshOpacity(mesh, item.opacity);
         app3.updateFrame();
@@ -390,12 +395,12 @@ async function handleSelectFile(event) {
         ud.fetching = true;
         ud.uploading = true;
         ud.infoList = [];
-        app3.loading(true);
+        elLoading.show(document.body, {message: `加载中...`, zIndex:5000});
         ud.fetchTotal = files.length;
         ud.fetchCount = 0;
         for (let i = 0; i < files.length; i++) {
             const file = files[i];
-            const geo = await new FilePathLoader(file.name, `${import.meta.env.VITE_APP_PREFIX_PUBLIC}/draco/`).load(file, (event)=>{
+            const geo = await new FilePathLoader(file.name, {drcPath:`${import.meta.env.VITE_APP_PREFIX_PUBLIC}/draco/`}).load(file, (event)=>{
                 // console.log('progress', event.loaded/event.total)
             }).catch(err=>{
                 if (err instanceof ProgressEvent) {
@@ -407,16 +412,15 @@ async function handleSelectFile(event) {
                     }   
                 }
                 msg.value = 'File Load failure';
-                app3.loading(false);
+                elLoading.hide();
                 return null;
             });
             ud.fetchCount++;
             if (!geo) return;
             const filename = FilePathLoader.getName(file.name);
-            app3.loading(false);
+            elLoading.hide();
             addGeotoScene(geo, filename);
         }
-        emptyTrackFile();
     } else if ([2,6].includes(ud.type)) {
         // 上传文件
         ud.fetching = false;
@@ -438,7 +442,7 @@ async function handleSelectFile(event) {
             } else {
                 //  其他格式转换一下
                 try {
-                    const geo = await new FilePathLoader(filename, `${import.meta.env.VITE_APP_PREFIX_PUBLIC}/draco/`).load(file)
+                    const geo = await new FilePathLoader(filename, {drcPath:`${import.meta.env.VITE_APP_PREFIX_PUBLIC}/draco/`}).load(file)
                     .catch(err=>{
                         msg.value = 'File Load failure';
                         console.error(err);
@@ -483,7 +487,7 @@ async function handleSelectFile(event) {
                 //  其他格式转换一下
                 try {
                     const noExtFilename = filename.substr(0, filename.lastIndexOf('.'));
-                    const geo = await new FilePathLoader(filename, `${import.meta.env.VITE_APP_PREFIX_PUBLIC}/draco/`).load(file)
+                    const geo = await new FilePathLoader(filename, {drcPath:`${import.meta.env.VITE_APP_PREFIX_PUBLIC}/draco/`}).load(file)
                     .catch(err=>{
                         msg.value = 'File Load failure';
                         return null;

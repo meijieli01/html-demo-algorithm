@@ -59,6 +59,12 @@ export const mapComponent2LocalFile = {
     functionCode: 'ViewerRetainer',
     functionId: '105',
   },
+  'SMILE': {
+    component: () => import('../views/Smile.vue'),
+    functionName: 'Smile',
+    functionCode: 'Smile',
+    functionId: '201',
+  },
 }
 
 const router = createRouter({

@@ -1951,9 +1951,15 @@ class EventPool extends EventDispatcher {
     return this.canvas;
   }
 }
+var eEntryCode = /* @__PURE__ */ ((eEntryCode2) => {
+  eEntryCode2[eEntryCode2["none"] = 0] = "none";
+  eEntryCode2[eEntryCode2["webui"] = 1] = "webui";
+  return eEntryCode2;
+})(eEntryCode || {});
 class MqMultiViewEditor extends MqRender {
-  constructor() {
+  constructor(entryCode = 0) {
     super("multi-view-render", eColorState.currently);
+    this.entryCode = entryCode;
     this.cameraAngle = 20;
     this.cameraFar = 1e4;
     this.tan = 1;
@@ -2183,16 +2189,38 @@ class MqMultiViewEditor extends MqRender {
   }
   add(mesh, name) {
     var _a;
-    const { options: inOptions } = this;
+    const { options: inOptions, entryCode } = this;
     (_a = inOptions.viewStateList) == null ? void 0 : _a.forEach((view) => {
       var _a2;
       if (view.name == name) (_a2 = view.scene) == null ? void 0 : _a2.add(mesh);
     });
+    if ([
+      1
+      /* webui */
+    ].includes(entryCode)) {
+      this.cameraFitViewport();
+      this.computeSceneBox();
+    }
     this.updateFrame();
   }
   updateFrame() {
     const { camera } = this;
     this.oneFrame(camera.getCamera());
+  }
+  cameraFitViewport() {
+    const { options, camera, renderer } = this;
+    if (!options || !renderer) return;
+    if (!options.viewStateList) return;
+    const theScene = options.viewStateList[0].scene;
+    const { size } = this.getBox(theScene);
+    const maxside = Math.max(size.x, size.y, size.z);
+    const aspect = renderer.domElement.width / renderer.domElement.height;
+    let fitSideH = maxside * Math.sqrt(3);
+    let fitSideV = fitSideH / aspect;
+    console.log(fitSideH, fitSideV, maxside);
+    const persp = camera.persp;
+    persp.projectionMatrix.makePerspective(-fitSideH, fitSideH, fitSideV, -fitSideV, persp.near, persp.far);
+    persp.updateProjectionMatrix();
   }
 }
 function setXYZ(arr, i, x, y, z) {
@@ -2285,6 +2313,7 @@ export {
   n as create4ToothNumberMesh,
   l as createGumMesh,
   Y as debug_ToothVisualPoint,
+  eEntryCode,
   eMaterialReplace,
   o as eMaterialType,
   h as geometry2Mesh,

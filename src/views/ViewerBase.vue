@@ -6,7 +6,7 @@
 </template>
 <script setup>
 import { onMounted, onBeforeUnmount } from 'vue';
-import { MqMultiViewEditor, Scene, mesh2stl, Color } from '../third/mq-render/viewer.es';
+import { MqMultiViewEditor, Scene, mesh2stl, Color, eEntryCode } from '../third/mq-render/viewer.es';
 import { saveBinaryFile } from '../third/snippet/toolkit';
 const gScene = new Scene();
 const viewState = [
@@ -20,25 +20,23 @@ const viewState = [
         scene: gScene,
     },
 ];
-const app3 = new MqMultiViewEditor();
+const app3 = new MqMultiViewEditor(eEntryCode.webui);
 onMounted(() => {
     let el = document.getElementById('id3DContainer');
     let rect = el.getBoundingClientRect();
     if (import.meta.env.DEV) {        
-        window.mj3 = app3;
+        window.app3 = app3;
     }
     app3.init({
         width: rect.width,
         height: rect.height,
         container: el,
+        cameraPositionZ: 90,
         useControl: true,
-        pointIntensity: 0.5,
-        ambientIntensity: 0.1,
-        pointDistance: 1500,
         viewStateList: viewState,
     });
     app3.callAnimate();
-    app3.updateFrame();
+    app3.updateFrame();    
 });
 onBeforeUnmount(() => {
     app3.dispose();

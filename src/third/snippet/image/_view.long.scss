@@ -1,0 +1,58 @@
+// 图片对比
+$cLongViewActive: $primary !default;
+$cLongViewHover: $success !default;
+$cLongViewIndicatorHover: green !default;
+$nLongViewBorder: 3px !default;
+$nLongViewShow: 3 !default;
+$brLongViewSize: 6px !default;
+$nLongViewPointSize: 8px !default;
+$oneLongViewShow: calc(100% / $nLongViewShow);
+.image-view-long {
+    position: relative;
+    .img-coat {
+        position: relative;
+        overflow: hidden;
+        img {
+            position: relative;
+        }
+        .img-cover {
+            position: absolute;
+            height: $oneLongViewShow;
+            width: 100%;
+            background: transparent;
+            box-sizing: border-box;                               
+            top: 0;
+            @for $i from 1 through $nLongViewShow {
+                &.pos#{$i} {
+                  top: #{$i * $oneLongViewShow}!important;
+                }
+            }
+            border-radius: $brLongViewSize;
+            &.active {
+                border: $nLongViewBorder solid $cLongViewActive; 
+            }
+            &:hover {
+                border: $nLongViewBorder solid $cLongViewHover;
+            }
+        }
+    }
+    .image-arrow-item {
+        display: flex;
+        justify-content: center;
+        svg {
+            transform: scale(2);
+        }
+    }
+    .image-indicator-item {
+        width: $nLongViewPointSize;
+        height: $nLongViewPointSize;
+        border-radius: 50%;
+        background-color: gray;
+        &.select-on {
+            background-color: white;
+        }
+        &.hover-on {
+          border: $nLongViewBorder solid $cLongViewIndicatorHover;  
+        }
+    }
+}

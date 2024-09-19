@@ -154,7 +154,7 @@
                     <button type="button" class="btn btn-sm theme1 my-1 mx-2 sub4-type-2" :class="sub4Type==2?'active':''">动态对比</button>
                     <button type="button" class="btn btn-sm theme1 my-1 mx-2 sub4-type-3" :class="sub4Type==3?'active':''" v-if="showVideo">视频对比</button>
                     <button type="button" class="btn btn-sm theme1 my-1 mx-2 sub4-type-4" v-if="sub4Type==1">下载</button>
-                    <button type="button" class="btn btn-sm theme1 my-1 mx-2 sub4-type-5">存档</button>
+                    <!-- <button type="button" class="btn btn-sm theme1 my-1 mx-2 sub4-type-5">存档</button> -->
                 </div>
                 <div class="w-100 d-flex flex-column" v-if="subCode==3" @click="clickEventByName($event, 'selectSub3Type')">
                     <button type="button" class="btn theme1 btn-sm text-white w-auto my-1 mx-2 sub3-type-1" v-if="subMenuType==2">调整更新</button>
@@ -191,7 +191,7 @@
             </div>
         </div>
         <div class="position-fixed bottom me-3" style="bottom:10px;right:0;height:30px;">
-            <img class="w-100 h-100" :src="imgLogoOrange" alt="logo" />
+            <img class="w-100 h-100" :src="imgLogo" alt="logo" />
         </div>
         <input ref="elInputFile" type="file" accept="image/*" @change="changeInputFile" hidden/>
     </div>
@@ -202,7 +202,7 @@ import { useStore } from 'vuex';
 import { signPath, uploadFileList } from '../third/snippet/toolOss';
 import ImageCompare from '../third/snippet/image/ImageCompare.vue';
 import ImageViewLong from '../third/snippet/image/ImageViewLong.vue';
-import imgLogoOrange from '../assets/logo-orange.png?url';
+import imgLogo from '../assets/logo.png?url';
 import svgList from '../third/smile/svgList.svg?url';
 import imgTemplate from '../assets/template.png?url';
 import imgTemplateStroke from '../assets/templateStroke.png?url';
@@ -891,7 +891,7 @@ onMounted(()=>{
     gConfigSmile.auxShowTeethPoint = import.meta.env.DEV;
     // gConfigSmile.showColorDebug = ['dev', 'beta'].includes(import.meta.env.VITE_APP_MODE);
     // document.title = `微笑设计`;
-    ud.info.logo = imgLogoOrange;
+    ud.info.logo = imgLogo;
     ud.ctx = bindCanvasPanZoom(elCanvas.value, {
         minimumZoom: true,
         lockZoom: false,

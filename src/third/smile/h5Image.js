@@ -326,10 +326,10 @@ export function ClosureCanvasUpdateImage(bitmap, options = {}) {
                 ctx.imageSmoothingEnabled = enableSmooth;
                 ctx.fillStyle = 'black';
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
-                const text1 = `医生姓名：${data.doctorName}`;
-                const text2 = `患者姓名：${data.patientName}`;
+                const text1 = `Doctor's Name：${data.doctorName}`;
+                const text2 = `Patient's Name：${data.patientName}`;
                 const now = new Date();
-                const text3 = `时间：${now.getFullYear()}年${now.getMonth()+1}月${now.getDate()}日`;
+                const text3 = `Date：${now.getFullYear()}-${now.getMonth()+1}-${now.getDate()}`;
                 ctx.fillStyle = 'white';
                 ctx.font = `normal normal normal 36px ${data.font.family || 'serif'}`;
                 const hHeight = textHeight / 2;

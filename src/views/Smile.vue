@@ -1,58 +1,58 @@
 <template>
     <div ref="elRoot" class="smile-index-page">
-        <div class="smile-title"><label class="w-100 text-center m-auto">Veneesmile Design</label></div>
+        <div class="smile-title"><label class="w-100 text-center m-auto"  v-html="t('smile.title')"></label></div>
         <div ref="elMenuTool" class="smile-menu-tool px-3" @click="clickEventByName($event, 'selectSmileMenuCode')">
             <div class="menu-tool-item sub-code-0 active begin">
-                <label>照片上传</label>
+                <label v-html="t('smile.title1')"></label>
             </div>
             <div class="menu-tool-item sub-code-1">
-                <label>微笑编辑</label>
+                <label v-html="t('smile.title2')"></label>
             </div>
             <div class="menu-tool-item sub-code-2">
-                <label>微笑选择</label>
+                <label v-html="t('smile.title3')"></label>
             </div>
             <div class="menu-tool-item sub-code-3">
-                <label>精准微调</label>
+                <label v-html="t('smile.title4')"></label>
             </div>
             <div class="menu-tool-item sub-code-4 end">
-                <label>前后对比</label>
+                <label v-html="t('smile.title5')"></label>
             </div>
         </div>
         <div class="smile-main-content">
             <div class="content-sub-menu mx-3" :class="menuShow?'show-menu':''">
                 <div class="btn-group btn-group-sm m-2" role="group" @click="clickEventByName($event, 'selectSubMenuType')" v-if="subCode==3">
-                    <button type="button" class="btn theme1 sub-type-1" :class="subMenuType==1?'active':''">模板</button>
-                    <button type="button" class="btn theme1 sub-type-2" :class="subMenuType==2?'active':''">形态</button>
-                    <button type="button" class="btn theme1 sub-type-3" :class="subMenuType==3?'active':''">牙色</button>
+                    <button type="button" class="btn theme1 sub-type-1" :class="subMenuType==1?'active':''" v-html="t('smile.template')"></button>
+                    <button type="button" class="btn theme1 sub-type-2" :class="subMenuType==2?'active':''" v-html="t('smile.shape')"></button>
+                    <button type="button" class="btn theme1 sub-type-3" :class="subMenuType==3?'active':''" v-html="t('smile.color')"></button>
                 </div>
                 <div class="w-100 d-flex flex-column" v-if="subCode==3 && (subMenuType==1 || subMenuType==3)">
                     <div class="sub-menu-row">
-                        <label class="ms-2" v-html="subMenuType==3?'颜色':'模板'"></label>
+                        <label class="ms-2" v-html="subMenuType==3?t('smile.color'):t('smile.template')"></label>
                     </div>
                     <div class="sub-menu-row flex-column">
                         <ImageViewLong type="1" v-if="subMenuType==3" :src="imgTemplate" :yCount="7" :xCount="10" :select="ud.idxTemplateColor" :xOffset="ud.idxTemplateStroke" @update="updateViewLongIndex"/>
                         <ImageViewLong type="2" v-else :src="imgTemplateStroke" :yCount="10" :select="ud.idxTemplateStroke" @update="updateViewLongIndex"/>
                     </div>
                     <div class="sub-menu-row" v-if="subMenuType==1">
-                        <label class="ms-2">视图</label>
+                        <label class="ms-2" v-html="t('smile.view')"></label>
                         <div class="form-check form-switch"></div>
                     </div>                    
                     <div class="sub-menu-row" v-if="subMenuType==3">
-                        <label class="ms-2">色调</label>
+                        <label class="ms-2" v-html="t('smile.hue')"></label>
                         <div class="d-flex">
                             <input class="theme1" type="range" :min="ConfigColor.hueMin" :max="ConfigColor.hueMax" :step="ConfigColor.unit" :title="infoColor.hue" v-model="infoColor.hue" @input="clickEventByName($event, 'change2ColorValue')">
                             <label class="range-per"></label>
                         </div>
                     </div>                    
                     <div class="sub-menu-row" v-if="subMenuType==3">
-                        <label class="ms-2">亮度</label>
+                        <label class="ms-2" v-html="t('smile.brightness')"></label>
                         <div class="d-flex">
                             <input class="theme1" type="range" :min="ConfigColor.brightnessMin" :max="ConfigColor.brightnessMax" :step="ConfigColor.unit" :title="infoColor.brightness" v-model="infoColor.brightness" @input="clickEventByName($event, 'change2ColorValue')">
                             <label class="range-per"></label>
                         </div>
                     </div>                    
                     <div class="sub-menu-row" v-if="subMenuType==3">
-                        <label class="ms-2">饱和度</label>
+                        <label class="ms-2" v-html="t('smile.saturation')"></label>
                         <div class="d-flex">
                             <input class="theme1" type="range" :min="ConfigColor.saturationMin" :max="ConfigColor.saturationMax" :step="ConfigColor.unit" :title="infoColor.saturation" v-model="infoColor.saturation" @input="clickEventByName($event, 'change2ColorValue')">
                             <label class="range-per"></label>
@@ -67,31 +67,31 @@
                 </div>
                 <div class="w-100 d-flex flex-column" v-if="subCode==1 || (subCode==3 && subMenuType==2)">
                     <div class="sub-menu-row">
-                        <label class="ms-2">对称调整</label>
+                        <label class="ms-2" v-html="t('smile.symmetricalAdjustment')"></label>
                         <div class="form-check form-switch">
                             <input class="form-check-input" type="checkbox"  v-model="ud.symmetry" @change="clickEventByName($event, 'change2Symmetry')">
                         </div>
                     </div>
                     <div class="sub-menu-row" v-if="subCode===1">
-                        <label class="ms-2">面部定点</label>
+                        <label class="ms-2" v-html="t('smile.facialLandmarks')"></label>
                         <div class="form-check form-switch">
                             <input class="form-check-input" type="checkbox"  v-model="ud.keyPoint" @change="clickEventByName($event, 'change2KeyPoint')">
                         </div>
                     </div>
                     <div class="sub-menu-row">
-                        <label class="ms-2">笑窗</label>
+                        <label class="ms-2" v-html="t('smile.smileWindow')"></label>
                         <div class="form-check form-switch">
                             <input class="form-check-input" type="checkbox"  v-model="ud.smileWindow" @change="clickEventByName($event, 'change2SmileWindow')">
                         </div>
                     </div>
                     <div class="sub-menu-row">
-                        <label class="ms-2">笑线</label>
+                        <label class="ms-2" v-html="t('smile.smileLine')"></label>
                         <div class="form-check form-switch">
                             <input class="form-check-input" type="checkbox"  v-model="ud.smileCurve" @change="clickEventByName($event, 'change2SmileCurve')">
                         </div>
                     </div>
                     <div class="sub-menu-row">
-                        <label class="d-flex text-white ms-2">图片旋转<input v-if="isDev" type="number" class="form-control form-control-sm" style="width:6rem;" v-model="ud.degree" :step="ud.step"/></label>
+                        <label class="d-flex text-white ms-2">{{t('smile.imageRotate')}}<input v-if="isDev" type="number" class="form-control form-control-sm" style="width:6rem;" v-model="ud.degree" :step="ud.step"/></label>
                         <div class="rotate-theme1" >
                             <svg class="wh-16" @click="clickEventByName($event, 'clickToRotateLeft')"><use :xlink:href="`${svgList}#b5ArrowCCW`"></use></svg>
                         </div>
@@ -103,7 +103,7 @@
                         <label class="d-flex text-white ms-2">牙齿轮廓平移<input type="number" class="form-control form-control-sm" style="width:6rem;" v-model="ud.unit" step="0.01" @change="clickEventByName($event, 'inputChange2unit')" /></label>
                     </div>
                     <div class="sub-menu-row">
-                        <label class="ms-2">长度</label>
+                        <label class="ms-2" v-html="t('smile.length')"></label>
                         <div class="d-flex">
                             <label class="range-per"></label>
                             <input ref="elHeight" class="theme1" type="range" :min="infoHeight.min" :max="infoHeight.max" :step="infoHeight.unit" v-model="infoHeight.value" @input="clickEventByName($event, 'change2TeethHeight')">
@@ -116,7 +116,7 @@
                         </div>
                     </div>
                     <div class="sub-menu-row">
-                        <label class="ms-2" v-html="ud.symmetry?'宽长比':'宽长比左'"></label>
+                        <label class="ms-2" v-html="ud.symmetry?t('smile.w2lratio'):t('smile.w2lratioL')"></label>
                         <div class="d-flex">
                             <label class="range-per" v-html="gConfigSmile.ratioDown+'%'"></label>
                             <input ref="elRatioLeft" class="theme1" type="range" :min="gConfigSmile.ratioMin" :max="gConfigSmile.ratioMax" :step="infoHeight.unit" v-model="infoHeight.lvalue" :disabled="infoHeight.lockRatio" @input="clickEventByName($event, 'change2TeethHeight', 1)">
@@ -124,7 +124,7 @@
                         </div>
                     </div>
                     <div class="sub-menu-row" v-if="!ud.symmetry">
-                        <label class="ms-2">宽长比右</label>
+                        <label class="ms-2" v-html="t('smile.w2lratioR')"></label>
                         <div class="d-flex">
                             <label class="range-per" v-html="gConfigSmile.ratioDown+'%'"></label>
                             <input ref="elRatioRight" class="theme1" type="range" :min="gConfigSmile.ratioMin" :max="gConfigSmile.ratioMax" :step="infoHeight.unit" v-model="infoHeight.rvalue" :disabled="infoHeight.lockRatio" @input="clickEventByName($event, 'change2TeethHeight', 2)">
@@ -132,7 +132,7 @@
                         </div>
                     </div>
                     <div class="sub-menu-row">
-                        <label class="ms-2" v-html="ud.symmetry?'颊囊':'颊囊左'"></label>
+                        <label class="ms-2" v-html="ud.symmetry?t('smile.cheekPocket'):t('smile.cheekPocketL')"></label>
                         <div class="d-flex">
                             <label class="range-per"></label>
                             <input ref="elCorridorLeft" class="theme1" type="range" :min="infoCorridor.min" :max="infoCorridor.max" :step="infoCorridor.unit" v-model="infoCorridor.lvalue" @input="clickEventByName($event, 'change2Corridor', 1)">
@@ -140,25 +140,25 @@
                         </div>
                     </div>                
                     <div class="sub-menu-row" v-if="!ud.symmetry">
-                        <label class="ms-2">颊囊右</label>
+                        <label class="ms-2" v-html="t('smile.cheekPocketR')"></label>
                         <div class="d-flex">
                             <label class="range-per"></label>
                             <input ref="elCorridorRight" class="theme1" type="range" :min="infoCorridor.min" :max="infoCorridor.max" :step="infoCorridor.unit" v-model="infoCorridor.rvalue" @input="clickEventByName($event, 'change2Corridor', 2)">
                             <label class="range-per"></label>
                         </div>
                     </div>
-                    <button v-if="subCode==1" type="button" class="btn btn-secondary btn-sm text-white w-auto my-1 mx-2 bg3" @click="clickEventByName($event, 'clickToGenerateSmile')" >生成微笑</button>
+                    <button v-if="subCode==1" type="button" class="btn btn-secondary btn-sm text-white w-auto my-1 mx-2 bg3" @click="clickEventByName($event, 'clickToGenerateSmile')" v-html="t('smile.generateSmile')"></button>
                 </div>
                 <div class="w-100 d-flex flex-column" v-if="subCode==4" @click="clickEventByName($event, 'selectSub4Type')">
-                    <button type="button" class="btn btn-sm theme1 my-1 mx-2 sub4-type-1" :class="sub4Type==1?'active':''">图片对比</button>
-                    <button type="button" class="btn btn-sm theme1 my-1 mx-2 sub4-type-2" :class="sub4Type==2?'active':''">动态对比</button>
-                    <button type="button" class="btn btn-sm theme1 my-1 mx-2 sub4-type-3" :class="sub4Type==3?'active':''" v-if="showVideo">视频对比</button>
-                    <button type="button" class="btn btn-sm theme1 my-1 mx-2 sub4-type-4" v-if="sub4Type==1">下载</button>
+                    <button type="button" class="btn btn-sm theme1 my-1 mx-2 sub4-type-1" :class="sub4Type==1?'active':''" v-html="t('smile.p5imgCpr')"></button>
+                    <button type="button" class="btn btn-sm theme1 my-1 mx-2 sub4-type-2" :class="sub4Type==2?'active':''" v-html="t('smile.p5sliderCpr')"></button>
+                    <button type="button" class="btn btn-sm theme1 my-1 mx-2 sub4-type-3" :class="sub4Type==3?'active':''" v-html="t('smile.p5videoCpr')" v-if="showVideo"></button>
+                    <button type="button" class="btn btn-sm theme1 my-1 mx-2 sub4-type-4" v-if="sub4Type==1" v-html="t('smile.p5download')"></button>
                     <!-- <button type="button" class="btn btn-sm theme1 my-1 mx-2 sub4-type-5">存档</button> -->
                 </div>
                 <div class="w-100 d-flex flex-column" v-if="subCode==3" @click="clickEventByName($event, 'selectSub3Type')">
-                    <button type="button" class="btn theme1 btn-sm text-white w-auto my-1 mx-2 sub3-type-1" v-if="subMenuType==2">调整更新</button>
-                    <button type="button" class="btn theme1 btn-sm text-white w-auto my-1 mx-2 sub3-type-2">生成效果</button>
+                    <button type="button" class="btn theme1 btn-sm text-white w-auto my-1 mx-2 sub3-type-1" v-if="subMenuType==2" v-html="t('smile.p4Update')"></button>
+                    <button type="button" class="btn theme1 btn-sm text-white w-auto my-1 mx-2 sub3-type-2" v-html="t('smile.p4Generate')"></button>
                 </div>
                 <div class="my-3 text-white" id="idLog" v-if="isDev">
                     <p></p>
@@ -168,7 +168,7 @@
                 <canvas ref="elCanvas"></canvas>
                 <div class="content-sub-code-0" v-if="subCode==0">
                     <div class="d-flex justify-content-center">
-                        <button type="button" class="btn btn-outline-primary theme1" @click="clickEventByName($event, 'clickToPickFile')">点击此处上传微笑照片</button>
+                        <button type="button" class="btn btn-outline-primary theme1" @click="clickEventByName($event, 'clickToPickFile')" v-html="t('smile.p1btn')"></button>
                     </div>
                 </div>
                 <div class="content-sub-code-2" v-if="subCode==2">
@@ -176,8 +176,8 @@
                         <div class="image-wrap-single mx-3" v-for="(item,i) in ud.genImgUrl" :class="((i+1)%2)==0?'place-start':'place-end'" :key="i">
                             <div class="image-content" :class="ud.selIdx == i ? ' active':''" @mouseenter="ud.selIdx=i" @click="clickEventByName($event, 'clickToShowImage', item)">
                                 <img :src="item.url" :style="`transform:${ud.imgStyleTransform}`" />
-                                <label class="" v-html="ConfigColor.shapeInfo[i].label"></label>
-                                <button type="button" class="btn btn-sm text-white w-auto my-1" :class="ud.selIdx==i?'active':''" @click="clickEventByName($event, 'clickToSelectOneFromFour', i)" >选择</button>
+                                <label class="" v-html="t(ConfigColor.shapeInfo[i].label)"></label>
+                                <button type="button" class="btn btn-sm text-white w-auto my-1" :class="ud.selIdx==i?'active':''" @click="clickEventByName($event, 'clickToSelectOneFromFour', i)"  v-html="t('smile.select')"></button>
                             </div>
                         </div>
                     </div>
@@ -199,6 +199,7 @@
 <script setup>
 import { onMounted, ref, reactive, nextTick, toRaw } from 'vue';
 import { useStore } from 'vuex';
+import { t } from '../lang/index';
 import { signPath, uploadFileList } from '../third/snippet/toolOss';
 import ImageCompare from '../third/snippet/image/ImageCompare.vue';
 import ImageViewLong from '../third/snippet/image/ImageViewLong.vue';
@@ -300,10 +301,10 @@ const infoCorridor = {
 }
 let faceData = null;
 let closureImageData = null;
-document.title = `Veneesmile Design`;
+document.title = t('smile.title');
 function getImageFilename() {
     const d = new Date();
-    const str = `患者姓名-${ud.info.patientName}-医生姓名-${ud.info.doctorName}-${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日.jpg`;
+    const str = `${ud.info.caseNo}-${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}.jpg`;
     return str;     
 }
 function clickEventByName(event, type, code) {
@@ -339,10 +340,11 @@ function clickEventByName(event, type, code) {
                     subCode.value = nextCode;
                     updateMenu();
                 } else {
-                    elLoading.show(document.body, {zIndex: 2002, message: `当前未执行，不能跳到后面步骤`, type: 'text-danger'});
+                    elLoading.show(document.body, {zIndex: 2002, message: t('smile.tip1'), type: 'text-danger'});
+                    elLoading.hide(4000);
                 }
             }
-            if (faceData.ctx) {
+            if (faceData && faceData.ctx) {
                 faceData.ctx.reset();
             }
         }
@@ -732,7 +734,7 @@ async function uploadOriginImage(file) {
         window.mjfd = faceData;
     }
     if (!file.type.startsWith('image/')) {
-        elLoading.update(`${file.name}不是图片格式`, 'text-danger');
+        elLoading.update(`${file.name} non image format`, 'text-danger');
         return;
     }
     // ud.imgUrl = URL.createObjectURL(file);
@@ -791,7 +793,7 @@ async function uploadOriginImage(file) {
                                 imgRealHeight = offsetHeight;
                                 imgRealWidth = Math.ceil(offsetHeight * imgRatio);
                             } else {
-                                elLoading.update(`未考虑图像大小逻辑`, 'text-danger');
+                                elLoading.update(`unsupport image size in logic`, 'text-danger');
                                 return;
                             }
                             elCanvas.value.width = imgRealWidth;
@@ -875,8 +877,8 @@ function invokeQueue(id, queue = 1) {
 }
 onMounted(()=>{
     ud.info = {
-        patientName: '患者姓名',
-        doctorName: '医生姓名',
+        patientName: 'test Patient',
+        doctorName: 'test Doctor ',
         caseNo: 'A00001',
     };
     testUiAdapter();

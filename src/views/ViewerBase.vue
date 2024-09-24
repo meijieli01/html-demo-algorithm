@@ -6,17 +6,17 @@
 </template>
 <script setup>
 import { onMounted, onBeforeUnmount } from 'vue';
-import { MqMultiViewEditor, Scene, mesh2stl, Color, eEntryCode } from '../third/mq-render/viewer.es';
+import { MqMultiViewEditor, mesh2stl, eEntryCode, alias3 } from '../third/mq-render/viewer.es';
 import { saveBinaryFile } from '../third/snippet/toolkit';
-const gScene = new Scene();
+const gScene = new alias3.Scene();
 const viewState = [
     {
         left: 0,
         bottom: 0,
         width: 1,
         height: 1,
-        clearColor: new Color().setRGB(1, 1, 1),     
-        background: new Color().setStyle('#cccccc'),
+        clearColor: new alias3.Color().setRGB(1, 1, 1),     
+        background: new alias3.Color().setStyle('#cccccc'),
         scene: gScene,
     },
 ];

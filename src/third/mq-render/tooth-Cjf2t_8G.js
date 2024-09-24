@@ -33464,19 +33464,27 @@ class MqRender {
     };
   }
   setAxes(size) {
-    const { scene, scene2, track, options } = this;
+    var _a;
+    const { scene, scene2, track, options, renderName } = this;
     const axes = new AxesHelper(size);
     axes.name = "axesHelper";
-    if (!scene.getObjectByName(axes.name)) {
-      scene.add(axes);
-      track.track(axes);
-    }
-    if (options.twoScene) {
-      const axes2 = axes.clone();
-      if (!scene2.getObjectByName(axes2.name)) {
-        scene2.add(axes2);
-        track.track(axes2);
+    if (renderName == "editor-solution") {
+      if (!scene.getObjectByName(axes.name)) {
+        scene.add(axes);
+        track.track(axes);
       }
+      if (options.twoScene) {
+        const axes2 = axes.clone();
+        if (!scene2.getObjectByName(axes2.name)) {
+          scene2.add(axes2);
+          track.track(axes2);
+        }
+      }
+    } else if (renderName == "multi-view-render") {
+      (_a = options.viewStateList) == null ? void 0 : _a.forEach((view, i) => {
+        var _a2;
+        (_a2 = view.scene) == null ? void 0 : _a2.add(i == 0 ? axes : axes.clone());
+      });
     }
     this.updateFrame();
   }
@@ -33505,31 +33513,27 @@ class MqRender {
     const { width: fullWidth, height: fullHeight } = rc;
     const { viewStateList } = options;
     if (viewStateList && renderer) {
-      for (let i = 0; i < (viewStateList == null ? void 0 : viewStateList.length); i++) {
+      const countViews = viewStateList.length;
+      for (let i = 0; i < countViews; i++) {
         const view = viewStateList[i];
         const left = Math.floor(fullWidth * view.left);
         const bottom = Math.floor(fullHeight * view.bottom);
         const width = Math.floor(fullWidth * view.width);
         const height = Math.floor(fullHeight * view.height);
         if (view.scene) {
+          const option1 = {
+            left,
+            bottom,
+            width,
+            height,
+            view,
+            index: i,
+            total: countViews
+          };
           if (view.updateCamera) {
-            view.updateCamera(camera, view.scene, {
-              left,
-              bottom,
-              width,
-              height,
-              view,
-              index: i
-            });
+            view.updateCamera(camera, view.scene, option1);
           } else {
-            localUpdateCamera(camera, view.scene, {
-              left,
-              bottom,
-              width,
-              height,
-              view,
-              index: i
-            });
+            localUpdateCamera(camera, view.scene, option1);
           }
           renderer.setViewport(left, bottom, width, height);
           renderer.setScissor(left, bottom, width, height);
@@ -33542,7 +33546,7 @@ class MqRender {
   }
 }
 function localUpdateCamera(camera, scene, options) {
-  const { width, height, view, index } = options;
+  const { width, height, view, index, total } = options;
   scene.add(camera);
   if (!scene.background && view) scene.background = view.background;
   if (index == 0) {
@@ -34890,8 +34894,186 @@ function computeToothInfo(target, options = {}) {
 function debug_ToothVisualPoint(target, fpList, options = {}) {
   return new MyPoint(target, fpList, options);
 }
+const intersectSegmentPlane = function() {
+  const SMALL_NUM = 1e-8;
+  const u = new Vector3();
+  const w = new Vector3();
+  return function(p0, p1, V0, n, p) {
+    u.subVectors(p1, p0);
+    w.subVectors(p0, V0);
+    var D = n.dot(u);
+    var N = -n.dot(w);
+    if (Math.abs(D) < SMALL_NUM) {
+      if (N == 0)
+        return 2;
+      else return 0;
+    }
+    var sI = N / D;
+    if (sI < 0 || sI > 1) return 0;
+    p.copy(u).multiplyScalar(sI).add(p0);
+    return 1;
+  };
+}();
+class MqUtil {
+  /**
+   * 获取一个模型在另个模型的 OBB 盒子内部的点
+   * @param mesh 
+   * @param boundingBox1 
+   * @returns 
+   */
+  static calculate_Meshes_Vertexs(mesh, boundingBox1) {
+    let inPoints = [];
+    let vers = mesh.geometry.attributes.position.array;
+    for (let i = 0; i < vers.length; i += 3) {
+      let pos = new Vector3(vers[i], vers[i + 1], vers[i + 2]);
+      pos.applyMatrix4(mesh.matrixWorld);
+      if (boundingBox1.containsPoint(pos)) {
+        inPoints.push({ index: i, pos: pos.clone() });
+      }
+    }
+    return inPoints;
+  }
+  /**
+   * 获取2个模型件最近的距离 
+   * 如果模型 OBB 盒子未相交，返回 undefined
+   * @param _teeth0 
+   * @param _teeth1 
+   * @param minDist 
+   * @param checkType 
+   * @returns 
+   */
+  static calculate_Dist_M2M(_teeth0, _teeth1, minDist, checkType) {
+    _teeth0.mesh.updateMatrix();
+    _teeth0.mesh.updateMatrix();
+    _teeth1.mesh.updateMatrixWorld();
+    _teeth1.mesh.updateMatrixWorld();
+    let teeth0 = _teeth0, teeth1 = _teeth1;
+    const isSameArea = teeth0.areaId == teeth1.areaId;
+    let _cType = checkType;
+    let boundingBox0 = teeth0.get_boundingBox();
+    let boundingBox1 = teeth1.get_boundingBox();
+    let _box00 = boundingBox0.clone().expandByScalar(1.2);
+    let points0 = this.calculate_Meshes_Vertexs(teeth1.mesh, _box00.clone());
+    let dist, res0 = new Vector3(), res1 = new Vector3(), minDit, moveDir;
+    function getDistance() {
+      let center0 = new Vector3(), center1 = new Vector3();
+      boundingBox0.getCenter(center0);
+      boundingBox1.getCenter(center1);
+      const rayDir = center1.clone().sub(center0).normalize();
+      let raycaster = new Raycaster();
+      raycaster.set(center0, rayDir);
+      const intersects2 = raycaster.intersectObjects([teeth0.mesh, teeth1.mesh]);
+      minDit = intersects2[1].distance - intersects2[0].distance;
+      moveDir = rayDir;
+      res0 = intersects2[0].point;
+      res1 = intersects2[1].point;
+    }
+    if (points0.length === 0 && (void 0 === _cType || _cType === 0)) {
+      _cType = 0;
+      let _points0 = teeth0.get_WorldPoints();
+      let _points1 = teeth1.get_WorldPoints();
+      let _ppDist0, _ppDist1, p0, p1, tmd0, tmd1;
+      p0 = _points0[0];
+      while (!_ppDist0 || !_ppDist1 || _ppDist0 - _ppDist1 > 1e-4) {
+        _points1.forEach((tp1) => {
+          tmd0 = p0.distanceTo(tp1);
+          if (!_ppDist0 || tmd0 < _ppDist0) {
+            _ppDist0 = tmd0;
+            p1 = tp1;
+          }
+        });
+        _points0.forEach((tp0) => {
+          tmd1 = p1.distanceTo(tp0);
+          if (!_ppDist1 || tmd1 < _ppDist1) {
+            _ppDist1 = tmd1;
+            p0 = tp0;
+          }
+        });
+      }
+      minDit = _ppDist0;
+      moveDir = void 0;
+      res0 = p0.clone();
+      res1 = p1.clone();
+    } else {
+      _cType = 1;
+      const _minDist = minDist ? Math.abs(minDist) + 1 : 1;
+      const points = !isSameArea ? teeth1.getMesialPoints() : teeth1.getFarPoints();
+      const targetMesh = teeth0.mesh;
+      let ma4 = new Matrix4();
+      ma4.copy(targetMesh.matrixWorld).invert();
+      moveDir = void 0;
+      let target = new Vector3();
+      points.forEach((p) => {
+        let pos = p.clone();
+        pos.applyMatrix4(ma4);
+        dist = targetMesh.geometry.boundsTree.closestPointToPoint(
+          targetMesh,
+          pos,
+          target,
+          0,
+          _minDist
+        );
+        if (dist !== Infinity) {
+          if (this.containsPoint2(targetMesh, p)) dist *= -1;
+          if (!minDit || dist < minDit) {
+            minDit = dist;
+            res0 = p.clone();
+            res1 = target.clone().applyMatrix4(targetMesh.matrixWorld);
+          }
+        }
+      });
+    }
+    if (!minDit) getDistance();
+    return { dist: minDit, checkType: _cType, moveDir, pos0: res0, pos1: res1 };
+  }
+  /**
+   * 一个点是否在模型内部，不准确
+   * @param mesh 
+   * @param point 
+   * @returns 
+   */
+  static containsPoint2(mesh, point) {
+    let center = mesh.geometry.boundingBox.getCenter(new Vector3()).applyMatrix4(mesh.matrixWorld);
+    let dir = new Vector3().subVectors(point, center).normalize(), result;
+    var faces = /* @__PURE__ */ new Set();
+    function Raycaster1(dir2) {
+      let raycaster = new Raycaster();
+      raycaster.params.Points.threshold = 1e-7;
+      raycaster.set(point, dir2);
+      result = raycaster.intersectObject(mesh, false);
+      if (!result) throw new Error("投影错误");
+      var intersectFaceCount = 0;
+      for (let i = 0; i < result.length; i++) {
+        const face = result[i];
+        var isPointExist = faces.has(face.a) || faces.has(face.b) || faces.has(face.c);
+        if (!isPointExist) {
+          intersectFaceCount++;
+          faces.add(face.a);
+          faces.add(face.b);
+          faces.add(face.c);
+        }
+      }
+      return intersectFaceCount % 2 !== 0;
+    }
+    return Raycaster1(dir);
+  }
+  static intersectFacePlane(a, b, c, V0, n, points) {
+    var pointCount = 0;
+    if (intersectSegmentPlane(a, b, V0, n, points[pointCount]) == 1) {
+      pointCount++;
+    }
+    if (intersectSegmentPlane(b, c, V0, n, points[pointCount]) == 1) {
+      pointCount++;
+    }
+    if (pointCount == 2 || pointCount == 0) return pointCount;
+    if (intersectSegmentPlane(c, a, V0, n, points[pointCount]) == 1) {
+      pointCount++;
+    }
+    return pointCount;
+  }
+}
 export {
-  Scene as $,
+  Float32BufferAttribute as $,
   AmbientLight as A,
   BoxGeometry as B,
   Color as C,
@@ -34909,21 +35091,42 @@ export {
   OrthographicCamera as O,
   PerspectiveCamera as P,
   materialGumShader as Q,
-  mesh2drc as R,
+  BufferGeometry as R,
   SRGBColorSpace as S,
   TrackballControls as T,
-  mesh2ply as U,
+  InstancedBufferAttribute as U,
   Vector3 as V,
-  mesh2stl as W,
-  bindDracoEncoder as X,
-  debug_ToothVisualPoint as Y,
-  ObjectLoader as Z,
-  AxesHelper as _,
+  InterleavedBuffer as W,
+  InterleavedBufferAttribute as X,
+  TrianglesDrawMode as Y,
+  TriangleFanDrawMode as Z,
+  TriangleStripDrawMode as _,
   StrSprite as a,
-  BufferGeometry as a0,
-  Float32BufferAttribute as a1,
-  MeshBasicMaterial as a2,
-  ObjectSpaceNormalMap as a3,
+  Plane as a0,
+  Line3 as a1,
+  Triangle as a2,
+  Sphere as a3,
+  Box3 as a4,
+  BackSide as a5,
+  FrontSide as a6,
+  BatchedMesh as a7,
+  Ray as a8,
+  ObjectLoader as a9,
+  Scene as aa,
+  AxesHelper as ab,
+  Quaternion as ac,
+  TubeGeometry as ad,
+  SphereGeometry as ae,
+  ConeGeometry as af,
+  MeshBasicMaterial as ag,
+  ObjectSpaceNormalMap as ah,
+  CatmullRomCurve3 as ai,
+  mesh2drc as aj,
+  mesh2ply as ak,
+  mesh2stl as al,
+  bindDracoEncoder as am,
+  debug_ToothVisualPoint as an,
+  MqUtil as ao,
   Matrix4 as b,
   Vector4 as c,
   editorViewDir as d,

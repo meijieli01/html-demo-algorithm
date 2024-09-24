@@ -1,7 +1,4 @@
-import { 
-    Mesh, Color, MeshPhongMaterial, Float32BufferAttribute, DoubleSide,
-    ObjectSpaceNormalMap, Matrix4,
-} from './mq-render/viewer.es';
+import { alias3 } from './mq-render/viewer.es';
 // 默认模型颜色
 const colorModelDefault = '#B38E6B'; // 'rgb(179,142,107)'
 const colorModelSelectDefault = '#d9342a'; // 'rgb(217,52,42)'
@@ -121,7 +118,7 @@ export function getMeasureMaterialByName(name) {
 }
 
 export function updateMeshColor(mesh, strColor) {  
-    const color = new Color(strColor);
+    const color = new alias3.Color(strColor);
     mesh.material.color.copy(color);
 }
 
@@ -134,14 +131,14 @@ export function updateMeshOpacity(mesh, opacity) {
 export function addColor2Mesh(bufferGeo, options = {}) {  
     const hasColor = typeof options.hasColor == 'boolean' ? options.hasColor : true;
     return new Promise((resolve)=>{
-      const color = new Color(options.color || 'rgb(179,142,107)');
-      let material = new MeshPhongMaterial({
+      const color = new alias3.Color(options.color || 'rgb(179,142,107)');
+      let material = new alias3.MeshPhongMaterial({
         color: color,
         specular: 0x111111,
         reflectivity: 0.2,
         shininess: 10,
-        normalMapType: ObjectSpaceNormalMap,
-        side: DoubleSide,
+        normalMapType: alias3.ObjectSpaceNormalMap,
+        side: alias3.DoubleSide,
         transparent: false,
       });
       if (hasColor) {
@@ -151,12 +148,12 @@ export function addColor2Mesh(bufferGeo, options = {}) {
           colors.push(color.g)
           colors.push(color.b)
         }
-        bufferGeo.setAttribute('color', new Float32BufferAttribute(colors, 3))
+        bufferGeo.setAttribute('color', new alias3.Float32BufferAttribute(colors, 3))
         bufferGeo.computeVertexNormals()
         bufferGeo.normalizeNormals()
         bufferGeo.attributes.color.needsUpdate = true
       }
-      const mesh = new Mesh(bufferGeo, material)
+      const mesh = new alias3.Mesh(bufferGeo, material)
       mesh.name = options.name || Date.now().toString();
       updateMeshOpacity(mesh, options.opacity || 1);
       resolve(mesh);
@@ -164,7 +161,7 @@ export function addColor2Mesh(bufferGeo, options = {}) {
   }
   
   export function arrayVectorToMatrix(arrVector) {
-    const mat = new Matrix4();
+    const mat = new alias3.Matrix4();
     mat.set(
         arrVector[0][0], arrVector[0][1], arrVector[0][2], arrVector[0][3], 
         arrVector[1][0], arrVector[1][1], arrVector[1][2], arrVector[1][3], 

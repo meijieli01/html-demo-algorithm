@@ -2,6 +2,7 @@ import { createApp } from 'vue'
 import App from './App.vue'
 import router from './router'
 import store from './store';
+import { i18n } from './lang/index';
 
 const newPageList = ['/editor', '/assigned'] // 跳转新页面
 router.beforeEach(async (to, from, next) => {
@@ -27,4 +28,5 @@ router.beforeEach(async (to, from, next) => {
 createApp(App)
 .use(router)
 .use(store)
+.use(i18n)
 .mount('#app')

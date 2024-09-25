@@ -1,5 +1,5 @@
-import { C as Color, V as Vector3, q as Camera, P as PerspectiveCamera, O as OrthographicCamera, b as Matrix4, v as viewDir, r as Mesh, s as PlaneGeometry, u as ShaderMaterial, w as AlwaysDepth, E as EventDispatcher, x as Vector2, M as MqRender, e as eColorState, S as SRGBColorSpace, a as StrSprite, f as PointLight, D as DirectionalLight, A as AmbientLight, T as TrackballControls, y as LinearSRGBColorSpace, z as MeshPhongMaterial, I as DoubleSide, J as BufferAttribute, K as MeshStandardMaterial, N as materiallegacyCrownShader, Q as materialGumShader, R as BufferGeometry, U as InstancedBufferAttribute, W as InterleavedBuffer, X as InterleavedBufferAttribute, Y as TrianglesDrawMode, Z as TriangleFanDrawMode, _ as TriangleStripDrawMode, $ as Float32BufferAttribute, a0 as Plane, a1 as Line3, a2 as Triangle, a3 as Sphere, a4 as Box3, a5 as BackSide, a6 as FrontSide, a7 as BatchedMesh, a8 as Ray, a9 as ObjectLoader, aa as Scene, ab as AxesHelper, ac as Quaternion, B as BoxGeometry, ad as TubeGeometry, ae as SphereGeometry, i as CylinderGeometry, af as ConeGeometry, ag as MeshBasicMaterial, ah as ObjectSpaceNormalMap, ai as CatmullRomCurve3 } from "./tooth-Cjf2t_8G.js";
-import { F, ao, j, p, am, n, l, an, o, h, m, k, aj, ak, al } from "./tooth-Cjf2t_8G.js";
+import { C as Color, V as Vector3, q as Camera, P as PerspectiveCamera, O as OrthographicCamera, b as Matrix4, v as viewDir, r as Mesh, s as PlaneGeometry, u as ShaderMaterial, w as AlwaysDepth, E as EventDispatcher, x as Vector2, R as Raycaster, M as MqRender, e as eColorState, S as SRGBColorSpace, a as StrSprite, f as PointLight, D as DirectionalLight, A as AmbientLight, T as TrackballControls, y as LinearSRGBColorSpace, z as MeshPhongMaterial, I as DoubleSide, J as BufferAttribute, K as MeshStandardMaterial, N as materiallegacyCrownShader, Q as materialGumShader, U as MeshBasicMaterial, W as BufferGeometry, X as InstancedBufferAttribute, Y as InterleavedBuffer, Z as InterleavedBufferAttribute, _ as TrianglesDrawMode, $ as TriangleFanDrawMode, a0 as TriangleStripDrawMode, a1 as Float32BufferAttribute, a2 as Plane, a3 as Line3, a4 as Triangle, a5 as Sphere, a6 as Box3, a7 as BackSide, a8 as FrontSide, a9 as BatchedMesh, aa as Ray, ab as ObjectLoader, ac as Scene, ad as AxesHelper, ae as Quaternion, B as BoxGeometry, af as TubeGeometry, ag as SphereGeometry, i as CylinderGeometry, ah as ConeGeometry, ai as ObjectSpaceNormalMap, aj as CatmullRomCurve3 } from "./tooth-DHtn7wnC.js";
+import { F, ap, j, p, an, n, l, ao, o, h, m, k, ak, al, am } from "./tooth-DHtn7wnC.js";
 const themeDefault = {
   name: "Default",
   lights: [
@@ -51,18 +51,8 @@ function setXYZ(arr, i, x, y, z) {
 function inMinMax(current, min, max) {
   return Math.min(Math.max(current, min), max);
 }
-function minimalValue(value) {
-  return Math.max(value, 0.01);
-}
 function getVFov(aspect, hFov) {
   return 2 * Math.atan(Math.tan(hFov / 2) / aspect);
-}
-function frustumHeightAtDistance(camera, distance) {
-  const vFov = camera.fov * Math.PI / 180;
-  return Math.tan(vFov / 2) * distance * 2;
-}
-function frustumWidthAtDistance(camera, distance) {
-  return frustumHeightAtDistance(camera, distance) * camera.aspect;
 }
 class SwitchCamera extends Camera {
   constructor(cameraAngle = 20) {
@@ -114,18 +104,6 @@ class SwitchCamera extends Camera {
     }
     if (control) control.object = this.camera;
   }
-  updateFrustum(control, options = {}) {
-    const { persp, ortho } = this;
-    persp.aspect = options.width / options.height;
-    const distance = ortho.position.distanceTo(control.target);
-    const halfWidth = frustumWidthAtDistance(persp, distance) / 2;
-    const halfHeight = frustumHeightAtDistance(persp, distance) / 2;
-    const halfSize = { x: halfWidth, y: halfHeight };
-    ortho.top = halfSize.y;
-    ortho.bottom = -halfSize.y;
-    ortho.left = -halfSize.x;
-    ortho.right = halfSize.x;
-  }
   toOrthographic(control) {
     const { persp, ortho, tan } = this;
     const distance = persp.position.distanceTo(control.target);
@@ -136,7 +114,6 @@ class SwitchCamera extends Camera {
     ortho.left = -halfWidth;
     ortho.right = halfWidth;
     ortho.zoom = 1;
-    console.log("to ortho ", Math.log2(distance), distance, persp.zoom, ortho.zoom);
     ortho.lookAt(control.target);
     this.syncCameraPosture(true);
     ortho.updateProjectionMatrix();
@@ -145,8 +122,9 @@ class SwitchCamera extends Camera {
     const { persp, ortho, tan } = this;
     this.syncCameraPosture(false);
     let frustumHeight = (ortho.top - ortho.bottom) / ortho.zoom;
-    let d = frustumHeight / 2 / tan;
-    persp.position.copy(ortho.position).normalize().multiplyScalar(d);
+    let halfHeight = frustumHeight / 2;
+    let distance = halfHeight / tan;
+    persp.position.copy(ortho.position).normalize().multiplyScalar(distance);
     persp.updateProjectionMatrix();
   }
   syncCameraPosture(toOrtho) {
@@ -167,30 +145,30 @@ class SwitchCamera extends Camera {
       persp.updateMatrixWorld();
     }
   }
-  get wPositionV() {
+  getWorldCameraPosition() {
     const { position, quaternion } = this.camera;
     const pos = position.clone();
     const quat = quaternion.clone();
     quat.invert();
     pos.applyQuaternion(quat);
-    return pos.toArray();
+    return pos;
   }
-  newOrhtoProjection() {
+  getOrthoViewWidth(mat) {
+    const w = mat.elements[0], x = mat.elements[12];
+    const left = -(x + 1) / w;
+    const right = (1 - x) / w;
+    return right - left;
+  }
+  getCurrentViewportWidth() {
     const { tan } = this;
     const { near, far, zoom } = this.ortho;
     const { aspect } = this.persp;
-    const height = tan * new Vector3().fromArray(this.wPositionV).z;
+    const wCameraPos = this.getWorldCameraPosition();
+    const height = tan * wCameraPos.z;
     const width = height * aspect;
     const projectionMatrix = new Matrix4();
     projectionMatrix.makeOrthographic(-width, width, height, -height, near, far);
-    const { left, right } = function(e) {
-      const t = e.elements[0], n2 = e.elements[12];
-      return {
-        left: -(n2 + 1) / t,
-        right: (1 - n2) / t
-      };
-    }(projectionMatrix);
-    const vpWidth = (right - left) / zoom;
+    const vpWidth = this.getOrthoViewWidth(projectionMatrix) / zoom;
     return vpWidth;
   }
   updateViewDir(code) {
@@ -204,18 +182,6 @@ class SwitchCamera extends Camera {
     camera.rotation.set(data.rotation[0], data.rotation[1], data.rotation[2]);
     camera.updateProjectionMatrix();
   }
-  getRealViewWidth() {
-    const { projectionMatrix } = this.ortho;
-    const { left: vpLeft, right: vpRight } = function(e) {
-      const t = e.elements[0], n2 = e.elements[12];
-      return {
-        left: -(n2 + 1) / t,
-        right: (1 - n2) / t
-      };
-    }(projectionMatrix);
-    const width = vpRight - vpLeft;
-    return width;
-  }
   updateProjectionMatrix() {
     const { isOrtho, orthoView: ov, perspView: pv, near, far } = this;
     if (isOrtho) {
@@ -226,25 +192,10 @@ class SwitchCamera extends Camera {
       this.projectionMatrix.makePerspective(pv.left, pv.right, pv.top, pv.bottom, near, far);
     }
   }
-  getOrthoViewportWidth() {
-    const { isOrtho, width, projectionMatrix, ortho } = this;
-    let vpWidth = width;
-    if (isOrtho) {
-      const { left, right } = function(e) {
-        const t = e.elements[0], n2 = e.elements[12];
-        return {
-          left: -(n2 + 1) / t,
-          right: (1 - n2) / t
-        };
-      }(projectionMatrix);
-      vpWidth = (right - left) / ortho.zoom;
-    }
-    return vpWidth;
-  }
   updateOrthoView() {
     const { fov, aspect, orthoView } = this;
-    let tmp = new Vector3().fromArray(this.wPositionV);
-    const halfHeight = Math.tan(fov / 2) * tmp.z;
+    const wCameraPos = this.getWorldCameraPosition();
+    const halfHeight = Math.tan(fov / 2) * wCameraPos.z;
     const halfWidth = halfHeight * aspect;
     orthoView.left = -halfWidth;
     orthoView.right = halfWidth;
@@ -286,20 +237,11 @@ class SwitchCamera extends Camera {
   }
   setZoom(zoom) {
     this.zoom = inMinMax(zoom, this.zoomMin, this.zoomMax);
-    this.updateFov(zoom);
-    this.updatePosition(zoom);
-    this.updateCameraInfo();
     this.dispatchEvent({ type: "zoomChanged" });
   }
   updateFov(fov) {
     const hFov = getVFov(this.aspect, fov);
     this.fov = inMinMax(hFov, this.fovMin, this.fovMax);
-  }
-  updatePosition(zoom) {
-    const { position, quaternion } = this;
-    const t = position.clone().applyQuaternion(quaternion.clone().invert());
-    t.z = minimalValue(zoom);
-    this.position.copy(t.applyQuaternion(quaternion));
   }
 }
 class OrthoGrid1 extends Mesh {
@@ -519,14 +461,14 @@ function __read(o2, n2) {
   }
   return ar;
 }
-function __spreadArray(to, from2, pack) {
-  if (pack || arguments.length === 2) for (var i = 0, l2 = from2.length, ar; i < l2; i++) {
-    if (ar || !(i in from2)) {
-      if (!ar) ar = Array.prototype.slice.call(from2, 0, i);
-      ar[i] = from2[i];
+function __spreadArray(to, from, pack) {
+  if (pack || arguments.length === 2) for (var i = 0, l2 = from.length, ar; i < l2; i++) {
+    if (ar || !(i in from)) {
+      if (!ar) ar = Array.prototype.slice.call(from, 0, i);
+      ar[i] = from[i];
     }
   }
-  return to.concat(ar || Array.prototype.slice.call(from2));
+  return to.concat(ar || Array.prototype.slice.call(from));
 }
 function __await(v) {
   return this instanceof __await ? (this.v = v, this) : new __await(v);
@@ -1274,18 +1216,6 @@ var AnonymousSubject = function(_super) {
   };
   return AnonymousSubject2;
 }(Subject);
-function isScheduler(value) {
-  return value && isFunction(value.schedule);
-}
-function last(arr) {
-  return arr[arr.length - 1];
-}
-function popScheduler(args) {
-  return isScheduler(last(args)) ? args.pop() : void 0;
-}
-function popNumber(args, defaultValue) {
-  return typeof last(args) === "number" ? args.pop() : defaultValue;
-}
 var isArrayLike = function(x) {
   return x && typeof x.length === "number" && typeof x !== "function";
 };
@@ -1509,132 +1439,6 @@ function executeSchedule(parentSubscription, scheduler, work, delay, repeat) {
     return scheduleSubscription;
   }
 }
-function observeOn(scheduler, delay) {
-  if (delay === void 0) {
-    delay = 0;
-  }
-  return operate(function(source, subscriber) {
-    source.subscribe(createOperatorSubscriber(subscriber, function(value) {
-      return executeSchedule(subscriber, scheduler, function() {
-        return subscriber.next(value);
-      }, delay);
-    }, function() {
-      return executeSchedule(subscriber, scheduler, function() {
-        return subscriber.complete();
-      }, delay);
-    }, function(err) {
-      return executeSchedule(subscriber, scheduler, function() {
-        return subscriber.error(err);
-      }, delay);
-    }));
-  });
-}
-function subscribeOn(scheduler, delay) {
-  if (delay === void 0) {
-    delay = 0;
-  }
-  return operate(function(source, subscriber) {
-    subscriber.add(scheduler.schedule(function() {
-      return source.subscribe(subscriber);
-    }, delay));
-  });
-}
-function scheduleObservable(input, scheduler) {
-  return innerFrom(input).pipe(subscribeOn(scheduler), observeOn(scheduler));
-}
-function schedulePromise(input, scheduler) {
-  return innerFrom(input).pipe(subscribeOn(scheduler), observeOn(scheduler));
-}
-function scheduleArray(input, scheduler) {
-  return new Observable(function(subscriber) {
-    var i = 0;
-    return scheduler.schedule(function() {
-      if (i === input.length) {
-        subscriber.complete();
-      } else {
-        subscriber.next(input[i++]);
-        if (!subscriber.closed) {
-          this.schedule();
-        }
-      }
-    });
-  });
-}
-function scheduleIterable(input, scheduler) {
-  return new Observable(function(subscriber) {
-    var iterator$1;
-    executeSchedule(subscriber, scheduler, function() {
-      iterator$1 = input[iterator]();
-      executeSchedule(subscriber, scheduler, function() {
-        var _a;
-        var value;
-        var done;
-        try {
-          _a = iterator$1.next(), value = _a.value, done = _a.done;
-        } catch (err) {
-          subscriber.error(err);
-          return;
-        }
-        if (done) {
-          subscriber.complete();
-        } else {
-          subscriber.next(value);
-        }
-      }, 0, true);
-    });
-    return function() {
-      return isFunction(iterator$1 === null || iterator$1 === void 0 ? void 0 : iterator$1.return) && iterator$1.return();
-    };
-  });
-}
-function scheduleAsyncIterable(input, scheduler) {
-  if (!input) {
-    throw new Error("Iterable cannot be null");
-  }
-  return new Observable(function(subscriber) {
-    executeSchedule(subscriber, scheduler, function() {
-      var iterator2 = input[Symbol.asyncIterator]();
-      executeSchedule(subscriber, scheduler, function() {
-        iterator2.next().then(function(result) {
-          if (result.done) {
-            subscriber.complete();
-          } else {
-            subscriber.next(result.value);
-          }
-        });
-      }, 0, true);
-    });
-  });
-}
-function scheduleReadableStreamLike(input, scheduler) {
-  return scheduleAsyncIterable(readableStreamLikeToAsyncGenerator(input), scheduler);
-}
-function scheduled(input, scheduler) {
-  if (input != null) {
-    if (isInteropObservable(input)) {
-      return scheduleObservable(input, scheduler);
-    }
-    if (isArrayLike(input)) {
-      return scheduleArray(input, scheduler);
-    }
-    if (isPromise(input)) {
-      return schedulePromise(input, scheduler);
-    }
-    if (isAsyncIterable(input)) {
-      return scheduleAsyncIterable(input, scheduler);
-    }
-    if (isIterable(input)) {
-      return scheduleIterable(input, scheduler);
-    }
-    if (isReadableStreamLike(input)) {
-      return scheduleReadableStreamLike(input, scheduler);
-    }
-  }
-  throw createInvalidObservableTypeError(input);
-}
-function from(input, scheduler) {
-  return scheduler ? scheduled(input, scheduler) : innerFrom(input);
-}
 function map(project, thisArg) {
   return operate(function(source, subscriber) {
     var index = 0;
@@ -1643,9 +1447,9 @@ function map(project, thisArg) {
     }));
   });
 }
-var isArray$1 = Array.isArray;
+var isArray = Array.isArray;
 function callOrApply(fn, args) {
-  return isArray$1(args) ? fn.apply(void 0, __spreadArray([], __read(args))) : fn(args);
+  return isArray(args) ? fn.apply(void 0, __spreadArray([], __read(args))) : fn(args);
 }
 function mapOneOrManyArgs(fn) {
   return map(function(args) {
@@ -1719,12 +1523,6 @@ function mergeMap(project, resultSelector, concurrent) {
     return mergeInternals(source, subscriber, project, concurrent);
   });
 }
-function mergeAll(concurrent) {
-  if (concurrent === void 0) {
-    concurrent = Infinity;
-  }
-  return mergeMap(identity, concurrent);
-}
 var nodeEventEmitterMethods = ["addListener", "removeListener"];
 var eventTargetMethods = ["addEventListener", "removeEventListener"];
 var jqueryMethods = ["on", "off"];
@@ -1780,29 +1578,6 @@ function isJQueryStyleEventEmitter(target) {
 }
 function isEventTarget(target) {
   return isFunction(target.addEventListener) && isFunction(target.removeEventListener);
-}
-var isArray = Array.isArray;
-function argsOrArgArray(args) {
-  return args.length === 1 && isArray(args[0]) ? args[0] : args;
-}
-function merge() {
-  var args = [];
-  for (var _i = 0; _i < arguments.length; _i++) {
-    args[_i] = arguments[_i];
-  }
-  var scheduler = popScheduler(args);
-  var concurrent = popNumber(args, Infinity);
-  args = argsOrArgArray(args);
-  return operate(function(source, subscriber) {
-    mergeAll(concurrent)(from(__spreadArray([source], __read(args)), scheduler)).subscribe(subscriber);
-  });
-}
-function mergeWith() {
-  var otherSources = [];
-  for (var _i = 0; _i < arguments.length; _i++) {
-    otherSources[_i] = arguments[_i];
-  }
-  return merge.apply(void 0, __spreadArray([], __read(otherSources)));
 }
 function share(options) {
   if (options === void 0) {
@@ -1917,18 +1692,38 @@ function tap(observerOrNext, error, complete) {
     }));
   }) : identity;
 }
+var eEventType = /* @__PURE__ */ ((eEventType2) => {
+  eEventType2[eEventType2["down"] = 1] = "down";
+  eEventType2[eEventType2["up"] = 2] = "up";
+  eEventType2[eEventType2["move"] = 4] = "move";
+  eEventType2[eEventType2["over"] = 8] = "over";
+  eEventType2[eEventType2["enter"] = 16] = "enter";
+  eEventType2[eEventType2["leave"] = 32] = "leave";
+  eEventType2[eEventType2["out"] = 64] = "out";
+  eEventType2[eEventType2["cancel"] = 128] = "cancel";
+  eEventType2[eEventType2["kdown"] = 256] = "kdown";
+  eEventType2[eEventType2["kup"] = 512] = "kup";
+  eEventType2[eEventType2["menu"] = 1024] = "menu";
+  eEventType2[eEventType2["got"] = 2048] = "got";
+  eEventType2[eEventType2["lost"] = 4096] = "lost";
+  eEventType2[eEventType2["update"] = 8192] = "update";
+  return eEventType2;
+})(eEventType || {});
 const cSupportEventName = [
-  "touchstart",
-  "touchmove",
-  "touchend",
-  "mouseleave",
-  "mousedown",
-  "mousemove",
-  "mouseup",
-  "wheel",
-  "keydown",
-  "keyup",
-  "contextmenu"
+  { name: "pointerdown", value: 1 },
+  { name: "pointerup", value: 1 },
+  { name: "pointermove", value: 0 },
+  { name: "pointerover", value: 0 },
+  { name: "pointerenter", value: 0 },
+  { name: "pointercancel", value: 0 },
+  { name: "pointerout", value: 0 },
+  { name: "pointerleave", value: 0 },
+  { name: "pointerrawupdate", value: 0 },
+  { name: "gotpointercapture", value: 0 },
+  { name: "lostpointercapture", value: 0 },
+  { name: "keydown", value: 0 },
+  { name: "keyup", value: 0 },
+  { name: "contextmenu", value: 0 }
 ];
 const cKeyboardEventName = ["keydown", "keyup"];
 class EventPool extends EventDispatcher {
@@ -1936,75 +1731,66 @@ class EventPool extends EventDispatcher {
     super();
     this.canvas = canvas;
     this.preventMouse = (e) => {
-      if ("TouchEvent" in window && e instanceof TouchEvent) e.preventDefault();
-    };
-    this.getMerge = (eName) => {
-      switch (eName) {
-        case "mousedown":
-          return this.streamPool.touchstart;
-        case "mousemove":
-          return this.streamPool.touchmove;
-        case "mouseup":
-          return this.streamPool.touchend;
-        default:
-          return new Subject();
-      }
+      e.preventDefault();
     };
     this.pick = (e) => {
-      this.normalizeCoords(e);
+      const coords = this.normalizeCoords(e);
+      let index, intersects;
+      if (coords) {
+        const tmp = this.app.pickMesh(coords);
+        index = tmp.index;
+        intersects = tmp.intersects;
+      }
       return {
-        e,
-        first: false,
-        data: {}
+        type: e.type,
+        pointerType: e.pointerType,
+        intersects,
+        data: {
+          index,
+          coords
+        }
       };
     };
     this.streamPool = {};
   }
-  createStream() {
-    cSupportEventName.forEach((eName) => {
-      const target = cKeyboardEventName.includes(eName) ? window : this.canvas;
+  bindApp(app) {
+    this.app = app;
+  }
+  createStream(eType) {
+    cSupportEventName.filter((e) => e.value & eType).forEach((one) => {
+      const target = cKeyboardEventName.includes(one.name) ? window : this.canvas;
       if (!target) throw new Error("un-bind canvas");
-      const observer = fromEvent(target, eName);
-      this.streamPool[eName] = observer.pipe(
+      const observer = fromEvent(target, one.name);
+      this.streamPool[one.name] = observer.pipe(
         tap(this.preventMouse),
+        // 执行副作用，不对数据流产生影响 不返回任何值
         map(this.pick),
-        mergeWith(this.getMerge(eName)),
         share()
       );
     });
-    this.streamPool.documenttouchend = fromEvent(document, "touchend").pipe(
+    this.streamPool.documentpointerup = fromEvent(document, "pointerup").pipe(
       map((e) => ({ e })),
       share()
     );
-    this.streamPool.documentmouseup = fromEvent(document, "mouseup").pipe(
-      map((e) => ({ e })),
-      mergeWith(this.streamPool.documenttouchend),
-      share()
-    );
-    this.streamPool.documentmousedown = fromEvent(document, "mousedown").pipe(
+    this.streamPool.documentpointerdown = fromEvent(document, "pointerdown").pipe(
       map(this.pick),
       share()
     );
-    Object.keys(this.streamPool).forEach((key) => {
-      this.streamPool[key].subscribe(() => {
-      });
+  }
+  listen(callback = (e) => {
+  }, eType) {
+    this.createStream(eType);
+    const { streamPool } = this;
+    Object.keys(streamPool).forEach((key) => {
+      streamPool[key].subscribe((e) => callback(e));
     });
   }
   normalizeCoords(evt) {
     const rc = this.canvas.getBoundingClientRect();
+    if (["keydown", "keyup"].includes(evt.type)) return;
     let x, y;
-    if ("TouchEvent" in window && evt instanceof TouchEvent) {
-      x = evt.changedTouches[0].clientX;
-      y = evt.changedTouches[0].clientY;
-    } else {
-      if (["keydown", "keyup"].includes(evt.type)) return;
-      if (!(evt instanceof MouseEvent)) {
-        console.log(evt.type);
-        throw new Error("Unknown type of event");
-      }
-      x = evt.clientX;
-      y = evt.clientY;
-    }
+    x = evt.clientX;
+    y = evt.clientY;
     x = x - rc.left;
     y = y - rc.top;
     return new Vector2(x, y);
@@ -2013,6 +1799,7 @@ class EventPool extends EventDispatcher {
     return this.canvas;
   }
 }
+const localRayCaster = new Raycaster();
 var eEntryCode = /* @__PURE__ */ ((eEntryCode2) => {
   eEntryCode2[eEntryCode2["none"] = 0] = "none";
   eEntryCode2[eEntryCode2["webui"] = 1] = "webui";
@@ -2058,7 +1845,7 @@ class MqMultiViewEditor extends MqRender {
     this.cameraOrtho.position.z = 10;
     if (options.useGrid) {
       const sizeScale = 80;
-      this.meshGrid = new OrthoGrid1(5);
+      this.meshGrid = new OrthoGrid1(10);
       this.sceneOrtho.add(this.meshGrid);
       this.labelUnit = new StrSprite("10", {
         hasPostfix: true,
@@ -2072,7 +1859,7 @@ class MqMultiViewEditor extends MqRender {
       this.sceneOrtho.add(this.labelUnit.target);
     }
     this.ePool = new EventPool(this.renderer.domElement);
-    this.ePool.createStream();
+    this.ePool.bindApp(this);
   }
   applyAppearance(theme = this.theme) {
     const { viewStateList } = this.options;
@@ -2155,7 +1942,7 @@ class MqMultiViewEditor extends MqRender {
       if (camera.isOrtho) {
         let total = ((_a = options.viewStateList) == null ? void 0 : _a.length) || 1;
         if (this.meshGrid) {
-          this.meshGrid.updateSize(camera.newOrhtoProjection() * total, cameraOrtho);
+          this.meshGrid.updateSize(camera.getCurrentViewportWidth() * total, cameraOrtho);
           (_b = this.labelUnit) == null ? void 0 : _b.update(this.meshGrid.unit.toString());
         }
         renderer.setViewport(0, 0, rc.width, rc.height);
@@ -2238,6 +2025,8 @@ class MqMultiViewEditor extends MqRender {
     }
     this.updateFrame();
   }
+  findByName(name) {
+  }
   remove(name) {
     var _a;
     const { options: inOptions, entryCode } = this;
@@ -2269,10 +2058,31 @@ class MqMultiViewEditor extends MqRender {
     const aspect = renderer.domElement.width / renderer.domElement.height;
     let fitSideH = maxside * Math.sqrt(3);
     let fitSideV = fitSideH / aspect;
-    console.log(fitSideH, fitSideV, maxside);
     const persp = camera.persp;
     persp.projectionMatrix.makePerspective(-fitSideH, fitSideH, fitSideV, -fitSideV, persp.near, persp.far);
     persp.updateProjectionMatrix();
+  }
+  listen(callback, vEvent = eEventType.down) {
+    var _a;
+    (_a = this.ePool) == null ? void 0 : _a.listen(callback, vEvent);
+  }
+  pickMesh(pt, inOptions = {}) {
+    var _a;
+    const { rc, renderer, camera, options } = this;
+    if (!renderer) return;
+    const recursive = typeof inOptions.recursive == "boolean" ? inOptions.recursive : false;
+    pt.x = pt.x / rc.width / rc.dpr * 2 - 1;
+    pt.y = -(pt.y / rc.height / rc.dpr) * 2 + 1;
+    localRayCaster.setFromCamera(pt, camera.getCamera());
+    const listScene = (_a = options.viewStateList) == null ? void 0 : _a.filter((e) => e.scene).map((e) => e.scene);
+    let intersects, index = 0, count = listScene.length;
+    for (; index < count; index++) {
+      intersects = localRayCaster.intersectObjects(listScene[index].children, recursive);
+      if (intersects.length > 0) {
+        break;
+      }
+    }
+    return { index, intersects };
   }
 }
 var eMaterialReplace = /* @__PURE__ */ ((eMaterialReplace2) => {
@@ -2332,6 +2142,40 @@ function toMeshWithMaterialReplace(geometry, eType, userData = {}) {
     throw new Error(`un-support material type ${eType}`);
   }
   if (material) return new Mesh(geometry, material);
+}
+const cPickColor = new Color().setRGB(0.5, 0.5, 0.5);
+const cPickList = [];
+function pickUpdateColor(mesh, color, isReset = false) {
+  const userData = mesh.userData || {};
+  const material = mesh.material;
+  if (Array.isArray(material)) {
+    console.log("unsupport array material type");
+  } else {
+    if (["ShaderMaterial", "RawShaderMaterial"].includes(material.type)) {
+      console.log("unsupport shader type", material.type);
+    } else {
+      if (material instanceof MeshBasicMaterial) {
+        if (isReset) {
+          material.color.copy(userData.oColor);
+          userData.oColor = void 0;
+          userData.pick = 0;
+        } else {
+          userData.oColor = material.color.clone();
+          material.color.copy(color);
+          userData.pick = 1;
+        }
+      } else {
+        console.log("unsupport type", material.type);
+      }
+    }
+  }
+}
+function pickMesh(mesh, options = {}) {
+  const cPick = options.color ? new Color(options.color) : cPickColor;
+  cPickList.forEach((m2) => pickUpdateColor(m2, cPick, true));
+  cPickList.length = 0;
+  pickUpdateColor(mesh, cPick);
+  cPickList.push(mesh);
 }
 function computeMikkTSpaceTangents(geometry, MikkTSpace, negateSign = true) {
   if (!MikkTSpace || !MikkTSpace.isReady) {
@@ -6465,23 +6309,25 @@ const aliasBvh = {
 export {
   F as FilePathLoader,
   MqMultiViewEditor,
-  ao as MqUtil,
+  ap as MqUtil,
   j as PathLoader,
   p as StrMesh,
   alias3,
   aliasBvh,
-  am as bindDracoEncoder,
+  an as bindDracoEncoder,
   n as create4ToothNumberMesh,
   l as createGumMesh,
-  an as debug_ToothVisualPoint,
+  ao as debug_ToothVisualPoint,
   eEntryCode,
+  eEventType,
   eMaterialReplace,
   o as eMaterialType,
   h as geometry2Mesh,
   m as mat2Mesh,
   k as mat4Tooth,
-  aj as mesh2drc,
-  ak as mesh2ply,
-  al as mesh2stl,
+  ak as mesh2drc,
+  al as mesh2ply,
+  am as mesh2stl,
+  pickMesh,
   toMeshWithMaterialReplace
 };

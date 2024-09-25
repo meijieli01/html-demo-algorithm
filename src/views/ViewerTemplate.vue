@@ -79,7 +79,7 @@
             </div>
         </div>
         <div class="">
-            <div class="d-flex my-1" v-for="(item,i) in ud.infoList" :key="i">
+            <div class="d-flex flex-wrap my-1" v-for="(item,i) in ud.infoList" :key="i">
                 <input type="color" class="form-control" :value="item.color" @change="inputChangeColorUpdate($event,item)" style="width:60px;" />
                 <input type="range" class="form-range" min="0" max="1" step="0.01" :value="item.opacity" @change="inputChangeOpacityUpdate($event,item)" style="width:160px;" />
                 <div class="form-check form-switch mx-3">
@@ -368,7 +368,7 @@ function updateByPath() {
         const filename = PathLoader.getName(path);
         const validPath = `${import.meta.env.VITE_APP_FILE_PREFIX}/${path}`;
         const geo = await new PathLoader(path, {drcPath:`${import.meta.env.VITE_APP_PREFIX_PUBLIC}/draco/`}).load(validPath, (e)=>{
-            console.log('progress', e.loaded/e.total)
+            // console.log('progress', e.loaded/e.total)
         }).catch(err=>{
             if (err instanceof ProgressEvent) {
                 if (err.total==0) {
@@ -529,7 +529,7 @@ function showDownload(event, item, type) {
         event.preventDefault();
         event.stopPropagation();
     } 
-    if (['AI_NightGuard', 'AI_Retainer'].includes(props.tag)) {        
+    if (['AI_NightGuard', 'AI_Retainer', 'AI_BracketRemove'].includes(props.tag)) {        
         if (type == 'download') {
             return elViewer.value.donwloadByName(item.filename, {
                 prefix:`NightGuard`

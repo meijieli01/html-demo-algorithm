@@ -43,11 +43,15 @@ onBeforeUnmount(() => {
 });
 function donwloadByName(name, options = {}) {
     const prefix = options.prefix || '';
-    const mesh = app3.getByName(name);
-    mesh2stl(mesh.clone(), {isBinary:true}).then(buffer=>{
-        const fName = name.substring(0, name.lastIndexOf('.'));
-        saveBinaryFile(buffer, `${prefix?prefix+'-':''}${fName}-${Date.now()}.stl`);
-    })
+    app3.updateVisitGroup((m)=>{
+        if (m.name == name) {
+            const mesh = m.clone();
+            mesh2stl(mesh, {isBinary:true}).then(buffer=>{
+                const fName = name.substring(0, name.lastIndexOf('.'));
+                saveBinaryFile(buffer, `${prefix?prefix+'-':''}${fName}-${Date.now()}.stl`);
+            });
+        }
+    });
 }
 defineExpose({
     app3,

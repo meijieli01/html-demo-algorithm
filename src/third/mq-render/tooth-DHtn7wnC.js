@@ -34765,14 +34765,14 @@ const geometry2Mesh = (bufferGeo, options) => {
   if (options.userData) mesh.userData = options.userData;
   if (typeof options.visible == "boolean") mesh.visible = options.visible;
   if (code == 3) {
-    mesh.userData.orginalColor = mesh.geometry.attributes.color.clone();
+    mesh.userData.oColor = mesh.geometry.attributes.color.clone();
     const colors = mesh.geometry.attributes.color.array;
     for (let i = 0, il = colors.length; i < il; i += 3) {
       colors[i] = 1;
       colors[i + 1] = 1;
       colors[i + 2] = 1;
     }
-    mesh.userData.originMaterial = mesh.material;
+    mesh.userData.oMaterial = mesh.material;
     mesh.material = materiallegacyCrownShader(mesh.geometry, mesh.userData.isUpper);
   }
   return mesh;
@@ -35073,7 +35073,7 @@ class MqUtil {
   }
 }
 export {
-  Float32BufferAttribute as $,
+  TriangleFanDrawMode as $,
   AmbientLight as A,
   BoxGeometry as B,
   Color as C,
@@ -35091,42 +35091,43 @@ export {
   OrthographicCamera as O,
   PerspectiveCamera as P,
   materialGumShader as Q,
-  BufferGeometry as R,
+  Raycaster as R,
   SRGBColorSpace as S,
   TrackballControls as T,
-  InstancedBufferAttribute as U,
+  MeshBasicMaterial as U,
   Vector3 as V,
-  InterleavedBuffer as W,
-  InterleavedBufferAttribute as X,
-  TrianglesDrawMode as Y,
-  TriangleFanDrawMode as Z,
-  TriangleStripDrawMode as _,
+  BufferGeometry as W,
+  InstancedBufferAttribute as X,
+  InterleavedBuffer as Y,
+  InterleavedBufferAttribute as Z,
+  TrianglesDrawMode as _,
   StrSprite as a,
-  Plane as a0,
-  Line3 as a1,
-  Triangle as a2,
-  Sphere as a3,
-  Box3 as a4,
-  BackSide as a5,
-  FrontSide as a6,
-  BatchedMesh as a7,
-  Ray as a8,
-  ObjectLoader as a9,
-  Scene as aa,
-  AxesHelper as ab,
-  Quaternion as ac,
-  TubeGeometry as ad,
-  SphereGeometry as ae,
-  ConeGeometry as af,
-  MeshBasicMaterial as ag,
-  ObjectSpaceNormalMap as ah,
-  CatmullRomCurve3 as ai,
-  mesh2drc as aj,
-  mesh2ply as ak,
-  mesh2stl as al,
-  bindDracoEncoder as am,
-  debug_ToothVisualPoint as an,
-  MqUtil as ao,
+  TriangleStripDrawMode as a0,
+  Float32BufferAttribute as a1,
+  Plane as a2,
+  Line3 as a3,
+  Triangle as a4,
+  Sphere as a5,
+  Box3 as a6,
+  BackSide as a7,
+  FrontSide as a8,
+  BatchedMesh as a9,
+  Ray as aa,
+  ObjectLoader as ab,
+  Scene as ac,
+  AxesHelper as ad,
+  Quaternion as ae,
+  TubeGeometry as af,
+  SphereGeometry as ag,
+  ConeGeometry as ah,
+  ObjectSpaceNormalMap as ai,
+  CatmullRomCurve3 as aj,
+  mesh2drc as ak,
+  mesh2ply as al,
+  mesh2stl as am,
+  bindDracoEncoder as an,
+  debug_ToothVisualPoint as ao,
+  MqUtil as ap,
   Matrix4 as b,
   Vector4 as c,
   editorViewDir as d,

@@ -184,8 +184,13 @@ function clickLoadShowData(type) {
         // callAiRetainer(m1).then(res=>{
         callAiRetainerNew(m1).then(res=>{
             ud.calling = false;
-            const {code, message, data} = res;
+            const {code, message, data} = res;            
             if (code == 200) {
+                const keyList = Object.keys(data);
+                if (keyList.length < 1) {
+                    msg.value = 'empty data';
+                    return;
+                }
                 ud.lockUpload = 0;
                 // 新的调用需要缓存记录
                 if (m1.type == 1) {           

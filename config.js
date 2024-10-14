@@ -47,7 +47,7 @@ export const vInfo = {
     'AI_NightGuard': {
         version: '2.2.0',
         changelog: [
-            '2023-10-14',
+            '2024-10-14',
             '1. Change edge curving algorithm to improve NG performance.',
             '2. Improve edge detection to meet the NG side requirement.',
             '3. Update the segment part algorithm to improve NG shape.',

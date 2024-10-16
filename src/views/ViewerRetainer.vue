@@ -24,6 +24,18 @@
                     <button class="btn btn-primary m-1 btn-sm" @click="clickLoadShowData(2)" :disabled="getState()" >Upload the lower scanned meshes</button>
                 </div>
             </div>
+            <div>
+                <div class="d-flex flex-column flex-wrap">
+                    <div class="d-flex justify-content-start">
+                        <label class="form-label my-auto mx-1">Thickness</label>
+                        <input class="form-control w-50" v-model="m1.thickness">
+                    </div>
+                    <div class="d-flex justify-content-start">
+                        <label class="form-label my-auto mx-1">Tightness/Offset</label>
+                        <input class="form-control w-50" v-model="m1.tightness">
+                    </div>
+                </div>
+            </div>
             <div class="d-flex flex-wrap">                
                 <div class="d-flex">
                     <button class="btn btn-primary m-1" @click="clickLoadShowData(3)" :disabled="ud.lockUpload==1?false: ud.lockBtn !== 7" v-html="'Call the AI Algorithm'"></button>
@@ -53,7 +65,7 @@
         </div>
         <SubChangeLog :tag="tag" />
         <div class="">
-            <div class="d-flex" v-for="(item,i) in ud.infoList" :key="i">
+            <div class="d-flex flex-wrap my-1" v-for="(item,i) in ud.infoList" :key="i">
                 <input type="color" class="form-control" :value="item.color" @change="inputChangeColorUpdate($event,item)" style="width:60px;" />
                 <input type="range" class="form-range" min="0" max="1" step="0.01" :value="item.opacity" @change="inputChangeOpacityUpdate($event,item)" style="width:160px;" />
                 <div class="form-check form-switch mx-3">
@@ -128,6 +140,8 @@ const m1 = reactive({
     tempDir: '',
     tag: props.tag,
     isShell: configRetainer.isShell,
+    thickness: '0.6',
+    tightness: '0',
 });
 let app3 = null;
 let gScene = null;

@@ -6,8 +6,18 @@
 </template>
 <script setup>
 import { onMounted, onBeforeUnmount } from 'vue';
-import { MqMultiViewEditor, mesh2stl, eEntryCode, alias3 } from '../third/mq-render/viewer.es';
+import { 
+    MqMultiViewEditor, mesh2stl, eEntryCode, alias3,
+    updateMaterialColor, updateMaterialOpacity, 
+} from '../third/mq-render/viewer.es';
 import { saveBinaryFile } from '../third/snippet/toolkit';
+const props = defineProps({
+    entry: {
+        type:String,
+        default: '',
+    }
+});
+
 const gScene = new alias3.Scene();
 const viewState = [
     {
@@ -20,7 +30,7 @@ const viewState = [
         scene: gScene,
     },
 ];
-const app3 = new MqMultiViewEditor(eEntryCode.webui);
+const app3 = new MqMultiViewEditor(props.entry==='retainer' ? eEntryCode.aiWebUiRetainer : eEntryCode.aiwebUi);
 onMounted(() => {
     let el = document.getElementById('id3DContainer');
     let rect = el.getBoundingClientRect();
@@ -43,19 +53,58 @@ onBeforeUnmount(() => {
 });
 function donwloadByName(name, options = {}) {
     const prefix = options.prefix || '';
+    let hasUnique = options.hasUnique ? true : false;
+    const strUnique = hasUnique ? `-${Date.now()}` : '';
+    const strPrefix = prefix ? `${prefix}-` : '';
     app3.updateVisitGroup((m)=>{
         if (m.name == name) {
             const mesh = m.clone();
             mesh2stl(mesh, {isBinary:true}).then(buffer=>{
                 const fName = name.substring(0, name.lastIndexOf('.'));
-                saveBinaryFile(buffer, `${prefix?prefix+'-':''}${fName}-${Date.now()}.stl`);
+                saveBinaryFile(buffer, `${strPrefix}${fName}${strUnique}.stl`);
             });
         }
     });
 }
+function eventByType(category, event, item, type) {
+    if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+    } 
+    if (['AI_NightGuard', 'AI_Retainer', 'AI_BracketRemove', 'pmp_retainer1'].includes(category)) {        
+        if (type == 'download') {
+            return donwloadByName(item.filename, {
+                prefix: `${category.split('_')[1]}`,
+                hasUnique: ['pmp_retainer'].includes(category) ? false : true,
+            });
+        }
+        return true;
+    }
+    return false;
+}
+function colorUpdate(event, item) {
+    item.color = event.target.value;
+    const children = app3.getScene().children;
+    const mesh = children.filter(e=>e.name==item.filename)[0];
+    if (mesh) {
+        updateMaterialColor(mesh.material, item.color);
+        app3.updateFrame();
+    }
+}
+function opacityUpdate(event, item) {
+    item.opacity = parseFloat(event.target.value);
+    const children = app3.getScene().children;
+    const mesh = children.filter(e=>e.name==item.filename)[0];
+    if (mesh) {
+        updateMaterialOpacity(mesh.material, item.opacity);
+        app3.updateFrame();
+    }
+}
 defineExpose({
     app3,
     gScene,
-    donwloadByName,
+    eventByType,
+    colorUpdate,
+    opacityUpdate,
 });
 </script>

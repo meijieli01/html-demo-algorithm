@@ -48,8 +48,8 @@
         <SubChangeLog :tag="tag" />
         <div class="">
             <div class="d-flex" v-for="(item,i) in ud.infoList" :key="i">
-                <input type="color" class="form-control" :value="item.color" @change="inputChangeColorUpdate($event,item)" style="width:60px;" />
-                <input type="range" class="form-range" min="0" max="1" step="0.01" :value="item.opacity" @change="inputChangeOpacityUpdate($event,item)" style="width:160px;" />
+                <input type="color" class="form-control" :value="item.color" @change="elViewer.colorUpdate($event,item)" style="width:60px;" />
+                <input type="range" class="form-range" min="0" max="1" step="0.01" :value="item.opacity" @change="elViewer.opacityUpdate($event,item)" style="width:160px;" />
                 <div class="form-check form-switch mx-3">
                     <input class="form-check-input" type="checkbox" :checked="item.check" @change="inputChangeUpdate(item)" />
                     <label class="form-check-label" for="flexSwitchCheckDefault" v-html="item.filename"></label>
@@ -69,11 +69,10 @@ import SubChangeLog from './sub/SubChangeLog.vue';
 import SubVersion from './sub/SubVersion.vue';
 import SubSelection from './sub/SubSelection.vue';
 import SubProgress from './sub/SubProgress.vue';
-import { getMeshMaterialOption, updateMeshColor, updateMeshOpacity, addColor2Mesh } from '../third/auxThree';
+import { getMeshMaterialOption, addColor2Mesh } from '../third/auxThree';
 import { readFromStorage, writeToStorage } from '../third/snippet/storage';
 import { FilePathLoader, PathLoader } from '../third/mq-render/viewer.es';
 import { upload, callAi, getHistory } from '../api/ct';
-import { getBaseRoot, vInfo } from '../../config';
 import { calcPer, filterFile } from '../utils/util';
 const props = defineProps({
     tag: {
@@ -310,22 +309,6 @@ function inputChangeUpdate(item) {
     const mesh = app3.group.children.filter(e=>e.name==item.filename)[0];
     if (mesh) {
         mesh.visible = item.check;
-        app3.updateFrame();
-    }
-}
-function inputChangeColorUpdate(event, item) {
-    item.color = event.target.value;
-    const mesh = app3.group.children.filter(e=>e.name==item.filename)[0];
-    if (mesh) {
-        updateMeshColor(mesh, item.color);
-        app3.updateFrame();
-    }
-}
-function inputChangeOpacityUpdate(event, item) {
-    item.opacity = parseFloat(event.target.value);
-    const mesh = app3.group.children.filter(e=>e.name==item.filename)[0];
-    if (mesh) {
-        updateMeshOpacity(mesh, item.opacity);
         app3.updateFrame();
     }
 }

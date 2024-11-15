@@ -28,6 +28,7 @@ export function callAi(data) {
 
 
 /**
+ * @deprecated 弃用
  * @description 调用AI
  */
 export function callAiRetainer(data) {
@@ -47,10 +48,11 @@ export function callAiRetainer(data) {
 export function callAiRetainerNew(data) {
   return request({
     url: '/admin/retainerRequestNew',
-    headers: { 'content-type': 'application/x-www-form-urlencoded' },
+    // headers: { 'content-type': 'application/x-www-form-urlencoded' },
     method: 'POST',
-    timecount: 1000*60*10, // 十分钟
-    data: qs.stringify(data),
+    // timecount: 1000*60*10, // 十分钟
+    // data: qs.stringify(data),
+    data,
   })
 }
 

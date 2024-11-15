@@ -1,13 +1,13 @@
 <template>
-    <ViewerBase ref="elViewer">
+    <ViewerBase ref="elViewer" entry="retainer">
         <div>
             <div class="alert alert-info m-1 p-0 my-auto" role="alert" v-html="'Custom ID'"></div>
             <input class="form-control" v-model="ud.customId" type="text" />
         </div>  
         <div class="d-flex flex-wrap">
-            <button class="btn btn-primary m-1 btn-sm" @click="clickLoadShowData(1)" v-if="isDev" v-html="'Local Test to Show'"></button>
-            <button class="btn btn-primary m-1 btn-sm" @click="clickLoadShowData(4)" v-html="'New Timestamp'"></button>
-            <button class="btn btn-primary m-1 btn-sm" @click="clickLoadShowData(5)" v-html="'Load historical Data'"></button>
+            <button class="btn btn-primary m-1 btn-sm" @click="clickByCode(1)" v-if="isDev" v-html="'Local Test to Show'"></button>
+            <button class="btn btn-primary m-1 btn-sm" @click="clickByCode(4)" v-html="'New Timestamp'"></button>
+            <button class="btn btn-primary m-1 btn-sm" @click="clickByCode(5)" v-html="'Load historical Data'"></button>
             <SubVersion :tag="tag" />
         </div>
         <div v-if="ud.timestampList.length > 0">
@@ -20,8 +20,8 @@
                 </div>
                 <div class="d-flex flex-column flex-wrap">
                     <div class="alert alert-info m-1 p-0 my-auto" role="alert">Current is {{msg1}}</div>
-                    <button class="btn btn-primary m-1 btn-sm" @click="clickLoadShowData(6)" :disabled="getState()" >Upload the upper scanned meshes</button>
-                    <button class="btn btn-primary m-1 btn-sm" @click="clickLoadShowData(2)" :disabled="getState()" >Upload the lower scanned meshes</button>
+                    <button class="btn btn-primary m-1 btn-sm" @click="clickByCode(6)" :disabled="getState()" >Upload the upper scanned meshes</button>
+                    <button class="btn btn-primary m-1 btn-sm" @click="clickByCode(2)" :disabled="getState()" >Upload the lower scanned meshes</button>
                 </div>
             </div>
             <div>
@@ -34,11 +34,51 @@
                         <label class="form-label my-auto mx-1">Tightness/Offset</label>
                         <input class="form-control w-50" v-model="m1.tightness">
                     </div>
+                    <div class="d-flex justify-content-start my-2">
+                        <input class="form-check-input mx-2" type="checkbox" :checked="m2.hasCut" @change="inputChangeUnderCut"/>
+                        <label class="form-check-label" for="shellHollow">UnderCut Direction</label>
+                    </div>
+                </div>
+            </div>
+            <div v-if="m2.hasCut">
+                <div class="d-flex flex-column flex-wrap">
+                    <div class="d-flex">
+                        <div class="form-check form-check-inline" v-for="item in info1" :key="item.id">
+                            <input class="form-check-input" type="radio" name="jawType" v-model="m2.jaw" :id="`jaw${item.id}`" :value="item.id" @change="jawInputChange">
+                            <label class="form-check-label" :for="`jaw${item.id}`" v-html="item.label"></label>
+                        </div>
+                    </div>
+                    <div class="d-flex flex-column justify-content-start">
+                        <label class="form-label my-auto mx-1">upper Direction
+                            <button class="btn btn-primary w-25 m-1 btn-sm" :disabled="m2.lockUpper" @click="clickByCode(7)">update</button>
+                        </label>
+                        <div class="d-flex flex-column">
+                            <label class="d-flex mx-3">X
+                                <input class="form-control form-control-sm ms-2 w-50" :disabled="m2.lockUpper" v-model="m2.x1" @change="positionInputChange($event, 1)"></label>
+                            <label class="d-flex mx-3">Y
+                                <input class="form-control form-control-sm ms-2 w-50" :disabled="m2.lockUpper" v-model="m2.y1" @change="positionInputChange($event, 1)"></label>
+                            <label class="d-flex mx-3">Z
+                                <input class="form-control form-control-sm ms-2 w-50" :disabled="m2.lockUpper" v-model="m2.z1" @change="positionInputChange($event, 1)"></label>                            
+                        </div>
+                    </div>
+                    <div class="d-flex flex-column justify-content-start">
+                        <label class="form-label my-auto mx-1">lower Direction
+                            <button class="btn btn-primary w-25 m-1 btn-sm" :disabled="m2.lockLower" @click="clickByCode(8)">update</button>
+                        </label>
+                        <div class="d-flex flex-column">
+                            <label class="d-flex mx-3">X
+                                <input class="form-control form-control-sm ms-2 w-50" :disabled="m2.lockLower" v-model="m2.x2" @change="positionInputChange($event, 2)"></label>
+                            <label class="d-flex mx-3">Y
+                                <input class="form-control form-control-sm ms-2 w-50" :disabled="m2.lockLower" v-model="m2.y2" @change="positionInputChange($event, 2)"></label>
+                            <label class="d-flex mx-3">Z
+                                <input class="form-control form-control-sm ms-2 w-50" :disabled="m2.lockLower" v-model="m2.z2" @change="positionInputChange($event, 2)"></label>                            
+                        </div>
+                    </div>
                 </div>
             </div>
             <div class="d-flex flex-wrap">                
                 <div class="d-flex">
-                    <button class="btn btn-primary m-1" @click="clickLoadShowData(3)" :disabled="ud.lockUpload==1?false: ud.lockBtn !== 7" v-html="'Call the AI Algorithm'"></button>
+                    <button class="btn btn-primary m-1" @click="clickByCode(3)" :disabled="ud.lockUpload==1?false: ud.lockBtn !== 7" v-html="'Call the AI Algorithm'"></button>
                     <div class="d-flex m-auto">
                         <input class="form-check-input m-1" type="checkbox" v-model="m1.isShell" value="" id="shellHollow">
                         <label class="form-check-label" for="shellHollow">Hollow</label>
@@ -66,12 +106,14 @@
         <SubChangeLog :tag="tag" />
         <div class="">
             <div class="d-flex flex-wrap my-1" v-for="(item,i) in ud.infoList" :key="i">
-                <input type="color" class="form-control" :value="item.color" @change="inputChangeColorUpdate($event,item)" style="width:60px;" />
-                <input type="range" class="form-range" min="0" max="1" step="0.01" :value="item.opacity" @change="inputChangeOpacityUpdate($event,item)" style="width:160px;" />
+                <input type="color" class="form-control" :value="item.color" @change="elViewer.colorUpdate($event,item)" style="width:60px;" />
+                <input type="range" class="form-range" min="0" max="1" step="0.01" :value="item.opacity" @change="elViewer.opacityUpdate($event,item)" style="width:160px;" />
                 <div class="form-check form-switch mx-3">
                     <input class="form-check-input" type="checkbox" :checked="item.check" @change="inputChangeUpdate(item)" />
                     <label class="form-check-label" for="flexSwitchCheckDefault" v-html="item.filename"></label>
                 </div>
+                <button class="btn btn-primary btn-sm" v-if="elViewer.eventByType(tag, null, item)" 
+                @click="elViewer.eventByType(tag, $event, item, 'download')">Download</button>
             </div>
         </div>
         <!-- <input type="file" webkitdirectory ref="refFile" @change="handleSelectFile($event)" hidden /> -->
@@ -81,32 +123,52 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, onBeforeUnmount } from 'vue';
+import { ref, reactive, onMounted } from 'vue';
 import { useStore } from 'vuex';
 import ViewerBase from './ViewerBase.vue';
 import SubChangeLog from './sub/SubChangeLog.vue';
 import SubVersion from './sub/SubVersion.vue';
 import SubProgress from './sub/SubProgress.vue';
-import { getMeshMaterialOption, updateMeshColor, updateMeshOpacity, addColor2Mesh, arrayVectorToMatrix, bindDracoEncoder } from '../third/auxThree';
+import { 
+    getMeshMaterialOption, addColor2Mesh, 
+    arrayVectorToMatrix, bindDracoEncoder 
+} from '../third/auxThree';
 import { readFromStorage, writeToStorage } from '../third/snippet/storage';
 import elLoading from '../third/snippet/loading';
-import { FilePathLoader, PathLoader, mesh2drc } from '../third/mq-render/viewer.es';
-import { upload, getHistory, callAiRetainer, callAiRetainerNew } from '../api/all';
-import { getOssAuth } from '../api/admin';
-import { getBaseRoot, vInfo, configRetainer } from '../../config';
+import { 
+    FilePathLoader, PathLoader, mesh2drc, MarkerLines, toIndexGeometry, colorUpdateByIndex,
+    alias3,
+} from '../third/mq-render/viewer.es';
+import { upload, getHistory, callAiRetainerNew } from '../api/all';
+import { configRetainer } from '../../config';
 import { filterFile, toYYMMDDHHmmss } from '../utils/util';
+import { UnderCut } from '../utils/undercut';
+
 const props = defineProps({
     tag: {
         type:String,
         default: 'pmp_retainer',
     }
 });
+const info1 = [
+    {id: 1, label: 'Upper'},
+    {id: 2, label: 'Lower'},
+    {id: 3, label: 'None'},
+]
+const color4Mesh = [
+    // [0.23, 0.76, 0.71], // upper
+    // [0.44, 0.64, 0.98], // lower
+    [1, 0, 0], // upper
+    [0, 0, 1], // lower
+];
+const nameMeshs = ['cleaned_upper.mq','cleaned_lower.mq'];
 const store = useStore();
 const elViewer = ref(null);
 const refFile = ref(null);
 const isDev = ref(import.meta.env.DEV);
 const msg = ref('');
 const msg1 = ref('');
+const cut = new UnderCut();
 const ud = reactive({
     type: 0,
     total: 0,
@@ -132,6 +194,7 @@ const ud = reactive({
     selTimestamp: {},
     script: null,
 });
+let gCache = {};
 const mat = reactive({
     upper: null,
     lower: null,
@@ -143,15 +206,27 @@ const m1 = reactive({
     thickness: '0.6',
     tightness: '0',
 });
+const m2 = reactive({
+    jaw: '3',
+    lockUpper: true,
+    lockLower: true,
+    hasCut: false,
+    x1: '0',
+    y1: '0',
+    z1: '1',
+    x2: '0',
+    y2: '0',
+    z2: '1',
+})
 let app3 = null;
 let gScene = null;
+let markers = {}, idxMarker = 7;
 const keyOfLocalStorage = `keyOfLocalStorage${props.tag}`;
-onMounted(() => {
+onMounted(async() => {
     // 缓存上传文件的时间点
     ud.timestampList = JSON.parse(readFromStorage(keyOfLocalStorage, '[]'));
     // 
-    bindDracoEncoder(`https://mydentalx.com/public/draco/draco_encoder.js`);
-    store.dispatch('auth/getAuth').then(()=>{});
+    bindDracoEncoder(`/draco/draco_encoder.js`);
     app3 = elViewer.value.app3;
     gScene = elViewer.value.gScene;
     if (import.meta.env.DEV) {
@@ -159,6 +234,7 @@ onMounted(() => {
             app3,
         }
     }
+    await cut.init();
 })
 function parseTime(timestamp) {
     // console.log('22', timestamp)
@@ -179,14 +255,12 @@ function getState() {
     }
     return false;
 }
-function clickLoadShowData(type) {
+function clickByCode(type) {
     ud.fetching = false;
     msg.value = '';
-    ud.infoList = [];
     msg.errorList = [];
     msg.countError = 0;
     ud.type = type;
-    gScene.clear();
     if ([1,2,6].includes(type)) {
         refFile.value.dispatchEvent(new MouseEvent('click'))
     } else if (type == 3) {
@@ -195,7 +269,13 @@ function clickLoadShowData(type) {
             return;
         }
         ud.calling = true;
-        // callAiRetainer(m1).then(res=>{
+        if (m2.hasCut) {
+            m1.upperDir = { x: m2.x1, y: m2.y1, z: m2.z1 };
+            m1.lowerDir = { x: m2.x2, y: m2.y2, z: m2.z2 };
+        } else {
+            m1.upperDir = undefined;
+            m1.lowerDir = undefined;
+        }
         callAiRetainerNew(m1).then(res=>{
             ud.calling = false;
             const {code, message, data} = res;            
@@ -234,7 +314,14 @@ function clickLoadShowData(type) {
         m1.tempDir = `${ud.selTimestamp.tmpDir}_${ud.customId}`;      
         msg1.value = `${toYYMMDDHHmmss(ud.selTimestamp.tmpDir)}_${ud.customId}`;
         ud.lockUpload = 0;
-        ud.lockBtn = 1;
+        ud.lockBtn = 1;        
+        gScene.clear(); //不能直接清空，需要保留之前的数据
+        m2.hasCut = true;
+        ud.infoList = [];
+        gCache = {};
+        [7,8].forEach(e=>{
+            if (markers[e]) app3.add(markers[e]);
+        })
     } else if (type == 5) {
         ud.timestampList = [];
         getHistory(m1).then(res=>{
@@ -251,6 +338,17 @@ function clickLoadShowData(type) {
                 })
             }
         })
+    } else if ([7,8].includes(type)) {
+        elLoading.show(document.body, {message: `Wait for computing...`, zIndex:5000});
+        const pos = app3.getCameraPosition().normalize();
+        if (type==7) m2.x1 = pos.x, m2.y1 = pos.y, m2.z1 = pos.z;
+        else m2.x2 = pos.x, m2.y2 = pos.y, m2.z2 = pos.z;
+        if (!markers[type]) {            
+            elLoading.update(`no ${info1[type == 7 ? 0 : 1].label} mesh`)
+        } else {
+            markers[type].update(pos)
+            showUnderCut();
+        }
     }
 }
 function updateTimestampData(tmpDir, tid, isShell, isNew) {
@@ -294,7 +392,7 @@ function selectTimestamp() {
     msg1.value = `${toYYMMDDHHmmss(tmpDir)}_${tid}`;
 }
 function updateByPath() {
-    elLoading.show(document.body, {message: `加载中...`, zIndex:5000});
+    elLoading.show(document.body, {message: `Loading...`, zIndex:5000});
     ud.uploading = true;
     ud.fetching = true;
     ud.fetchTotal = ud.pathList.length || 0;
@@ -331,11 +429,65 @@ function updateByPath() {
         elLoading.hide();
         addGeotoScene(geo, filename, path);
     }
-    ud.pathList.forEach(path=>{
-        fetchSinglePath(path);
+    ud.pathList.forEach(path=>{        
+        if (path && path.indexOf('/input/') > 0) {
+            const str = path.toLowerCase();
+            if (str.indexOf('/input/cleaned_lower.mq') > 0 && mat.lower) {
+                gCache[nameMeshs[1]].applyMatrix4(mat.lower);
+                gCache[nameMeshs[1]].matrixWorldNeedsUpdate = true;
+            } else if (str.indexOf('/input/cleaned_upper.mq') > 0 && mat.upper) {
+                gCache[nameMeshs[0]].applyMatrix4(mat.upper);
+                gCache[nameMeshs[0]].matrixWorldNeedsUpdate = true;
+            }
+        } else {
+            fetchSinglePath(path);
+        }
     });
     app3.updateFrame();
     elLoading.hide();
+}
+async function showUnderCut() {
+    const dir = [];
+    let mesh;
+    if (idxMarker==7) {
+        dir.push(m2.x1, m2.y1, m2.z1);
+        mesh = gCache[nameMeshs[0]];
+    } else {
+        dir.push(m2.x2, m2.y2, m2.z2);
+        mesh = gCache[nameMeshs[1]];
+    }
+    const index = cut.fetchIndex(idxMarker==7, dir.map(e=>parseFloat(e)));
+    if (!mesh.userData.oldColor) {
+        mesh.userData.oldColor = mesh.geometry.attributes.color.clone();
+    } else {
+        mesh.geometry.attributes.color.copy(mesh.userData.oldColor);
+    }
+    colorUpdateByIndex(mesh.geometry, index, color4Mesh[idxMarker==7?0:1]);
+    elLoading.hide(0);
+    app3.updateFrame();
+}
+function appendFileMesh(mesh, filename, isUpper) {
+    mesh.name = filename;
+    const geo = mesh.geometry;
+    const idx = isUpper ? 7 : 8;
+    const pos = new alias3.Vector3(0, 0, 1);
+    markers[idx] = new MarkerLines([pos], 40, {
+        showX: true,
+        color1: color4Mesh[isUpper ? 0 : 1],
+    });     
+    markers[idx].name = `marker${idx}`;
+    app3.add(markers[idx]);
+    cut.setData(isUpper, geo.attributes.position.array, geo.index.array);
+    const info = getMeshMaterialOption(filename, {tag:props.tag});
+    ud.infoList.push({
+        filename: filename,
+        check: true,
+        color: info.color,
+        opacity: info.opacity,
+    });
+    app3.add(mesh);
+    app3.updateFrame();
+    gCache[filename] = mesh;
 }
 function addGeotoScene(geo, filename, path) {
     if (geo.type == 'BufferGeometry' && geo.attributes.position.count < 1) {
@@ -358,15 +510,15 @@ function addGeotoScene(geo, filename, path) {
     }
     const tmp = ud.infoList.sort(compare('filename'));
     addColor2Mesh(geo, {name:filename, color:info.color, opacity: info.opacity}).then(mesh=>{
-        if (path && path.indexOf('/input/') > 0) {
-            const str = path.toLowerCase();
-            if (str.indexOf('/input/cleaned_lower.mq') > 0 && mat.lower) {
-                mesh.applyMatrix4(mat.lower);
-            } else if (str.indexOf('/input/cleaned_upper.mq') > 0 && mat.upper) {
-                mesh.applyMatrix4(mat.upper);
-            }
-            mesh.matrixWorldNeedsUpdate = true;
-        }
+        // if (path && path.indexOf('/input/') > 0) {
+        //     const str = path.toLowerCase();
+        //     if (str.indexOf('/input/cleaned_lower.mq') > 0 && mat.lower) {
+        //         mesh.applyMatrix4(mat.lower);
+        //     } else if (str.indexOf('/input/cleaned_upper.mq') > 0 && mat.upper) {
+        //         mesh.applyMatrix4(mat.upper);
+        //     }
+        //     mesh.matrixWorldNeedsUpdate = true;
+        // }
         app3.add(mesh);
         app3.updateFrame();
     })
@@ -377,27 +529,39 @@ function addGeotoScene(geo, filename, path) {
         app3.updateFrame();
     }
 }
+function jawInputChange() {
+    if (m2.jaw=='1') {
+        m2.lockUpper = false;
+        m2.lockLower = true;
+        idxMarker = 7;
+        showUnderCut();    
+    } else if (m2.jaw=='2') {
+        m2.lockUpper = true;
+        m2.lockLower = false;
+        idxMarker = 8;
+        showUnderCut();
+    } else {
+        m2.lockUpper = true;
+        m2.lockLower = true;
+    }
+}
+function positionInputChange(event, code) {
+    if (code == 1) {
+        markers[idxMarker].update([m2.x1, m2.y1, m2.z1].map(e=>parseFloat(e)));
+    } else if (code == 2) {
+        markers[idxMarker].update([m2.x2, m2.y2, m2.z2].map(e=>parseFloat(e)));
+    }
+    showUnderCut();
+}
+function inputChangeUnderCut() {
+    m2.hasCut = !m2.hasCut;
+}
 function inputChangeUpdate(item) {
     item.check = !item.check;
+    console.log(item);
     const mesh = gScene.children.filter(e=>e.name==item.filename)[0];
     if (mesh) {
         mesh.visible = item.check;
-        app3.updateFrame();
-    }
-}
-function inputChangeColorUpdate(event, item) {
-    item.color = event.target.value;
-    const mesh = gScene.children.filter(e=>e.name==item.filename)[0];
-    if (mesh) {
-        updateMeshColor(mesh, item.color);
-        app3.updateFrame();
-    }
-}
-function inputChangeOpacityUpdate(event, item) {
-    item.opacity = parseFloat(event.target.value);
-    const mesh = gScene.children.filter(e=>e.name==item.filename)[0];
-    if (mesh) {
-        updateMeshOpacity(mesh, item.opacity);
         app3.updateFrame();
     }
 }
@@ -455,33 +619,39 @@ async function handleSelectFile(event) {
         const { tag } = props;
         if (true) {
             const formData = new FormData();
+            let geo = await new FilePathLoader(filename, {drcPath:`${import.meta.env.VITE_APP_PREFIX_PUBLIC}/draco/`}).load(file)
+                .catch(err=>{
+                    msg.value = 'File Load failure';
+                    console.error(err);
+                    return null;
+                })
+            if (!geo) return; 
+            // console.log('load', geo.clone()) 
+            geo = toIndexGeometry(geo);
+            // console.log('merge', geo.clone()) 
+            const mesh = await addColor2Mesh(geo);
             if (fnameLower.endsWith('.drc') || fnameLower.endsWith('.mq')) {
-                filename =  ud.type == 6 ? 'cleaned_upper.mq' : 'cleaned_lower.mq';
+                filename = nameMeshs[ud.type == 6 ? 0 : 1];
                 formData.append("files", file, filename);
             } else {
                 //  其他格式转换一下
                 try {
-                    const geo = await new FilePathLoader(filename, {drcPath:`${import.meta.env.VITE_APP_PREFIX_PUBLIC}/draco/`}).load(file)
-                    .catch(err=>{
-                        msg.value = 'File Load failure';
-                        console.error(err);
-                        return null;
-                    })
-                    if (!geo) return;            
-                    const mesh = await addColor2Mesh(geo);
                     const buffer = await mesh2drc(mesh);
-                    const noExtFilename = filename.substr(0, filename.lastIndexOf('.'));
-                    filename =  ud.type == 6 ? 'cleaned_upper.mq' : 'cleaned_lower.mq';
+                    // const noExtFilename = filename.substr(0, filename.lastIndexOf('.'));
+                    filename = nameMeshs[ud.type == 6 ? 0 : 1];
                     formData.append("files", new Blob([buffer.buffer], { type: 'application/octet-stream',}), filename);
                 } catch(err){
-                    console.log(err);
                     msg.value = 'File Load failure';
                 }
             }
+            appendFileMesh(mesh, filename, ud.type == 6);
+            ud.uploading = false;
+            return;
             formData.append("tempDir", `${ud.timestamp}_${ud.customId}`); 
             formData.append("tag", tag); 
             const res = await upload(formData)
-            if (res.code == 200) {
+            if (res.code == 200) {  
+                // appendFileMesh(mesh, filename, ud.type == 6);
                 if (ud.type == 6) {
                     m1.upper = filename;
                     ud.lockBtn |= 2;

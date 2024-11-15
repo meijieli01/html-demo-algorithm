@@ -912,9 +912,9 @@ class Matrix3 {
     return this;
   }
   //
-  equals(matrix2) {
+  equals(matrix) {
     const te = this.elements;
-    const me = matrix2.elements;
+    const me = matrix.elements;
     for (let i = 0; i < 9; i++) {
       if (te[i] !== me[i]) return false;
     }
@@ -2954,16 +2954,16 @@ class Box3 {
     this.max.max(box.max);
     return this;
   }
-  applyMatrix4(matrix2) {
+  applyMatrix4(matrix) {
     if (this.isEmpty()) return this;
-    _points[0].set(this.min.x, this.min.y, this.min.z).applyMatrix4(matrix2);
-    _points[1].set(this.min.x, this.min.y, this.max.z).applyMatrix4(matrix2);
-    _points[2].set(this.min.x, this.max.y, this.min.z).applyMatrix4(matrix2);
-    _points[3].set(this.min.x, this.max.y, this.max.z).applyMatrix4(matrix2);
-    _points[4].set(this.max.x, this.min.y, this.min.z).applyMatrix4(matrix2);
-    _points[5].set(this.max.x, this.min.y, this.max.z).applyMatrix4(matrix2);
-    _points[6].set(this.max.x, this.max.y, this.min.z).applyMatrix4(matrix2);
-    _points[7].set(this.max.x, this.max.y, this.max.z).applyMatrix4(matrix2);
+    _points[0].set(this.min.x, this.min.y, this.min.z).applyMatrix4(matrix);
+    _points[1].set(this.min.x, this.min.y, this.max.z).applyMatrix4(matrix);
+    _points[2].set(this.min.x, this.max.y, this.min.z).applyMatrix4(matrix);
+    _points[3].set(this.min.x, this.max.y, this.max.z).applyMatrix4(matrix);
+    _points[4].set(this.max.x, this.min.y, this.min.z).applyMatrix4(matrix);
+    _points[5].set(this.max.x, this.min.y, this.max.z).applyMatrix4(matrix);
+    _points[6].set(this.max.x, this.max.y, this.min.z).applyMatrix4(matrix);
+    _points[7].set(this.max.x, this.max.y, this.max.z).applyMatrix4(matrix);
     this.setFromPoints(_points);
     return this;
   }
@@ -3086,9 +3086,9 @@ class Sphere {
     target.expandByScalar(this.radius);
     return target;
   }
-  applyMatrix4(matrix2) {
-    this.center.applyMatrix4(matrix2);
-    this.radius = this.radius * matrix2.getMaxScaleOnAxis();
+  applyMatrix4(matrix) {
+    this.center.applyMatrix4(matrix);
+    this.radius = this.radius * matrix.getMaxScaleOnAxis();
     return this;
   }
   translate(offset) {
@@ -4106,9 +4106,9 @@ class Matrix4 {
     te[15] = 1;
     return this;
   }
-  equals(matrix2) {
+  equals(matrix) {
     const te = this.elements;
-    const me = matrix2.elements;
+    const me = matrix.elements;
     for (let i = 0; i < 16; i++) {
       if (te[i] !== me[i]) return false;
     }
@@ -4438,9 +4438,9 @@ class Object3D extends EventDispatcher {
   }
   onAfterRender() {
   }
-  applyMatrix4(matrix2) {
+  applyMatrix4(matrix) {
     if (this.matrixAutoUpdate) this.updateMatrix();
-    this.matrix.premultiply(matrix2);
+    this.matrix.premultiply(matrix);
     this.matrix.decompose(this.position, this.quaternion, this.scale);
   }
   applyQuaternion(q) {
@@ -6240,21 +6240,21 @@ class BufferGeometry extends EventDispatcher {
     this.drawRange.start = start;
     this.drawRange.count = count;
   }
-  applyMatrix4(matrix2) {
+  applyMatrix4(matrix) {
     const position = this.attributes.position;
     if (position !== void 0) {
-      position.applyMatrix4(matrix2);
+      position.applyMatrix4(matrix);
       position.needsUpdate = true;
     }
     const normal = this.attributes.normal;
     if (normal !== void 0) {
-      const normalMatrix = new Matrix3().getNormalMatrix(matrix2);
+      const normalMatrix = new Matrix3().getNormalMatrix(matrix);
       normal.applyNormalMatrix(normalMatrix);
       normal.needsUpdate = true;
     }
     const tangent = this.attributes.tangent;
     if (tangent !== void 0) {
-      tangent.transformDirection(matrix2);
+      tangent.transformDirection(matrix);
       tangent.needsUpdate = true;
     }
     if (this.boundingBox !== null) {
@@ -7709,9 +7709,9 @@ class Plane {
   coplanarPoint(target) {
     return target.copy(this.normal).multiplyScalar(-this.constant);
   }
-  applyMatrix4(matrix2, optionalNormalMatrix) {
-    const normalMatrix = optionalNormalMatrix || _normalMatrix.getNormalMatrix(matrix2);
-    const referencePoint = this.coplanarPoint(_vector1).applyMatrix4(matrix2);
+  applyMatrix4(matrix, optionalNormalMatrix) {
+    const normalMatrix = optionalNormalMatrix || _normalMatrix.getNormalMatrix(matrix);
+    const referencePoint = this.coplanarPoint(_vector1).applyMatrix4(matrix);
     const normal = this.normal.applyMatrix3(normalMatrix).normalize();
     this.constant = -referencePoint.dot(normal);
     return this;
@@ -18875,8 +18875,8 @@ class Skeleton {
     const boneMatrices = this.boneMatrices;
     const boneTexture = this.boneTexture;
     for (let i = 0, il = bones.length; i < il; i++) {
-      const matrix2 = bones[i] ? bones[i].matrixWorld : _identityMatrix$1;
-      _offsetMatrix.multiplyMatrices(matrix2, boneInverses[i]);
+      const matrix = bones[i] ? bones[i].matrixWorld : _identityMatrix$1;
+      _offsetMatrix.multiplyMatrices(matrix, boneInverses[i]);
       _offsetMatrix.toArray(boneMatrices, i * 16);
     }
     if (boneTexture !== null) {
@@ -19034,8 +19034,8 @@ class InstancedMesh extends Mesh {
   getColorAt(index, color) {
     color.fromArray(this.instanceColor.array, index * 3);
   }
-  getMatrixAt(index, matrix2) {
-    matrix2.fromArray(this.instanceMatrix.array, index * 16);
+  getMatrixAt(index, matrix) {
+    matrix.fromArray(this.instanceMatrix.array, index * 16);
   }
   getMorphAt(index, object) {
     const objectInfluences = object.morphTargetInfluences;
@@ -19076,8 +19076,8 @@ class InstancedMesh extends Mesh {
     }
     color.toArray(this.instanceColor.array, index * 3);
   }
-  setMatrixAt(index, matrix2) {
-    matrix2.toArray(this.instanceMatrix.array, index * 16);
+  setMatrixAt(index, matrix) {
+    matrix.toArray(this.instanceMatrix.array, index * 16);
   }
   setMorphAt(index, object) {
     const objectInfluences = object.morphTargetInfluences;
@@ -19519,24 +19519,24 @@ class BatchedMesh extends Mesh {
     target.copy(sphere);
     return target;
   }
-  setMatrixAt(instanceId, matrix2) {
+  setMatrixAt(instanceId, matrix) {
     const drawInfo = this._drawInfo;
     const matricesTexture = this._matricesTexture;
     const matricesArray = this._matricesTexture.image.data;
     if (instanceId >= drawInfo.length || drawInfo[instanceId].active === false) {
       return this;
     }
-    matrix2.toArray(matricesArray, instanceId * 16);
+    matrix.toArray(matricesArray, instanceId * 16);
     matricesTexture.needsUpdate = true;
     return this;
   }
-  getMatrixAt(instanceId, matrix2) {
+  getMatrixAt(instanceId, matrix) {
     const drawInfo = this._drawInfo;
     const matricesArray = this._matricesTexture.image.data;
     if (instanceId >= drawInfo.length || drawInfo[instanceId].active === false) {
       return null;
     }
-    return matrix2.fromArray(matricesArray, instanceId * 16);
+    return matrix.fromArray(matricesArray, instanceId * 16);
   }
   setColorAt(instanceId, color) {
     if (this._colorsTexture === null) {
@@ -26749,9 +26749,9 @@ class Line3 {
     const t = this.closestPointToPointParameter(point, clampToLine);
     return this.delta(target).multiplyScalar(t).add(this.start);
   }
-  applyMatrix4(matrix2) {
-    this.start.applyMatrix4(matrix2);
-    this.end.applyMatrix4(matrix2);
+  applyMatrix4(matrix) {
+    this.start.applyMatrix4(matrix);
+    this.end.applyMatrix4(matrix);
     return this;
   }
   equals(line) {
@@ -29862,11 +29862,12 @@ class MqRender {
     const { domElement } = renderer;
     const control = new TrackballControls(camera, domElement);
     control.zoomSpeed = 1.2;
-    control.panSpeed = 0.5;
+    control.panSpeed = 2.5;
     control.rotateSpeed = 1;
     control.noZoom = false;
     control.noPan = false;
     control.noRotate = false;
+    control.staticMoving = true;
     control.keys = ["65", "83", "68"];
     control.target.set(0, 0, 0);
     control.minZoom = 0.01;
@@ -29930,6 +29931,13 @@ class MqRender {
   }
   debugExportMesh(mesh, name) {
     mesh2stl(mesh.clone(), { isBinary: true }).then((buffer) => toLocalFile(buffer, `${name}.stl`));
+  }
+  getScene(index = 0) {
+    const { viewStateList } = this.options;
+    if (viewStateList.length > 0) {
+      return viewStateList[index].scene;
+    }
+    return this.scene;
   }
   updateVisitGroup(cb, options = {}) {
     var _a;
@@ -30002,6 +30010,12 @@ class MqRender {
         }
       }
     }
+  }
+  getCameraPosition() {
+    const { camera } = this;
+    const pos = new Vector3();
+    pos.copy(camera.getCamera().position);
+    return pos;
   }
 }
 function localUpdateCamera(camera, scene, oCamera, options) {
@@ -30295,6 +30309,7 @@ class StrMesh {
     this.options = options;
     this.opacity = 1;
     this.textMap = /* @__PURE__ */ new Map();
+    if (text === void 0) text = "";
     const cell = new StrCell(text, options);
     gAltas.addTextureCell(cell);
     this.textMap.set(text, cell);
@@ -30339,1495 +30354,10 @@ class StrMesh {
     }, 500);
   }
 }
-var extendStatics = function(d, b) {
-  extendStatics = Object.setPrototypeOf || { __proto__: [] } instanceof Array && function(d2, b2) {
-    d2.__proto__ = b2;
-  } || function(d2, b2) {
-    for (var p in b2) if (Object.prototype.hasOwnProperty.call(b2, p)) d2[p] = b2[p];
-  };
-  return extendStatics(d, b);
-};
-function __extends(d, b) {
-  if (typeof b !== "function" && b !== null)
-    throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
-  extendStatics(d, b);
-  function __() {
-    this.constructor = d;
-  }
-  d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-}
-function __awaiter(thisArg, _arguments, P, generator) {
-  function adopt(value) {
-    return value instanceof P ? value : new P(function(resolve) {
-      resolve(value);
-    });
-  }
-  return new (P || (P = Promise))(function(resolve, reject) {
-    function fulfilled(value) {
-      try {
-        step(generator.next(value));
-      } catch (e) {
-        reject(e);
-      }
-    }
-    function rejected(value) {
-      try {
-        step(generator["throw"](value));
-      } catch (e) {
-        reject(e);
-      }
-    }
-    function step(result) {
-      result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected);
-    }
-    step((generator = generator.apply(thisArg, _arguments || [])).next());
-  });
-}
-function __generator(thisArg, body) {
-  var _ = { label: 0, sent: function() {
-    if (t[0] & 1) throw t[1];
-    return t[1];
-  }, trys: [], ops: [] }, f, y, t, g = Object.create((typeof Iterator === "function" ? Iterator : Object).prototype);
-  return g.next = verb(0), g["throw"] = verb(1), g["return"] = verb(2), typeof Symbol === "function" && (g[Symbol.iterator] = function() {
-    return this;
-  }), g;
-  function verb(n) {
-    return function(v) {
-      return step([n, v]);
-    };
-  }
-  function step(op) {
-    if (f) throw new TypeError("Generator is already executing.");
-    while (g && (g = 0, op[0] && (_ = 0)), _) try {
-      if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
-      if (y = 0, t) op = [op[0] & 2, t.value];
-      switch (op[0]) {
-        case 0:
-        case 1:
-          t = op;
-          break;
-        case 4:
-          _.label++;
-          return { value: op[1], done: false };
-        case 5:
-          _.label++;
-          y = op[1];
-          op = [0];
-          continue;
-        case 7:
-          op = _.ops.pop();
-          _.trys.pop();
-          continue;
-        default:
-          if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) {
-            _ = 0;
-            continue;
-          }
-          if (op[0] === 3 && (!t || op[1] > t[0] && op[1] < t[3])) {
-            _.label = op[1];
-            break;
-          }
-          if (op[0] === 6 && _.label < t[1]) {
-            _.label = t[1];
-            t = op;
-            break;
-          }
-          if (t && _.label < t[2]) {
-            _.label = t[2];
-            _.ops.push(op);
-            break;
-          }
-          if (t[2]) _.ops.pop();
-          _.trys.pop();
-          continue;
-      }
-      op = body.call(thisArg, _);
-    } catch (e) {
-      op = [6, e];
-      y = 0;
-    } finally {
-      f = t = 0;
-    }
-    if (op[0] & 5) throw op[1];
-    return { value: op[0] ? op[1] : void 0, done: true };
-  }
-}
-function __values(o) {
-  var s = typeof Symbol === "function" && Symbol.iterator, m = s && o[s], i = 0;
-  if (m) return m.call(o);
-  if (o && typeof o.length === "number") return {
-    next: function() {
-      if (o && i >= o.length) o = void 0;
-      return { value: o && o[i++], done: !o };
-    }
-  };
-  throw new TypeError(s ? "Object is not iterable." : "Symbol.iterator is not defined.");
-}
-function __read(o, n) {
-  var m = typeof Symbol === "function" && o[Symbol.iterator];
-  if (!m) return o;
-  var i = m.call(o), r, ar = [], e;
-  try {
-    while ((n === void 0 || n-- > 0) && !(r = i.next()).done) ar.push(r.value);
-  } catch (error) {
-    e = { error };
-  } finally {
-    try {
-      if (r && !r.done && (m = i["return"])) m.call(i);
-    } finally {
-      if (e) throw e.error;
-    }
-  }
-  return ar;
-}
-function __spreadArray(to, from, pack) {
-  if (pack || arguments.length === 2) for (var i = 0, l = from.length, ar; i < l; i++) {
-    if (ar || !(i in from)) {
-      if (!ar) ar = Array.prototype.slice.call(from, 0, i);
-      ar[i] = from[i];
-    }
-  }
-  return to.concat(ar || Array.prototype.slice.call(from));
-}
-function __await(v) {
-  return this instanceof __await ? (this.v = v, this) : new __await(v);
-}
-function __asyncGenerator(thisArg, _arguments, generator) {
-  if (!Symbol.asyncIterator) throw new TypeError("Symbol.asyncIterator is not defined.");
-  var g = generator.apply(thisArg, _arguments || []), i, q = [];
-  return i = Object.create((typeof AsyncIterator === "function" ? AsyncIterator : Object).prototype), verb("next"), verb("throw"), verb("return", awaitReturn), i[Symbol.asyncIterator] = function() {
-    return this;
-  }, i;
-  function awaitReturn(f) {
-    return function(v) {
-      return Promise.resolve(v).then(f, reject);
-    };
-  }
-  function verb(n, f) {
-    if (g[n]) {
-      i[n] = function(v) {
-        return new Promise(function(a, b) {
-          q.push([n, v, a, b]) > 1 || resume(n, v);
-        });
-      };
-      if (f) i[n] = f(i[n]);
-    }
-  }
-  function resume(n, v) {
-    try {
-      step(g[n](v));
-    } catch (e) {
-      settle(q[0][3], e);
-    }
-  }
-  function step(r) {
-    r.value instanceof __await ? Promise.resolve(r.value.v).then(fulfill, reject) : settle(q[0][2], r);
-  }
-  function fulfill(value) {
-    resume("next", value);
-  }
-  function reject(value) {
-    resume("throw", value);
-  }
-  function settle(f, v) {
-    if (f(v), q.shift(), q.length) resume(q[0][0], q[0][1]);
-  }
-}
-function __asyncValues(o) {
-  if (!Symbol.asyncIterator) throw new TypeError("Symbol.asyncIterator is not defined.");
-  var m = o[Symbol.asyncIterator], i;
-  return m ? m.call(o) : (o = typeof __values === "function" ? __values(o) : o[Symbol.iterator](), i = {}, verb("next"), verb("throw"), verb("return"), i[Symbol.asyncIterator] = function() {
-    return this;
-  }, i);
-  function verb(n) {
-    i[n] = o[n] && function(v) {
-      return new Promise(function(resolve, reject) {
-        v = o[n](v), settle(resolve, reject, v.done, v.value);
-      });
-    };
-  }
-  function settle(resolve, reject, d, v) {
-    Promise.resolve(v).then(function(v2) {
-      resolve({ value: v2, done: d });
-    }, reject);
-  }
-}
-typeof SuppressedError === "function" ? SuppressedError : function(error, suppressed, message) {
-  var e = new Error(message);
-  return e.name = "SuppressedError", e.error = error, e.suppressed = suppressed, e;
-};
-function isFunction(value) {
-  return typeof value === "function";
-}
-function createErrorClass(createImpl) {
-  var _super = function(instance) {
-    Error.call(instance);
-    instance.stack = new Error().stack;
-  };
-  var ctorFunc = createImpl(_super);
-  ctorFunc.prototype = Object.create(Error.prototype);
-  ctorFunc.prototype.constructor = ctorFunc;
-  return ctorFunc;
-}
-var UnsubscriptionError = createErrorClass(function(_super) {
-  return function UnsubscriptionErrorImpl(errors) {
-    _super(this);
-    this.message = errors ? errors.length + " errors occurred during unsubscription:\n" + errors.map(function(err, i) {
-      return i + 1 + ") " + err.toString();
-    }).join("\n  ") : "";
-    this.name = "UnsubscriptionError";
-    this.errors = errors;
-  };
-});
-function arrRemove(arr, item) {
-  if (arr) {
-    var index = arr.indexOf(item);
-    0 <= index && arr.splice(index, 1);
-  }
-}
-var Subscription = function() {
-  function Subscription2(initialTeardown) {
-    this.initialTeardown = initialTeardown;
-    this.closed = false;
-    this._parentage = null;
-    this._finalizers = null;
-  }
-  Subscription2.prototype.unsubscribe = function() {
-    var e_1, _a, e_2, _b;
-    var errors;
-    if (!this.closed) {
-      this.closed = true;
-      var _parentage = this._parentage;
-      if (_parentage) {
-        this._parentage = null;
-        if (Array.isArray(_parentage)) {
-          try {
-            for (var _parentage_1 = __values(_parentage), _parentage_1_1 = _parentage_1.next(); !_parentage_1_1.done; _parentage_1_1 = _parentage_1.next()) {
-              var parent_1 = _parentage_1_1.value;
-              parent_1.remove(this);
-            }
-          } catch (e_1_1) {
-            e_1 = { error: e_1_1 };
-          } finally {
-            try {
-              if (_parentage_1_1 && !_parentage_1_1.done && (_a = _parentage_1.return)) _a.call(_parentage_1);
-            } finally {
-              if (e_1) throw e_1.error;
-            }
-          }
-        } else {
-          _parentage.remove(this);
-        }
-      }
-      var initialFinalizer = this.initialTeardown;
-      if (isFunction(initialFinalizer)) {
-        try {
-          initialFinalizer();
-        } catch (e) {
-          errors = e instanceof UnsubscriptionError ? e.errors : [e];
-        }
-      }
-      var _finalizers = this._finalizers;
-      if (_finalizers) {
-        this._finalizers = null;
-        try {
-          for (var _finalizers_1 = __values(_finalizers), _finalizers_1_1 = _finalizers_1.next(); !_finalizers_1_1.done; _finalizers_1_1 = _finalizers_1.next()) {
-            var finalizer = _finalizers_1_1.value;
-            try {
-              execFinalizer(finalizer);
-            } catch (err) {
-              errors = errors !== null && errors !== void 0 ? errors : [];
-              if (err instanceof UnsubscriptionError) {
-                errors = __spreadArray(__spreadArray([], __read(errors)), __read(err.errors));
-              } else {
-                errors.push(err);
-              }
-            }
-          }
-        } catch (e_2_1) {
-          e_2 = { error: e_2_1 };
-        } finally {
-          try {
-            if (_finalizers_1_1 && !_finalizers_1_1.done && (_b = _finalizers_1.return)) _b.call(_finalizers_1);
-          } finally {
-            if (e_2) throw e_2.error;
-          }
-        }
-      }
-      if (errors) {
-        throw new UnsubscriptionError(errors);
-      }
-    }
-  };
-  Subscription2.prototype.add = function(teardown) {
-    var _a;
-    if (teardown && teardown !== this) {
-      if (this.closed) {
-        execFinalizer(teardown);
-      } else {
-        if (teardown instanceof Subscription2) {
-          if (teardown.closed || teardown._hasParent(this)) {
-            return;
-          }
-          teardown._addParent(this);
-        }
-        (this._finalizers = (_a = this._finalizers) !== null && _a !== void 0 ? _a : []).push(teardown);
-      }
-    }
-  };
-  Subscription2.prototype._hasParent = function(parent) {
-    var _parentage = this._parentage;
-    return _parentage === parent || Array.isArray(_parentage) && _parentage.includes(parent);
-  };
-  Subscription2.prototype._addParent = function(parent) {
-    var _parentage = this._parentage;
-    this._parentage = Array.isArray(_parentage) ? (_parentage.push(parent), _parentage) : _parentage ? [_parentage, parent] : parent;
-  };
-  Subscription2.prototype._removeParent = function(parent) {
-    var _parentage = this._parentage;
-    if (_parentage === parent) {
-      this._parentage = null;
-    } else if (Array.isArray(_parentage)) {
-      arrRemove(_parentage, parent);
-    }
-  };
-  Subscription2.prototype.remove = function(teardown) {
-    var _finalizers = this._finalizers;
-    _finalizers && arrRemove(_finalizers, teardown);
-    if (teardown instanceof Subscription2) {
-      teardown._removeParent(this);
-    }
-  };
-  Subscription2.EMPTY = function() {
-    var empty = new Subscription2();
-    empty.closed = true;
-    return empty;
-  }();
-  return Subscription2;
-}();
-var EMPTY_SUBSCRIPTION = Subscription.EMPTY;
-function isSubscription(value) {
-  return value instanceof Subscription || value && "closed" in value && isFunction(value.remove) && isFunction(value.add) && isFunction(value.unsubscribe);
-}
-function execFinalizer(finalizer) {
-  if (isFunction(finalizer)) {
-    finalizer();
-  } else {
-    finalizer.unsubscribe();
-  }
-}
-var config = {
-  onUnhandledError: null,
-  onStoppedNotification: null,
-  Promise: void 0,
-  useDeprecatedSynchronousErrorHandling: false,
-  useDeprecatedNextContext: false
-};
-var timeoutProvider = {
-  setTimeout: function(handler, timeout) {
-    var args = [];
-    for (var _i = 2; _i < arguments.length; _i++) {
-      args[_i - 2] = arguments[_i];
-    }
-    return setTimeout.apply(void 0, __spreadArray([handler, timeout], __read(args)));
-  },
-  clearTimeout: function(handle) {
-    var delegate = timeoutProvider.delegate;
-    return ((delegate === null || delegate === void 0 ? void 0 : delegate.clearTimeout) || clearTimeout)(handle);
-  },
-  delegate: void 0
-};
-function reportUnhandledError(err) {
-  timeoutProvider.setTimeout(function() {
-    {
-      throw err;
-    }
-  });
-}
-function noop() {
-}
-function errorContext(cb) {
-  {
-    cb();
-  }
-}
-var Subscriber = function(_super) {
-  __extends(Subscriber2, _super);
-  function Subscriber2(destination) {
-    var _this = _super.call(this) || this;
-    _this.isStopped = false;
-    if (destination) {
-      _this.destination = destination;
-      if (isSubscription(destination)) {
-        destination.add(_this);
-      }
-    } else {
-      _this.destination = EMPTY_OBSERVER;
-    }
-    return _this;
-  }
-  Subscriber2.create = function(next, error, complete) {
-    return new SafeSubscriber(next, error, complete);
-  };
-  Subscriber2.prototype.next = function(value) {
-    if (this.isStopped) ;
-    else {
-      this._next(value);
-    }
-  };
-  Subscriber2.prototype.error = function(err) {
-    if (this.isStopped) ;
-    else {
-      this.isStopped = true;
-      this._error(err);
-    }
-  };
-  Subscriber2.prototype.complete = function() {
-    if (this.isStopped) ;
-    else {
-      this.isStopped = true;
-      this._complete();
-    }
-  };
-  Subscriber2.prototype.unsubscribe = function() {
-    if (!this.closed) {
-      this.isStopped = true;
-      _super.prototype.unsubscribe.call(this);
-      this.destination = null;
-    }
-  };
-  Subscriber2.prototype._next = function(value) {
-    this.destination.next(value);
-  };
-  Subscriber2.prototype._error = function(err) {
-    try {
-      this.destination.error(err);
-    } finally {
-      this.unsubscribe();
-    }
-  };
-  Subscriber2.prototype._complete = function() {
-    try {
-      this.destination.complete();
-    } finally {
-      this.unsubscribe();
-    }
-  };
-  return Subscriber2;
-}(Subscription);
-var _bind = Function.prototype.bind;
-function bind(fn, thisArg) {
-  return _bind.call(fn, thisArg);
-}
-var ConsumerObserver = function() {
-  function ConsumerObserver2(partialObserver) {
-    this.partialObserver = partialObserver;
-  }
-  ConsumerObserver2.prototype.next = function(value) {
-    var partialObserver = this.partialObserver;
-    if (partialObserver.next) {
-      try {
-        partialObserver.next(value);
-      } catch (error) {
-        handleUnhandledError(error);
-      }
-    }
-  };
-  ConsumerObserver2.prototype.error = function(err) {
-    var partialObserver = this.partialObserver;
-    if (partialObserver.error) {
-      try {
-        partialObserver.error(err);
-      } catch (error) {
-        handleUnhandledError(error);
-      }
-    } else {
-      handleUnhandledError(err);
-    }
-  };
-  ConsumerObserver2.prototype.complete = function() {
-    var partialObserver = this.partialObserver;
-    if (partialObserver.complete) {
-      try {
-        partialObserver.complete();
-      } catch (error) {
-        handleUnhandledError(error);
-      }
-    }
-  };
-  return ConsumerObserver2;
-}();
-var SafeSubscriber = function(_super) {
-  __extends(SafeSubscriber2, _super);
-  function SafeSubscriber2(observerOrNext, error, complete) {
-    var _this = _super.call(this) || this;
-    var partialObserver;
-    if (isFunction(observerOrNext) || !observerOrNext) {
-      partialObserver = {
-        next: observerOrNext !== null && observerOrNext !== void 0 ? observerOrNext : void 0,
-        error: error !== null && error !== void 0 ? error : void 0,
-        complete: complete !== null && complete !== void 0 ? complete : void 0
-      };
-    } else {
-      var context_1;
-      if (_this && config.useDeprecatedNextContext) {
-        context_1 = Object.create(observerOrNext);
-        context_1.unsubscribe = function() {
-          return _this.unsubscribe();
-        };
-        partialObserver = {
-          next: observerOrNext.next && bind(observerOrNext.next, context_1),
-          error: observerOrNext.error && bind(observerOrNext.error, context_1),
-          complete: observerOrNext.complete && bind(observerOrNext.complete, context_1)
-        };
-      } else {
-        partialObserver = observerOrNext;
-      }
-    }
-    _this.destination = new ConsumerObserver(partialObserver);
-    return _this;
-  }
-  return SafeSubscriber2;
-}(Subscriber);
-function handleUnhandledError(error) {
-  {
-    reportUnhandledError(error);
-  }
-}
-function defaultErrorHandler(err) {
-  throw err;
-}
-var EMPTY_OBSERVER = {
-  closed: true,
-  next: noop,
-  error: defaultErrorHandler,
-  complete: noop
-};
-var observable = function() {
-  return typeof Symbol === "function" && Symbol.observable || "@@observable";
-}();
-function identity(x) {
-  return x;
-}
-function pipeFromArray(fns) {
-  if (fns.length === 0) {
-    return identity;
-  }
-  if (fns.length === 1) {
-    return fns[0];
-  }
-  return function piped(input) {
-    return fns.reduce(function(prev, fn) {
-      return fn(prev);
-    }, input);
-  };
-}
-var Observable = function() {
-  function Observable2(subscribe) {
-    if (subscribe) {
-      this._subscribe = subscribe;
-    }
-  }
-  Observable2.prototype.lift = function(operator) {
-    var observable2 = new Observable2();
-    observable2.source = this;
-    observable2.operator = operator;
-    return observable2;
-  };
-  Observable2.prototype.subscribe = function(observerOrNext, error, complete) {
-    var _this = this;
-    var subscriber = isSubscriber(observerOrNext) ? observerOrNext : new SafeSubscriber(observerOrNext, error, complete);
-    errorContext(function() {
-      var _a = _this, operator = _a.operator, source = _a.source;
-      subscriber.add(operator ? operator.call(subscriber, source) : source ? _this._subscribe(subscriber) : _this._trySubscribe(subscriber));
-    });
-    return subscriber;
-  };
-  Observable2.prototype._trySubscribe = function(sink) {
-    try {
-      return this._subscribe(sink);
-    } catch (err) {
-      sink.error(err);
-    }
-  };
-  Observable2.prototype.forEach = function(next, promiseCtor) {
-    var _this = this;
-    promiseCtor = getPromiseCtor(promiseCtor);
-    return new promiseCtor(function(resolve, reject) {
-      var subscriber = new SafeSubscriber({
-        next: function(value) {
-          try {
-            next(value);
-          } catch (err) {
-            reject(err);
-            subscriber.unsubscribe();
-          }
-        },
-        error: reject,
-        complete: resolve
-      });
-      _this.subscribe(subscriber);
-    });
-  };
-  Observable2.prototype._subscribe = function(subscriber) {
-    var _a;
-    return (_a = this.source) === null || _a === void 0 ? void 0 : _a.subscribe(subscriber);
-  };
-  Observable2.prototype[observable] = function() {
-    return this;
-  };
-  Observable2.prototype.pipe = function() {
-    var operations = [];
-    for (var _i = 0; _i < arguments.length; _i++) {
-      operations[_i] = arguments[_i];
-    }
-    return pipeFromArray(operations)(this);
-  };
-  Observable2.prototype.toPromise = function(promiseCtor) {
-    var _this = this;
-    promiseCtor = getPromiseCtor(promiseCtor);
-    return new promiseCtor(function(resolve, reject) {
-      var value;
-      _this.subscribe(function(x) {
-        return value = x;
-      }, function(err) {
-        return reject(err);
-      }, function() {
-        return resolve(value);
-      });
-    });
-  };
-  Observable2.create = function(subscribe) {
-    return new Observable2(subscribe);
-  };
-  return Observable2;
-}();
-function getPromiseCtor(promiseCtor) {
-  var _a;
-  return (_a = promiseCtor !== null && promiseCtor !== void 0 ? promiseCtor : config.Promise) !== null && _a !== void 0 ? _a : Promise;
-}
-function isObserver(value) {
-  return value && isFunction(value.next) && isFunction(value.error) && isFunction(value.complete);
-}
-function isSubscriber(value) {
-  return value && value instanceof Subscriber || isObserver(value) && isSubscription(value);
-}
-function hasLift(source) {
-  return isFunction(source === null || source === void 0 ? void 0 : source.lift);
-}
-function operate(init) {
-  return function(source) {
-    if (hasLift(source)) {
-      return source.lift(function(liftedSource) {
-        try {
-          return init(liftedSource, this);
-        } catch (err) {
-          this.error(err);
-        }
-      });
-    }
-    throw new TypeError("Unable to lift unknown Observable type");
-  };
-}
-function createOperatorSubscriber(destination, onNext, onComplete, onError, onFinalize) {
-  return new OperatorSubscriber(destination, onNext, onComplete, onError, onFinalize);
-}
-var OperatorSubscriber = function(_super) {
-  __extends(OperatorSubscriber2, _super);
-  function OperatorSubscriber2(destination, onNext, onComplete, onError, onFinalize, shouldUnsubscribe) {
-    var _this = _super.call(this, destination) || this;
-    _this.onFinalize = onFinalize;
-    _this.shouldUnsubscribe = shouldUnsubscribe;
-    _this._next = onNext ? function(value) {
-      try {
-        onNext(value);
-      } catch (err) {
-        destination.error(err);
-      }
-    } : _super.prototype._next;
-    _this._error = onError ? function(err) {
-      try {
-        onError(err);
-      } catch (err2) {
-        destination.error(err2);
-      } finally {
-        this.unsubscribe();
-      }
-    } : _super.prototype._error;
-    _this._complete = onComplete ? function() {
-      try {
-        onComplete();
-      } catch (err) {
-        destination.error(err);
-      } finally {
-        this.unsubscribe();
-      }
-    } : _super.prototype._complete;
-    return _this;
-  }
-  OperatorSubscriber2.prototype.unsubscribe = function() {
-    var _a;
-    if (!this.shouldUnsubscribe || this.shouldUnsubscribe()) {
-      var closed_1 = this.closed;
-      _super.prototype.unsubscribe.call(this);
-      !closed_1 && ((_a = this.onFinalize) === null || _a === void 0 ? void 0 : _a.call(this));
-    }
-  };
-  return OperatorSubscriber2;
-}(Subscriber);
-var ObjectUnsubscribedError = createErrorClass(function(_super) {
-  return function ObjectUnsubscribedErrorImpl() {
-    _super(this);
-    this.name = "ObjectUnsubscribedError";
-    this.message = "object unsubscribed";
-  };
-});
-var Subject = function(_super) {
-  __extends(Subject2, _super);
-  function Subject2() {
-    var _this = _super.call(this) || this;
-    _this.closed = false;
-    _this.currentObservers = null;
-    _this.observers = [];
-    _this.isStopped = false;
-    _this.hasError = false;
-    _this.thrownError = null;
-    return _this;
-  }
-  Subject2.prototype.lift = function(operator) {
-    var subject = new AnonymousSubject(this, this);
-    subject.operator = operator;
-    return subject;
-  };
-  Subject2.prototype._throwIfClosed = function() {
-    if (this.closed) {
-      throw new ObjectUnsubscribedError();
-    }
-  };
-  Subject2.prototype.next = function(value) {
-    var _this = this;
-    errorContext(function() {
-      var e_1, _a;
-      _this._throwIfClosed();
-      if (!_this.isStopped) {
-        if (!_this.currentObservers) {
-          _this.currentObservers = Array.from(_this.observers);
-        }
-        try {
-          for (var _b = __values(_this.currentObservers), _c = _b.next(); !_c.done; _c = _b.next()) {
-            var observer = _c.value;
-            observer.next(value);
-          }
-        } catch (e_1_1) {
-          e_1 = { error: e_1_1 };
-        } finally {
-          try {
-            if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
-          } finally {
-            if (e_1) throw e_1.error;
-          }
-        }
-      }
-    });
-  };
-  Subject2.prototype.error = function(err) {
-    var _this = this;
-    errorContext(function() {
-      _this._throwIfClosed();
-      if (!_this.isStopped) {
-        _this.hasError = _this.isStopped = true;
-        _this.thrownError = err;
-        var observers = _this.observers;
-        while (observers.length) {
-          observers.shift().error(err);
-        }
-      }
-    });
-  };
-  Subject2.prototype.complete = function() {
-    var _this = this;
-    errorContext(function() {
-      _this._throwIfClosed();
-      if (!_this.isStopped) {
-        _this.isStopped = true;
-        var observers = _this.observers;
-        while (observers.length) {
-          observers.shift().complete();
-        }
-      }
-    });
-  };
-  Subject2.prototype.unsubscribe = function() {
-    this.isStopped = this.closed = true;
-    this.observers = this.currentObservers = null;
-  };
-  Object.defineProperty(Subject2.prototype, "observed", {
-    get: function() {
-      var _a;
-      return ((_a = this.observers) === null || _a === void 0 ? void 0 : _a.length) > 0;
-    },
-    enumerable: false,
-    configurable: true
-  });
-  Subject2.prototype._trySubscribe = function(subscriber) {
-    this._throwIfClosed();
-    return _super.prototype._trySubscribe.call(this, subscriber);
-  };
-  Subject2.prototype._subscribe = function(subscriber) {
-    this._throwIfClosed();
-    this._checkFinalizedStatuses(subscriber);
-    return this._innerSubscribe(subscriber);
-  };
-  Subject2.prototype._innerSubscribe = function(subscriber) {
-    var _this = this;
-    var _a = this, hasError = _a.hasError, isStopped = _a.isStopped, observers = _a.observers;
-    if (hasError || isStopped) {
-      return EMPTY_SUBSCRIPTION;
-    }
-    this.currentObservers = null;
-    observers.push(subscriber);
-    return new Subscription(function() {
-      _this.currentObservers = null;
-      arrRemove(observers, subscriber);
-    });
-  };
-  Subject2.prototype._checkFinalizedStatuses = function(subscriber) {
-    var _a = this, hasError = _a.hasError, thrownError = _a.thrownError, isStopped = _a.isStopped;
-    if (hasError) {
-      subscriber.error(thrownError);
-    } else if (isStopped) {
-      subscriber.complete();
-    }
-  };
-  Subject2.prototype.asObservable = function() {
-    var observable2 = new Observable();
-    observable2.source = this;
-    return observable2;
-  };
-  Subject2.create = function(destination, source) {
-    return new AnonymousSubject(destination, source);
-  };
-  return Subject2;
-}(Observable);
-var AnonymousSubject = function(_super) {
-  __extends(AnonymousSubject2, _super);
-  function AnonymousSubject2(destination, source) {
-    var _this = _super.call(this) || this;
-    _this.destination = destination;
-    _this.source = source;
-    return _this;
-  }
-  AnonymousSubject2.prototype.next = function(value) {
-    var _a, _b;
-    (_b = (_a = this.destination) === null || _a === void 0 ? void 0 : _a.next) === null || _b === void 0 ? void 0 : _b.call(_a, value);
-  };
-  AnonymousSubject2.prototype.error = function(err) {
-    var _a, _b;
-    (_b = (_a = this.destination) === null || _a === void 0 ? void 0 : _a.error) === null || _b === void 0 ? void 0 : _b.call(_a, err);
-  };
-  AnonymousSubject2.prototype.complete = function() {
-    var _a, _b;
-    (_b = (_a = this.destination) === null || _a === void 0 ? void 0 : _a.complete) === null || _b === void 0 ? void 0 : _b.call(_a);
-  };
-  AnonymousSubject2.prototype._subscribe = function(subscriber) {
-    var _a, _b;
-    return (_b = (_a = this.source) === null || _a === void 0 ? void 0 : _a.subscribe(subscriber)) !== null && _b !== void 0 ? _b : EMPTY_SUBSCRIPTION;
-  };
-  return AnonymousSubject2;
-}(Subject);
-var isArrayLike = function(x) {
-  return x && typeof x.length === "number" && typeof x !== "function";
-};
-function isPromise(value) {
-  return isFunction(value === null || value === void 0 ? void 0 : value.then);
-}
-function isInteropObservable(input) {
-  return isFunction(input[observable]);
-}
-function isAsyncIterable(obj) {
-  return Symbol.asyncIterator && isFunction(obj === null || obj === void 0 ? void 0 : obj[Symbol.asyncIterator]);
-}
-function createInvalidObservableTypeError(input) {
-  return new TypeError("You provided " + (input !== null && typeof input === "object" ? "an invalid object" : "'" + input + "'") + " where a stream was expected. You can provide an Observable, Promise, ReadableStream, Array, AsyncIterable, or Iterable.");
-}
-function getSymbolIterator() {
-  if (typeof Symbol !== "function" || !Symbol.iterator) {
-    return "@@iterator";
-  }
-  return Symbol.iterator;
-}
-var iterator = getSymbolIterator();
-function isIterable(input) {
-  return isFunction(input === null || input === void 0 ? void 0 : input[iterator]);
-}
-function readableStreamLikeToAsyncGenerator(readableStream) {
-  return __asyncGenerator(this, arguments, function readableStreamLikeToAsyncGenerator_1() {
-    var reader, _a, value, done;
-    return __generator(this, function(_b) {
-      switch (_b.label) {
-        case 0:
-          reader = readableStream.getReader();
-          _b.label = 1;
-        case 1:
-          _b.trys.push([1, , 9, 10]);
-          _b.label = 2;
-        case 2:
-          return [4, __await(reader.read())];
-        case 3:
-          _a = _b.sent(), value = _a.value, done = _a.done;
-          if (!done) return [3, 5];
-          return [4, __await(void 0)];
-        case 4:
-          return [2, _b.sent()];
-        case 5:
-          return [4, __await(value)];
-        case 6:
-          return [4, _b.sent()];
-        case 7:
-          _b.sent();
-          return [3, 2];
-        case 8:
-          return [3, 10];
-        case 9:
-          reader.releaseLock();
-          return [7];
-        case 10:
-          return [2];
-      }
-    });
-  });
-}
-function isReadableStreamLike(obj) {
-  return isFunction(obj === null || obj === void 0 ? void 0 : obj.getReader);
-}
-function innerFrom(input) {
-  if (input instanceof Observable) {
-    return input;
-  }
-  if (input != null) {
-    if (isInteropObservable(input)) {
-      return fromInteropObservable(input);
-    }
-    if (isArrayLike(input)) {
-      return fromArrayLike(input);
-    }
-    if (isPromise(input)) {
-      return fromPromise(input);
-    }
-    if (isAsyncIterable(input)) {
-      return fromAsyncIterable(input);
-    }
-    if (isIterable(input)) {
-      return fromIterable(input);
-    }
-    if (isReadableStreamLike(input)) {
-      return fromReadableStreamLike(input);
-    }
-  }
-  throw createInvalidObservableTypeError(input);
-}
-function fromInteropObservable(obj) {
-  return new Observable(function(subscriber) {
-    var obs = obj[observable]();
-    if (isFunction(obs.subscribe)) {
-      return obs.subscribe(subscriber);
-    }
-    throw new TypeError("Provided object does not correctly implement Symbol.observable");
-  });
-}
-function fromArrayLike(array) {
-  return new Observable(function(subscriber) {
-    for (var i = 0; i < array.length && !subscriber.closed; i++) {
-      subscriber.next(array[i]);
-    }
-    subscriber.complete();
-  });
-}
-function fromPromise(promise) {
-  return new Observable(function(subscriber) {
-    promise.then(function(value) {
-      if (!subscriber.closed) {
-        subscriber.next(value);
-        subscriber.complete();
-      }
-    }, function(err) {
-      return subscriber.error(err);
-    }).then(null, reportUnhandledError);
-  });
-}
-function fromIterable(iterable) {
-  return new Observable(function(subscriber) {
-    var e_1, _a;
-    try {
-      for (var iterable_1 = __values(iterable), iterable_1_1 = iterable_1.next(); !iterable_1_1.done; iterable_1_1 = iterable_1.next()) {
-        var value = iterable_1_1.value;
-        subscriber.next(value);
-        if (subscriber.closed) {
-          return;
-        }
-      }
-    } catch (e_1_1) {
-      e_1 = { error: e_1_1 };
-    } finally {
-      try {
-        if (iterable_1_1 && !iterable_1_1.done && (_a = iterable_1.return)) _a.call(iterable_1);
-      } finally {
-        if (e_1) throw e_1.error;
-      }
-    }
-    subscriber.complete();
-  });
-}
-function fromAsyncIterable(asyncIterable) {
-  return new Observable(function(subscriber) {
-    process(asyncIterable, subscriber).catch(function(err) {
-      return subscriber.error(err);
-    });
-  });
-}
-function fromReadableStreamLike(readableStream) {
-  return fromAsyncIterable(readableStreamLikeToAsyncGenerator(readableStream));
-}
-function process(asyncIterable, subscriber) {
-  var asyncIterable_1, asyncIterable_1_1;
-  var e_2, _a;
-  return __awaiter(this, void 0, void 0, function() {
-    var value, e_2_1;
-    return __generator(this, function(_b) {
-      switch (_b.label) {
-        case 0:
-          _b.trys.push([0, 5, 6, 11]);
-          asyncIterable_1 = __asyncValues(asyncIterable);
-          _b.label = 1;
-        case 1:
-          return [4, asyncIterable_1.next()];
-        case 2:
-          if (!(asyncIterable_1_1 = _b.sent(), !asyncIterable_1_1.done)) return [3, 4];
-          value = asyncIterable_1_1.value;
-          subscriber.next(value);
-          if (subscriber.closed) {
-            return [2];
-          }
-          _b.label = 3;
-        case 3:
-          return [3, 1];
-        case 4:
-          return [3, 11];
-        case 5:
-          e_2_1 = _b.sent();
-          e_2 = { error: e_2_1 };
-          return [3, 11];
-        case 6:
-          _b.trys.push([6, , 9, 10]);
-          if (!(asyncIterable_1_1 && !asyncIterable_1_1.done && (_a = asyncIterable_1.return))) return [3, 8];
-          return [4, _a.call(asyncIterable_1)];
-        case 7:
-          _b.sent();
-          _b.label = 8;
-        case 8:
-          return [3, 10];
-        case 9:
-          if (e_2) throw e_2.error;
-          return [7];
-        case 10:
-          return [7];
-        case 11:
-          subscriber.complete();
-          return [2];
-      }
-    });
-  });
-}
-function executeSchedule(parentSubscription, scheduler, work, delay, repeat) {
-  if (delay === void 0) {
-    delay = 0;
-  }
-  if (repeat === void 0) {
-    repeat = false;
-  }
-  var scheduleSubscription = scheduler.schedule(function() {
-    work();
-    if (repeat) {
-      parentSubscription.add(this.schedule(null, delay));
-    } else {
-      this.unsubscribe();
-    }
-  }, delay);
-  parentSubscription.add(scheduleSubscription);
-  if (!repeat) {
-    return scheduleSubscription;
-  }
-}
-function map(project, thisArg) {
-  return operate(function(source, subscriber) {
-    var index = 0;
-    source.subscribe(createOperatorSubscriber(subscriber, function(value) {
-      subscriber.next(project.call(thisArg, value, index++));
-    }));
-  });
-}
-var isArray = Array.isArray;
-function callOrApply(fn, args) {
-  return isArray(args) ? fn.apply(void 0, __spreadArray([], __read(args))) : fn(args);
-}
-function mapOneOrManyArgs(fn) {
-  return map(function(args) {
-    return callOrApply(fn, args);
-  });
-}
-function mergeInternals(source, subscriber, project, concurrent, onBeforeNext, expand, innerSubScheduler, additionalFinalizer) {
-  var buffer = [];
-  var active = 0;
-  var index = 0;
-  var isComplete = false;
-  var checkComplete = function() {
-    if (isComplete && !buffer.length && !active) {
-      subscriber.complete();
-    }
-  };
-  var outerNext = function(value) {
-    return active < concurrent ? doInnerSub(value) : buffer.push(value);
-  };
-  var doInnerSub = function(value) {
-    active++;
-    var innerComplete = false;
-    innerFrom(project(value, index++)).subscribe(createOperatorSubscriber(subscriber, function(innerValue) {
-      {
-        subscriber.next(innerValue);
-      }
-    }, function() {
-      innerComplete = true;
-    }, void 0, function() {
-      if (innerComplete) {
-        try {
-          active--;
-          var _loop_1 = function() {
-            var bufferedValue = buffer.shift();
-            if (innerSubScheduler) ;
-            else {
-              doInnerSub(bufferedValue);
-            }
-          };
-          while (buffer.length && active < concurrent) {
-            _loop_1();
-          }
-          checkComplete();
-        } catch (err) {
-          subscriber.error(err);
-        }
-      }
-    }));
-  };
-  source.subscribe(createOperatorSubscriber(subscriber, outerNext, function() {
-    isComplete = true;
-    checkComplete();
-  }));
-  return function() {
-  };
-}
-function mergeMap(project, resultSelector, concurrent) {
-  if (concurrent === void 0) {
-    concurrent = Infinity;
-  }
-  if (isFunction(resultSelector)) {
-    return mergeMap(function(a, i) {
-      return map(function(b, ii) {
-        return resultSelector(a, b, i, ii);
-      })(innerFrom(project(a, i)));
-    }, concurrent);
-  } else if (typeof resultSelector === "number") {
-    concurrent = resultSelector;
-  }
-  return operate(function(source, subscriber) {
-    return mergeInternals(source, subscriber, project, concurrent);
-  });
-}
-var nodeEventEmitterMethods = ["addListener", "removeListener"];
-var eventTargetMethods = ["addEventListener", "removeEventListener"];
-var jqueryMethods = ["on", "off"];
-function fromEvent(target, eventName, options, resultSelector) {
-  if (isFunction(options)) {
-    resultSelector = options;
-    options = void 0;
-  }
-  if (resultSelector) {
-    return fromEvent(target, eventName, options).pipe(mapOneOrManyArgs(resultSelector));
-  }
-  var _a = __read(isEventTarget(target) ? eventTargetMethods.map(function(methodName) {
-    return function(handler) {
-      return target[methodName](eventName, handler, options);
-    };
-  }) : isNodeStyleEventEmitter(target) ? nodeEventEmitterMethods.map(toCommonHandlerRegistry(target, eventName)) : isJQueryStyleEventEmitter(target) ? jqueryMethods.map(toCommonHandlerRegistry(target, eventName)) : [], 2), add = _a[0], remove = _a[1];
-  if (!add) {
-    if (isArrayLike(target)) {
-      return mergeMap(function(subTarget) {
-        return fromEvent(subTarget, eventName, options);
-      })(innerFrom(target));
-    }
-  }
-  if (!add) {
-    throw new TypeError("Invalid event target");
-  }
-  return new Observable(function(subscriber) {
-    var handler = function() {
-      var args = [];
-      for (var _i = 0; _i < arguments.length; _i++) {
-        args[_i] = arguments[_i];
-      }
-      return subscriber.next(1 < args.length ? args : args[0]);
-    };
-    add(handler);
-    return function() {
-      return remove(handler);
-    };
-  });
-}
-function toCommonHandlerRegistry(target, eventName) {
-  return function(methodName) {
-    return function(handler) {
-      return target[methodName](eventName, handler);
-    };
-  };
-}
-function isNodeStyleEventEmitter(target) {
-  return isFunction(target.addListener) && isFunction(target.removeListener);
-}
-function isJQueryStyleEventEmitter(target) {
-  return isFunction(target.on) && isFunction(target.off);
-}
-function isEventTarget(target) {
-  return isFunction(target.addEventListener) && isFunction(target.removeEventListener);
-}
-function share(options) {
-  if (options === void 0) {
-    options = {};
-  }
-  var _a = options.connector, connector = _a === void 0 ? function() {
-    return new Subject();
-  } : _a, _b = options.resetOnError, resetOnError = _b === void 0 ? true : _b, _c = options.resetOnComplete, resetOnComplete = _c === void 0 ? true : _c, _d = options.resetOnRefCountZero, resetOnRefCountZero = _d === void 0 ? true : _d;
-  return function(wrapperSource) {
-    var connection;
-    var resetConnection;
-    var subject;
-    var refCount = 0;
-    var hasCompleted = false;
-    var hasErrored = false;
-    var cancelReset = function() {
-      resetConnection === null || resetConnection === void 0 ? void 0 : resetConnection.unsubscribe();
-      resetConnection = void 0;
-    };
-    var reset = function() {
-      cancelReset();
-      connection = subject = void 0;
-      hasCompleted = hasErrored = false;
-    };
-    var resetAndUnsubscribe = function() {
-      var conn = connection;
-      reset();
-      conn === null || conn === void 0 ? void 0 : conn.unsubscribe();
-    };
-    return operate(function(source, subscriber) {
-      refCount++;
-      if (!hasErrored && !hasCompleted) {
-        cancelReset();
-      }
-      var dest = subject = subject !== null && subject !== void 0 ? subject : connector();
-      subscriber.add(function() {
-        refCount--;
-        if (refCount === 0 && !hasErrored && !hasCompleted) {
-          resetConnection = handleReset(resetAndUnsubscribe, resetOnRefCountZero);
-        }
-      });
-      dest.subscribe(subscriber);
-      if (!connection && refCount > 0) {
-        connection = new SafeSubscriber({
-          next: function(value) {
-            return dest.next(value);
-          },
-          error: function(err) {
-            hasErrored = true;
-            cancelReset();
-            resetConnection = handleReset(reset, resetOnError, err);
-            dest.error(err);
-          },
-          complete: function() {
-            hasCompleted = true;
-            cancelReset();
-            resetConnection = handleReset(reset, resetOnComplete);
-            dest.complete();
-          }
-        });
-        innerFrom(source).subscribe(connection);
-      }
-    })(wrapperSource);
-  };
-}
-function handleReset(reset, on) {
-  var args = [];
-  for (var _i = 2; _i < arguments.length; _i++) {
-    args[_i - 2] = arguments[_i];
-  }
-  if (on === true) {
-    reset();
-    return;
-  }
-  if (on === false) {
-    return;
-  }
-  var onSubscriber = new SafeSubscriber({
-    next: function() {
-      onSubscriber.unsubscribe();
-      reset();
-    }
-  });
-  return innerFrom(on.apply(void 0, __spreadArray([], __read(args)))).subscribe(onSubscriber);
-}
-function tap(observerOrNext, error, complete) {
-  var tapObserver = isFunction(observerOrNext) || error || complete ? { next: observerOrNext, error, complete } : observerOrNext;
-  return tapObserver ? operate(function(source, subscriber) {
-    var _a;
-    (_a = tapObserver.subscribe) === null || _a === void 0 ? void 0 : _a.call(tapObserver);
-    var isUnsub = true;
-    source.subscribe(createOperatorSubscriber(subscriber, function(value) {
-      var _a2;
-      (_a2 = tapObserver.next) === null || _a2 === void 0 ? void 0 : _a2.call(tapObserver, value);
-      subscriber.next(value);
-    }, function() {
-      var _a2;
-      isUnsub = false;
-      (_a2 = tapObserver.complete) === null || _a2 === void 0 ? void 0 : _a2.call(tapObserver);
-      subscriber.complete();
-    }, function(err) {
-      var _a2;
-      isUnsub = false;
-      (_a2 = tapObserver.error) === null || _a2 === void 0 ? void 0 : _a2.call(tapObserver, err);
-      subscriber.error(err);
-    }, function() {
-      var _a2, _b;
-      if (isUnsub) {
-        (_a2 = tapObserver.unsubscribe) === null || _a2 === void 0 ? void 0 : _a2.call(tapObserver);
-      }
-      (_b = tapObserver.finalize) === null || _b === void 0 ? void 0 : _b.call(tapObserver);
-    }));
-  }) : identity;
-}
-var eEventType = /* @__PURE__ */ ((eEventType2) => {
-  eEventType2[eEventType2["down"] = 1] = "down";
-  eEventType2[eEventType2["up"] = 2] = "up";
-  eEventType2[eEventType2["move"] = 4] = "move";
-  eEventType2[eEventType2["over"] = 8] = "over";
-  eEventType2[eEventType2["enter"] = 16] = "enter";
-  eEventType2[eEventType2["leave"] = 32] = "leave";
-  eEventType2[eEventType2["out"] = 64] = "out";
-  eEventType2[eEventType2["cancel"] = 128] = "cancel";
-  eEventType2[eEventType2["kdown"] = 256] = "kdown";
-  eEventType2[eEventType2["kup"] = 512] = "kup";
-  eEventType2[eEventType2["menu"] = 1024] = "menu";
-  eEventType2[eEventType2["got"] = 2048] = "got";
-  eEventType2[eEventType2["lost"] = 4096] = "lost";
-  eEventType2[eEventType2["update"] = 8192] = "update";
-  return eEventType2;
-})(eEventType || {});
-const cSupportEventName = [
-  { name: "pointerdown", value: 1 },
-  { name: "pointerup", value: 1 },
-  { name: "pointermove", value: 0 },
-  { name: "pointerover", value: 0 },
-  { name: "pointerenter", value: 0 },
-  { name: "pointercancel", value: 0 },
-  { name: "pointerout", value: 0 },
-  { name: "pointerleave", value: 0 },
-  { name: "pointerrawupdate", value: 0 },
-  { name: "gotpointercapture", value: 0 },
-  { name: "lostpointercapture", value: 0 },
-  { name: "keydown", value: 0 },
-  { name: "keyup", value: 0 },
-  { name: "contextmenu", value: 0 }
-];
-const cKeyboardEventName = ["keydown", "keyup"];
-class EventPool extends EventDispatcher {
-  constructor(canvas) {
-    super();
-    this.canvas = canvas;
-    this.preventMouse = (e) => {
-      e.preventDefault();
-    };
-    this.pick = (e) => {
-      const coords = this.normalizeCoords(e);
-      let index = -1, intersects2 = [], button = -1, target, type = e.type;
-      if (coords) {
-        button = e.button;
-        target = e.target;
-        const tmp2 = this.app.pickMesh(coords, {
-          button,
-          type
-        });
-        index = tmp2.index;
-        intersects2 = tmp2.intersects;
-      }
-      return {
-        type: e.type,
-        button,
-        target,
-        intersects: intersects2,
-        data: {
-          index,
-          coords
-        }
-      };
-    };
-    this.streamPool = {};
-  }
-  bindApp(app) {
-    this.app = app;
-  }
-  createStream(eType) {
-    cSupportEventName.filter((e) => e.value & eType).forEach((one) => {
-      const target = cKeyboardEventName.includes(one.name) ? window : this.canvas;
-      if (!target) throw new Error("un-bind canvas");
-      const observer = fromEvent(target, one.name);
-      this.streamPool[one.name] = observer.pipe(
-        tap(this.preventMouse),
-        // 执行副作用，不对数据流产生影响 不返回任何值
-        map(this.pick),
-        share()
-      );
-    });
-    this.streamPool.documentpointerup = fromEvent(document, "pointerup").pipe(
-      map((e) => ({ e })),
-      share()
-    );
-    this.streamPool.documentpointerdown = fromEvent(document, "pointerdown").pipe(
-      map(this.pick),
-      share()
-    );
-  }
-  listen(callback = (e) => {
-  }, eType) {
-    this.createStream(eType);
-    const { streamPool } = this;
-    Object.keys(streamPool).forEach((key) => {
-      streamPool[key].subscribe((e) => callback(e));
-    });
-  }
-  normalizeCoords(evt) {
-    const rc = this.canvas.getBoundingClientRect();
-    if (["keydown", "keyup"].includes(evt.type)) return;
-    let x, y;
-    x = evt.clientX;
-    y = evt.clientY;
-    x = x - rc.left;
-    y = y - rc.top;
-    return new Vector2(x, y);
-  }
-  getCanvas() {
-    return this.canvas;
-  }
-}
-const localRayCaster = new Raycaster();
 var eEntryCode = /* @__PURE__ */ ((eEntryCode2) => {
   eEntryCode2[eEntryCode2["none"] = 0] = "none";
-  eEntryCode2[eEntryCode2["webui"] = 1] = "webui";
+  eEntryCode2[eEntryCode2["aiwebUi"] = 1] = "aiwebUi";
+  eEntryCode2[eEntryCode2["aiWebUiRetainer"] = 2] = "aiWebUiRetainer";
   return eEntryCode2;
 })(eEntryCode || {});
 class MqMultiViewEditor extends MqRender {
@@ -31879,11 +30409,8 @@ class MqMultiViewEditor extends MqRender {
       this.labelUnit.target.visible = true;
       this.sceneOrtho.add(this.labelUnit.target);
     }
-    this.ePool = new EventPool(this.renderer.domElement);
-    this.ePool.bindApp(this);
     const sizeScale = 80;
     (_a = options.viewStateList) == null ? void 0 : _a.forEach((view, index) => {
-      console.log(index, view.label);
       if (view.label) {
         view.strSprite = new StrSprite(view.label);
         view.strSprite.target.center.set(0.5, 0.5);
@@ -31976,34 +30503,6 @@ class MqMultiViewEditor extends MqRender {
     };
     renderer.setAnimationLoop(animate);
   }
-  // initControl() {
-  //     const { camera, renderer, options} = this;
-  //     if (!options.useControl) return;
-  //     if (!this.control) {
-  //         const { domElement } = renderer!;
-  //         const control = new TrackballControls(camera.getCamera(), domElement);
-  //         control.zoomSpeed = 1.2;
-  //         control.panSpeed = 0.5;
-  //         control.rotateSpeed = 1;
-  //         control.noZoom = false;
-  //         control.noPan = false;
-  //         control.noRotate = false;
-  //         // control.staticMoving = true;
-  //         // control.dynamicDampingFactor = 0.3;
-  //         control.keys = ['65', '83', '68'];
-  //         // control.addEventListener('change', () => {
-  //         // //    this.oneFrame(); 
-  //         // });
-  //         control.target.set(0, 0, 0);
-  //         (<any>control).minZoom = 0.01;
-  //         (<any>control).maxZoom = 90.0;
-  //         this.control = control;
-  //     }
-  //     if (this.control.screen.width < 1 || this.control.screen.height < 1) {
-  //         this.control.handleResize();
-  //     }
-  //     this.control.update();
-  // }
   updateWindowSize(width, height) {
     const { rc } = this;
     rc.width = width;
@@ -32043,7 +30542,7 @@ class MqMultiViewEditor extends MqRender {
     });
     if ([
       1
-      /* webui */
+      /* aiwebUi */
     ].includes(entryCode)) {
       this.cameraFitViewport();
       this.computeSceneBox();
@@ -32058,17 +30557,19 @@ class MqMultiViewEditor extends MqRender {
     var _a;
     const { options: inOptions, entryCode } = this;
     (_a = inOptions.viewStateList) == null ? void 0 : _a.forEach((view) => {
-      var _a2, _b, _c;
-      if (typeof target == "string") {
-        const obj = (_a2 = view.scene) == null ? void 0 : _a2.getObjectByName(target);
-        if (obj) (_b = view.scene) == null ? void 0 : _b.remove(obj);
-      } else {
-        (_c = view.scene) == null ? void 0 : _c.remove(target);
+      const scene = view.scene;
+      if (scene) {
+        if (typeof target == "string") {
+          const obj = scene.getObjectByName(target);
+          if (obj) scene.remove(obj);
+        } else {
+          scene.remove(target);
+        }
       }
     });
     if ([
       1
-      /* webui */
+      /* aiwebUi */
     ].includes(entryCode)) {
       this.cameraFitViewport();
       this.computeSceneBox();
@@ -32092,46 +30593,6 @@ class MqMultiViewEditor extends MqRender {
     const persp = camera.persp;
     persp.projectionMatrix.makePerspective(-fitSideH, fitSideH, fitSideV, -fitSideV, persp.near, persp.far);
     persp.updateProjectionMatrix();
-  }
-  listen(callback, vEvent = eEventType.down) {
-    var _a;
-    (_a = this.ePool) == null ? void 0 : _a.listen(callback, vEvent);
-  }
-  pickMesh(pt, { button, type }) {
-    var _a;
-    const { rc, renderer, camera, options, control } = this;
-    if (!renderer) return;
-    if (!options.viewStateList) return;
-    if (control) {
-      console.log(type);
-      if (type == "pointerdown") control.enabled = false;
-      if (type == "pointerup") control.enabled = true;
-    }
-    const arrVS = options.viewStateList;
-    pt.x = pt.x / rc.width / rc.dpr * 2 - 1;
-    pt.y = -(pt.y / rc.height / rc.dpr) * 2 + 1;
-    localRayCaster.setFromCamera(pt, camera.getCamera());
-    let intersects2, index = 0, count = arrVS.length;
-    for (; index < count; index++) {
-      let target = (_a = arrVS[index].scene) == null ? void 0 : _a.children;
-      if (target) {
-        const config2 = arrVS[index].config;
-        let goOn = true;
-        if (typeof (config2 == null ? void 0 : config2.pickButton) == "number") {
-          goOn = config2.pickButton === button;
-        }
-        if (!goOn) break;
-        if (config2 && config2.pickFilter) target = target.filter(config2.pickFilter);
-        let recursive = false;
-        if (typeof (config2 == null ? void 0 : config2.pickRecursive) == "boolean") recursive = config2 == null ? void 0 : config2.pickRecursive;
-        if (typeof (config2 == null ? void 0 : config2.pickRecursive) == "function") recursive = config2 == null ? void 0 : config2.pickRecursive();
-        intersects2 = localRayCaster.intersectObjects(target, recursive);
-        if (intersects2.length > 0) {
-          break;
-        }
-      }
-    }
-    return { index, intersects: intersects2 };
   }
 }
 const GumShader = {
@@ -32647,6 +31108,63 @@ function createGumMesh(name, options) {
   if (typeof options.visible == "boolean") mesh.visible = options.visible;
   return mesh;
 }
+class MarkerLines extends LineSegments {
+  constructor(axes, size = 1, options = {}) {
+    let showX = options.showX ? true : false, showY = options.showY ? true : false, showZ = options.showZ ? true : false;
+    const vertices = [], colors = [];
+    if (showX && axes.length > 0) {
+      let xAxis = axes[0].normalize().multiplyScalar(size);
+      vertices.push(0, 0, 0, ...xAxis.toArray());
+      if (options.color1) {
+        colors.push(...options.color1, ...options.color1);
+      } else {
+        colors.push(1, 0, 0, 1, 0, 0);
+      }
+    }
+    if (showY && axes.length > 1) {
+      let yAxis = axes[1].normalize().multiplyScalar(size);
+      vertices.push(0, 0, 0, ...yAxis.toArray());
+      colors.push(0, 1, 0, 0, 1, 0);
+    }
+    if (showZ && axes.length > 2) {
+      let zAxis = axes[2].normalize().multiplyScalar(size);
+      vertices.push(0, 0, 0, ...zAxis.toArray());
+      colors.push(0, 0, 1, 0, 0, 1);
+    }
+    const geometry = new BufferGeometry();
+    geometry.setAttribute("position", new Float32BufferAttribute(vertices, 3));
+    geometry.setAttribute("color", new Float32BufferAttribute(colors, 3));
+    const material = new LineBasicMaterial({ vertexColors: true, toneMapped: false });
+    super(geometry, material);
+    this.len = axes.length;
+    this.axesLength = size;
+  }
+  dispose() {
+    this.geometry.dispose();
+    this.material.dispose();
+  }
+  update(pos, index = 1) {
+    const arrPosition = this.geometry.attributes.position;
+    let idx = index;
+    if (index === 2) idx = 3;
+    else if (index === 3) idx = 5;
+    const newPos = Array.isArray(pos) ? new Vector3().fromArray(pos) : new Vector3().copy(pos);
+    newPos.normalize().multiplyScalar(this.axesLength);
+    arrPosition.setXYZ(idx, newPos.x, newPos.y, newPos.z);
+    arrPosition.needsUpdate = true;
+  }
+}
+const gConfig = {
+  isDebug: true,
+  // 
+  debugToothDir: true,
+  // 
+  axesLength: 20,
+  showX: true,
+  showY: false,
+  showZ: false,
+  visualFp: true
+};
 const gFPTmplate = {
   fa: new MeshLambertMaterial({ color: 16711680 }),
   gbp: new MeshLambertMaterial({ color: 16716032 }),
@@ -32685,6 +31203,9 @@ class ToothKeyPoint extends Object3D {
       const ptList = [];
       ptList.push(new Vector3().set(fp.x, fp.y, fp.z));
       ptList.push(new Vector3().set(fp.x, fp.y + 10, fp.z));
+      if (fp.name === void 0) {
+        console.warn("feature point name is empty", fp);
+      }
       const strMesh = new StrMesh(fp.name, options);
       const scale = options.strScale || [5, 5, 1];
       strMesh.target.scale.set(scale[0], scale[1], scale[2]);
@@ -32737,6 +31258,23 @@ function computeToothInfo(target, options = {}) {
     dir.set(meta.flAxis[0], meta.flAxis[1], meta.flAxis[2]);
     pos.add(dir.multiplyScalar(-0.8));
     pos.add(new Vector3(meta.ieAxis[0], meta.ieAxis[1], meta.ieAxis[2]).multiplyScalar(isUpper ? 1.5 : -1.5));
+    if (gConfig.debugToothDir) {
+      const localAxex = new MarkerLines(
+        [
+          new Vector3(meta.mdAxis[0], meta.mdAxis[1], meta.mdAxis[2]),
+          new Vector3(meta.ieAxis[0], meta.ieAxis[1], meta.ieAxis[2]).multiplyScalar(isUpper ? -1 : 1),
+          new Vector3(meta.flAxis[0], meta.flAxis[1], meta.flAxis[2])
+        ],
+        gConfig.axesLength,
+        gConfig
+      );
+      const w2l = new Matrix4().fromArray(meta.world2Local).transpose();
+      localAxex.position.set(0, 0, 0);
+      localAxex.applyMatrix4(w2l.invert());
+      localAxex.updateMatrix();
+      localAxex.updateMatrixWorld(true);
+      target.add(localAxex);
+    }
   }
   mesh.position.copy(pos);
   mesh.updateMatrix();
@@ -32756,184 +31294,6 @@ function computeToothInfo(target, options = {}) {
 }
 function debug_ToothVisualPoint(target, fpList, options = {}) {
   return new ToothKeyPoint(target, fpList, options);
-}
-const intersectSegmentPlane = function() {
-  const SMALL_NUM = 1e-8;
-  const u = new Vector3();
-  const w = new Vector3();
-  return function(p0, p1, V0, n, p) {
-    u.subVectors(p1, p0);
-    w.subVectors(p0, V0);
-    var D = n.dot(u);
-    var N = -n.dot(w);
-    if (Math.abs(D) < SMALL_NUM) {
-      if (N == 0)
-        return 2;
-      else return 0;
-    }
-    var sI = N / D;
-    if (sI < 0 || sI > 1) return 0;
-    p.copy(u).multiplyScalar(sI).add(p0);
-    return 1;
-  };
-}();
-class MqUtil {
-  /**
-   * 获取一个模型在另个模型的 OBB 盒子内部的点
-   * @param mesh 
-   * @param boundingBox1 
-   * @returns 
-   */
-  static calculate_Meshes_Vertexs(mesh, boundingBox1) {
-    let inPoints = [];
-    let vers = mesh.geometry.attributes.position.array;
-    for (let i = 0; i < vers.length; i += 3) {
-      let pos = new Vector3(vers[i], vers[i + 1], vers[i + 2]);
-      pos.applyMatrix4(mesh.matrixWorld);
-      if (boundingBox1.containsPoint(pos)) {
-        inPoints.push({ index: i, pos: pos.clone() });
-      }
-    }
-    return inPoints;
-  }
-  /**
-   * 获取2个模型件最近的距离 
-   * 如果模型 OBB 盒子未相交，返回 undefined
-   * @param _teeth0 
-   * @param _teeth1 
-   * @param minDist 
-   * @param checkType 
-   * @returns 
-   */
-  static calculate_Dist_M2M(_teeth0, _teeth1, minDist, checkType) {
-    _teeth0.mesh.updateMatrix();
-    _teeth0.mesh.updateMatrix();
-    _teeth1.mesh.updateMatrixWorld();
-    _teeth1.mesh.updateMatrixWorld();
-    let teeth0 = _teeth0, teeth1 = _teeth1;
-    const isSameArea = teeth0.areaId == teeth1.areaId;
-    let _cType = checkType;
-    let boundingBox0 = teeth0.get_boundingBox();
-    let boundingBox1 = teeth1.get_boundingBox();
-    let _box00 = boundingBox0.clone().expandByScalar(1.2);
-    let points0 = this.calculate_Meshes_Vertexs(teeth1.mesh, _box00.clone());
-    let dist, res0 = new Vector3(), res1 = new Vector3(), minDit, moveDir;
-    function getDistance() {
-      let center0 = new Vector3(), center1 = new Vector3();
-      boundingBox0.getCenter(center0);
-      boundingBox1.getCenter(center1);
-      const rayDir = center1.clone().sub(center0).normalize();
-      let raycaster = new Raycaster();
-      raycaster.set(center0, rayDir);
-      const intersects2 = raycaster.intersectObjects([teeth0.mesh, teeth1.mesh]);
-      minDit = intersects2[1].distance - intersects2[0].distance;
-      moveDir = rayDir;
-      res0 = intersects2[0].point;
-      res1 = intersects2[1].point;
-    }
-    if (points0.length === 0 && (void 0 === _cType || _cType === 0)) {
-      _cType = 0;
-      let _points0 = teeth0.get_WorldPoints();
-      let _points1 = teeth1.get_WorldPoints();
-      let _ppDist0, _ppDist1, p0, p1, tmd0, tmd1;
-      p0 = _points0[0];
-      while (!_ppDist0 || !_ppDist1 || _ppDist0 - _ppDist1 > 1e-4) {
-        _points1.forEach((tp1) => {
-          tmd0 = p0.distanceTo(tp1);
-          if (!_ppDist0 || tmd0 < _ppDist0) {
-            _ppDist0 = tmd0;
-            p1 = tp1;
-          }
-        });
-        _points0.forEach((tp0) => {
-          tmd1 = p1.distanceTo(tp0);
-          if (!_ppDist1 || tmd1 < _ppDist1) {
-            _ppDist1 = tmd1;
-            p0 = tp0;
-          }
-        });
-      }
-      minDit = _ppDist0;
-      moveDir = void 0;
-      res0 = p0.clone();
-      res1 = p1.clone();
-    } else {
-      _cType = 1;
-      const _minDist = minDist ? Math.abs(minDist) + 1 : 1;
-      const points = !isSameArea ? teeth1.getMesialPoints() : teeth1.getFarPoints();
-      const targetMesh = teeth0.mesh;
-      let ma4 = new Matrix4();
-      ma4.copy(targetMesh.matrixWorld).invert();
-      moveDir = void 0;
-      let target = new Vector3();
-      points.forEach((p) => {
-        let pos = p.clone();
-        pos.applyMatrix4(ma4);
-        dist = targetMesh.geometry.boundsTree.closestPointToPoint(
-          targetMesh,
-          pos,
-          target,
-          0,
-          _minDist
-        );
-        if (dist !== Infinity) {
-          if (this.containsPoint2(targetMesh, p)) dist *= -1;
-          if (!minDit || dist < minDit) {
-            minDit = dist;
-            res0 = p.clone();
-            res1 = target.clone().applyMatrix4(targetMesh.matrixWorld);
-          }
-        }
-      });
-    }
-    if (!minDit) getDistance();
-    return { dist: minDit, checkType: _cType, moveDir, pos0: res0, pos1: res1 };
-  }
-  /**
-   * 一个点是否在模型内部，不准确
-   * @param mesh 
-   * @param point 
-   * @returns 
-   */
-  static containsPoint2(mesh, point) {
-    let center = mesh.geometry.boundingBox.getCenter(new Vector3()).applyMatrix4(mesh.matrixWorld);
-    let dir = new Vector3().subVectors(point, center).normalize(), result;
-    var faces = /* @__PURE__ */ new Set();
-    function Raycaster1(dir2) {
-      let raycaster = new Raycaster();
-      raycaster.params.Points.threshold = 1e-7;
-      raycaster.set(point, dir2);
-      result = raycaster.intersectObject(mesh, false);
-      if (!result) throw new Error("投影错误");
-      var intersectFaceCount = 0;
-      for (let i = 0; i < result.length; i++) {
-        const face = result[i];
-        var isPointExist = faces.has(face.a) || faces.has(face.b) || faces.has(face.c);
-        if (!isPointExist) {
-          intersectFaceCount++;
-          faces.add(face.a);
-          faces.add(face.b);
-          faces.add(face.c);
-        }
-      }
-      return intersectFaceCount % 2 !== 0;
-    }
-    return Raycaster1(dir);
-  }
-  static intersectFacePlane(a, b, c, V0, n, points) {
-    var pointCount = 0;
-    if (intersectSegmentPlane(a, b, V0, n, points[pointCount]) == 1) {
-      pointCount++;
-    }
-    if (intersectSegmentPlane(b, c, V0, n, points[pointCount]) == 1) {
-      pointCount++;
-    }
-    if (pointCount == 2 || pointCount == 0) return pointCount;
-    if (intersectSegmentPlane(c, a, V0, n, points[pointCount]) == 1) {
-      pointCount++;
-    }
-    return pointCount;
-  }
 }
 const CENTER = 0;
 const AVERAGE = 1;
@@ -34089,7 +32449,7 @@ ExtendedTriangle.prototype.distanceToTriangle = function() {
   };
 }();
 class OrientedBox {
-  constructor(min, max, matrix2) {
+  constructor(min, max, matrix) {
     this.isOrientedBox = true;
     this.min = new Vector3();
     this.max = new Vector3();
@@ -34102,12 +32462,12 @@ class OrientedBox {
     this.needsUpdate = false;
     if (min) this.min.copy(min);
     if (max) this.max.copy(max);
-    if (matrix2) this.matrix.copy(matrix2);
+    if (matrix) this.matrix.copy(matrix);
   }
-  set(min, max, matrix2) {
+  set(min, max, matrix) {
     this.min.copy(min);
     this.max.copy(max);
-    this.matrix.copy(matrix2);
+    this.matrix.copy(matrix);
     this.needsUpdate = true;
   }
   copy(other) {
@@ -34119,7 +32479,7 @@ class OrientedBox {
 }
 OrientedBox.prototype.update = /* @__PURE__ */ function() {
   return function update() {
-    const matrix2 = this.matrix;
+    const matrix = this.matrix;
     const min = this.min;
     const max = this.max;
     const points = this.points;
@@ -34131,7 +32491,7 @@ OrientedBox.prototype.update = /* @__PURE__ */ function() {
           v.x = x ? max.x : min.x;
           v.y = y ? max.y : min.y;
           v.z = z ? max.z : min.z;
-          v.applyMatrix4(matrix2);
+          v.applyMatrix4(matrix);
         }
       }
     }
@@ -34946,7 +33306,7 @@ function _raycastFirst$1(nodeIndex32, bvh, side, ray2, near, far) {
     }
   }
 }
-const boundingBox$2 = /* @__PURE__ */ new Box3();
+const boundingBox$1 = /* @__PURE__ */ new Box3();
 const triangle$1 = /* @__PURE__ */ new ExtendedTriangle();
 const triangle2$1 = /* @__PURE__ */ new ExtendedTriangle();
 const invertedMat$1 = /* @__PURE__ */ new Matrix4();
@@ -35019,11 +33379,11 @@ function _intersectsGeometry$1(nodeIndex32, bvh, otherGeometry, geometryToBvh, c
   } else {
     const left = nodeIndex32 + 8;
     const right = uint32Array2[nodeIndex32 + 6];
-    arrayToBox(BOUNDING_DATA_INDEX(left), float32Array2, boundingBox$2);
-    const leftIntersection = cachedObb.intersectsBox(boundingBox$2) && _intersectsGeometry$1(left, bvh, otherGeometry, geometryToBvh, cachedObb);
+    arrayToBox(BOUNDING_DATA_INDEX(left), float32Array2, boundingBox$1);
+    const leftIntersection = cachedObb.intersectsBox(boundingBox$1) && _intersectsGeometry$1(left, bvh, otherGeometry, geometryToBvh, cachedObb);
     if (leftIntersection) return true;
-    arrayToBox(BOUNDING_DATA_INDEX(right), float32Array2, boundingBox$2);
-    const rightIntersection = cachedObb.intersectsBox(boundingBox$2) && _intersectsGeometry$1(right, bvh, otherGeometry, geometryToBvh, cachedObb);
+    arrayToBox(BOUNDING_DATA_INDEX(right), float32Array2, boundingBox$1);
+    const rightIntersection = cachedObb.intersectsBox(boundingBox$1) && _intersectsGeometry$1(right, bvh, otherGeometry, geometryToBvh, cachedObb);
     if (rightIntersection) return true;
     return false;
   }
@@ -35340,7 +33700,7 @@ function _raycastFirst(nodeIndex32, bvh, side, ray2, near, far) {
     }
   }
 }
-const boundingBox$1 = /* @__PURE__ */ new Box3();
+const boundingBox = /* @__PURE__ */ new Box3();
 const triangle = /* @__PURE__ */ new ExtendedTriangle();
 const triangle2 = /* @__PURE__ */ new ExtendedTriangle();
 const invertedMat = /* @__PURE__ */ new Matrix4();
@@ -35414,11 +33774,11 @@ function _intersectsGeometry(nodeIndex32, bvh, otherGeometry, geometryToBvh, cac
   } else {
     const left = nodeIndex32 + 8;
     const right = uint32Array2[nodeIndex32 + 6];
-    arrayToBox(BOUNDING_DATA_INDEX(left), float32Array2, boundingBox$1);
-    const leftIntersection = cachedObb.intersectsBox(boundingBox$1) && _intersectsGeometry(left, bvh, otherGeometry, geometryToBvh, cachedObb);
+    arrayToBox(BOUNDING_DATA_INDEX(left), float32Array2, boundingBox);
+    const leftIntersection = cachedObb.intersectsBox(boundingBox) && _intersectsGeometry(left, bvh, otherGeometry, geometryToBvh, cachedObb);
     if (leftIntersection) return true;
-    arrayToBox(BOUNDING_DATA_INDEX(right), float32Array2, boundingBox$1);
-    const rightIntersection = cachedObb.intersectsBox(boundingBox$1) && _intersectsGeometry(right, bvh, otherGeometry, geometryToBvh, cachedObb);
+    arrayToBox(BOUNDING_DATA_INDEX(right), float32Array2, boundingBox);
+    const rightIntersection = cachedObb.intersectsBox(boundingBox) && _intersectsGeometry(right, bvh, otherGeometry, geometryToBvh, cachedObb);
     if (rightIntersection) return true;
     return false;
   }
@@ -36156,293 +34516,6 @@ class MeshBVH {
     return target;
   }
 }
-const boundingBox = /* @__PURE__ */ new Box3();
-const matrix = /* @__PURE__ */ new Matrix4();
-class MeshBVHRootHelper extends Object3D {
-  get isMesh() {
-    return !this.displayEdges;
-  }
-  get isLineSegments() {
-    return this.displayEdges;
-  }
-  get isLine() {
-    return this.displayEdges;
-  }
-  getVertexPosition(...args) {
-    return Mesh.prototype.getVertexPosition.call(this, ...args);
-  }
-  constructor(bvh, material, depth = 10, group = 0) {
-    super();
-    this.material = material;
-    this.geometry = new BufferGeometry();
-    this.name = "MeshBVHRootHelper";
-    this.depth = depth;
-    this.displayParents = false;
-    this.bvh = bvh;
-    this.displayEdges = true;
-    this._group = group;
-  }
-  raycast() {
-  }
-  update() {
-    const geometry = this.geometry;
-    const boundsTree = this.bvh;
-    const group = this._group;
-    geometry.dispose();
-    this.visible = false;
-    if (boundsTree) {
-      const targetDepth = this.depth - 1;
-      const displayParents = this.displayParents;
-      let boundsCount = 0;
-      boundsTree.traverse((depth, isLeaf) => {
-        if (depth >= targetDepth || isLeaf) {
-          boundsCount++;
-          return true;
-        } else if (displayParents) {
-          boundsCount++;
-        }
-      }, group);
-      let posIndex = 0;
-      const positionArray = new Float32Array(8 * 3 * boundsCount);
-      boundsTree.traverse((depth, isLeaf, boundingData) => {
-        const terminate = depth >= targetDepth || isLeaf;
-        if (terminate || displayParents) {
-          arrayToBox(0, boundingData, boundingBox);
-          const { min, max } = boundingBox;
-          for (let x = -1; x <= 1; x += 2) {
-            const xVal = x < 0 ? min.x : max.x;
-            for (let y = -1; y <= 1; y += 2) {
-              const yVal = y < 0 ? min.y : max.y;
-              for (let z = -1; z <= 1; z += 2) {
-                const zVal = z < 0 ? min.z : max.z;
-                positionArray[posIndex + 0] = xVal;
-                positionArray[posIndex + 1] = yVal;
-                positionArray[posIndex + 2] = zVal;
-                posIndex += 3;
-              }
-            }
-          }
-          return terminate;
-        }
-      }, group);
-      let indexArray;
-      let indices;
-      if (this.displayEdges) {
-        indices = new Uint8Array([
-          // x axis
-          0,
-          4,
-          1,
-          5,
-          2,
-          6,
-          3,
-          7,
-          // y axis
-          0,
-          2,
-          1,
-          3,
-          4,
-          6,
-          5,
-          7,
-          // z axis
-          0,
-          1,
-          2,
-          3,
-          4,
-          5,
-          6,
-          7
-        ]);
-      } else {
-        indices = new Uint8Array([
-          // X-, X+
-          0,
-          1,
-          2,
-          2,
-          1,
-          3,
-          4,
-          6,
-          5,
-          6,
-          7,
-          5,
-          // Y-, Y+
-          1,
-          4,
-          5,
-          0,
-          4,
-          1,
-          2,
-          3,
-          6,
-          3,
-          7,
-          6,
-          // Z-, Z+
-          0,
-          2,
-          4,
-          2,
-          6,
-          4,
-          1,
-          5,
-          3,
-          3,
-          5,
-          7
-        ]);
-      }
-      if (positionArray.length > 65535) {
-        indexArray = new Uint32Array(indices.length * boundsCount);
-      } else {
-        indexArray = new Uint16Array(indices.length * boundsCount);
-      }
-      const indexLength = indices.length;
-      for (let i = 0; i < boundsCount; i++) {
-        const posOffset = i * 8;
-        const indexOffset = i * indexLength;
-        for (let j = 0; j < indexLength; j++) {
-          indexArray[indexOffset + j] = posOffset + indices[j];
-        }
-      }
-      geometry.setIndex(
-        new BufferAttribute(indexArray, 1, false)
-      );
-      geometry.setAttribute(
-        "position",
-        new BufferAttribute(positionArray, 3, false)
-      );
-      this.visible = true;
-    }
-  }
-}
-class MeshBVHHelper extends Group {
-  get color() {
-    return this.edgeMaterial.color;
-  }
-  get opacity() {
-    return this.edgeMaterial.opacity;
-  }
-  set opacity(v) {
-    this.edgeMaterial.opacity = v;
-    this.meshMaterial.opacity = v;
-  }
-  constructor(mesh = null, bvh = null, depth = 10) {
-    if (mesh instanceof MeshBVH) {
-      depth = bvh || 10;
-      bvh = mesh;
-      mesh = null;
-    }
-    if (typeof bvh === "number") {
-      depth = bvh;
-      bvh = null;
-    }
-    super();
-    this.name = "MeshBVHHelper";
-    this.depth = depth;
-    this.mesh = mesh;
-    this.bvh = bvh;
-    this.displayParents = false;
-    this.displayEdges = true;
-    this.objectIndex = 0;
-    this._roots = [];
-    const edgeMaterial = new LineBasicMaterial({
-      color: 65416,
-      transparent: true,
-      opacity: 0.3,
-      depthWrite: false
-    });
-    const meshMaterial = new MeshBasicMaterial({
-      color: 65416,
-      transparent: true,
-      opacity: 0.3,
-      depthWrite: false
-    });
-    meshMaterial.color = edgeMaterial.color;
-    this.edgeMaterial = edgeMaterial;
-    this.meshMaterial = meshMaterial;
-    this.update();
-  }
-  update() {
-    const mesh = this.mesh;
-    let bvh = this.bvh || mesh.geometry.boundsTree || null;
-    if (mesh.isBatchedMesh && mesh.boundsTrees && !bvh) {
-      const drawInfo = mesh._drawInfo[this.objectIndex];
-      if (drawInfo) {
-        bvh = mesh.boundsTrees[drawInfo.geometryIndex] || bvh;
-      }
-    }
-    const totalRoots = bvh ? bvh._roots.length : 0;
-    while (this._roots.length > totalRoots) {
-      const root = this._roots.pop();
-      root.geometry.dispose();
-      this.remove(root);
-    }
-    for (let i = 0; i < totalRoots; i++) {
-      const { depth, edgeMaterial, meshMaterial, displayParents, displayEdges } = this;
-      if (i >= this._roots.length) {
-        const root2 = new MeshBVHRootHelper(bvh, edgeMaterial, depth, i);
-        this.add(root2);
-        this._roots.push(root2);
-      }
-      const root = this._roots[i];
-      root.bvh = bvh;
-      root.depth = depth;
-      root.displayParents = displayParents;
-      root.displayEdges = displayEdges;
-      root.material = displayEdges ? edgeMaterial : meshMaterial;
-      root.update();
-    }
-  }
-  updateMatrixWorld(...args) {
-    const mesh = this.mesh;
-    const parent = this.parent;
-    if (mesh !== null) {
-      mesh.updateWorldMatrix(true, false);
-      if (parent) {
-        this.matrix.copy(parent.matrixWorld).invert().multiply(mesh.matrixWorld);
-      } else {
-        this.matrix.copy(mesh.matrixWorld);
-      }
-      if (mesh.isInstancedMesh || mesh.isBatchedMesh) {
-        mesh.getMatrixAt(this.objectIndex, matrix);
-        this.matrix.multiply(matrix);
-      }
-      this.matrix.decompose(
-        this.position,
-        this.quaternion,
-        this.scale
-      );
-    }
-    super.updateMatrixWorld(...args);
-  }
-  copy(source) {
-    this.depth = source.depth;
-    this.mesh = source.mesh;
-    this.bvh = source.bvh;
-    this.opacity = source.opacity;
-    this.color.copy(source.color);
-  }
-  clone() {
-    return new MeshBVHHelper(this.mesh, this.bvh, this.depth);
-  }
-  dispose() {
-    this.edgeMaterial.dispose();
-    this.meshMaterial.dispose();
-    const children = this.children;
-    for (let i = 0, l = children.length; i < l; i++) {
-      children[i].geometry.dispose();
-    }
-  }
-}
 function convertRaycastIntersect(hit, object, raycaster) {
   if (hit === null) {
     return null;
@@ -36604,95 +34677,7 @@ function toMeshWithMaterialReplace(geometry, eType, userData = {}) {
   }
   if (material) return new Mesh(geometry, material);
 }
-const cPickColor = new Color().setRGB(0.5, 0.5, 0.5);
-const cPickList = [];
-function pickUpdateColor(callback, mesh, color, isReset = false, debugBvh = false) {
-  const udMesh = mesh.userData || {};
-  const material = mesh.material;
-  if (isReset && udMesh.bvhHelp) {
-    callback(udMesh.bvhHelp, { remove: true });
-  } else {
-    if (debugBvh) {
-      if (mesh.geometry.computeBoundsTree) {
-        mesh.geometry.computeBoundsTree();
-      } else {
-        mesh.geometry.computeBoundsTree = computeBoundsTree;
-        mesh.geometry.disposeBoundsTree = disposeBoundsTree;
-        mesh.raycast = acceleratedRaycast;
-        mesh.geometry.computeBoundsTree();
-      }
-      udMesh.bvhHelp = new MeshBVHHelper(mesh, 0);
-      callback(udMesh.bvhHelp, { add: true });
-    }
-  }
-  if (Array.isArray(material)) {
-    console.log("unsupport array material type");
-  } else {
-    const udMaterial = material.userData || {};
-    if (udMaterial.type == "toothCrown") {
-      if (isReset) {
-        mesh.material = udMesh.sMaterial.clone();
-        if (udMesh.sColor) {
-          mesh.geometry.setAttribute("color", udMesh.sColor);
-          mesh.geometry.attributes.color.needsUpdate = true;
-        }
-        udMesh.pick = 0;
-      } else {
-        udMesh.sMaterial = material.clone();
-        udMesh.sColor = mesh.geometry.getAttribute("color");
-        udMesh.pick = 1;
-        if (!udMesh.oColor) {
-          const count = mesh.geometry.attributes.position.count;
-          const arrColor = [];
-          for (let i = 0; i < count; i++) {
-            arrColor.push(color.r);
-            arrColor.push(color.g);
-            arrColor.push(color.b);
-          }
-          udMesh.oColor = new Float32BufferAttribute(arrColor, 3);
-        }
-        if (udMesh.oMaterial) {
-          mesh.material = new MeshBasicMaterial().copy(udMesh.oMaterial);
-        } else {
-          udMesh.oMaterial = new MeshBasicMaterial({ color: cPickColor });
-          udMesh.oMaterial.userData = material.userData;
-          mesh.material = udMesh.oMaterial;
-        }
-        mesh.geometry.setAttribute("color", udMesh.oColor);
-        mesh.geometry.computeVertexNormals();
-        mesh.geometry.normalizeNormals();
-        mesh.geometry.attributes.color.needsUpdate = true;
-      }
-    } else if (udMaterial.type == "Gum") ;
-    else {
-      if (material instanceof MeshBasicMaterial || material instanceof MeshStandardMaterial) {
-        if (isReset) {
-          material.color.copy(udMesh.oColor);
-          udMesh.oColor = void 0;
-          udMesh.pick = 0;
-        } else {
-          udMesh.oColor = material.color.clone();
-          material.color.copy(color);
-          udMesh.pick = 1;
-        }
-      } else {
-        console.log("pick unsupport type", material.type);
-      }
-    }
-  }
-}
-function pickMesh(mesh, options = {}) {
-  const cPick = options.color ? new Color(options.color) : cPickColor;
-  const debugBvh = typeof options.debugBvh == "boolean" ? options.debugBvh : false;
-  const callback = options.callback ? options.callback : (e, t) => {
-  };
-  cPickList.forEach((m) => pickUpdateColor(callback, m, cPick, true));
-  cPickList.length = 0;
-  if (mesh) {
-    pickUpdateColor(callback, mesh, cPick, false, debugBvh);
-    cPickList.push(mesh);
-  }
-}
+new Color().setRGB(0.5, 0.5, 0.5);
 function computeMikkTSpaceTangents(geometry, MikkTSpace, negateSign = true) {
   if (!MikkTSpace || !MikkTSpace.isReady) {
     throw new Error("BufferGeometryUtils: Initialized MikkTSpace library required.");
@@ -37470,6 +35455,7 @@ const alias3 = {
   Scene,
   AxesHelper,
   Mesh,
+  Vector2,
   Vector3,
   Euler,
   Quaternion,
@@ -37493,6 +35479,9 @@ const alias3 = {
   DoubleSide,
   ObjectSpaceNormalMap,
   CatmullRomCurve3,
+  Raycaster,
+  Sprite,
+  SpriteMaterial,
   // 
   BufferGeometryUtils
 };
@@ -37500,28 +35489,1265 @@ const aliasBvh = {
   computeBoundsTree,
   MeshBVH
 };
+var extendStatics = function(d, b) {
+  extendStatics = Object.setPrototypeOf || { __proto__: [] } instanceof Array && function(d2, b2) {
+    d2.__proto__ = b2;
+  } || function(d2, b2) {
+    for (var p in b2) if (Object.prototype.hasOwnProperty.call(b2, p)) d2[p] = b2[p];
+  };
+  return extendStatics(d, b);
+};
+function __extends(d, b) {
+  if (typeof b !== "function" && b !== null)
+    throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
+  extendStatics(d, b);
+  function __() {
+    this.constructor = d;
+  }
+  d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+}
+function __awaiter(thisArg, _arguments, P, generator) {
+  function adopt(value) {
+    return value instanceof P ? value : new P(function(resolve) {
+      resolve(value);
+    });
+  }
+  return new (P || (P = Promise))(function(resolve, reject) {
+    function fulfilled(value) {
+      try {
+        step(generator.next(value));
+      } catch (e) {
+        reject(e);
+      }
+    }
+    function rejected(value) {
+      try {
+        step(generator["throw"](value));
+      } catch (e) {
+        reject(e);
+      }
+    }
+    function step(result) {
+      result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected);
+    }
+    step((generator = generator.apply(thisArg, _arguments || [])).next());
+  });
+}
+function __generator(thisArg, body) {
+  var _ = { label: 0, sent: function() {
+    if (t[0] & 1) throw t[1];
+    return t[1];
+  }, trys: [], ops: [] }, f, y, t, g = Object.create((typeof Iterator === "function" ? Iterator : Object).prototype);
+  return g.next = verb(0), g["throw"] = verb(1), g["return"] = verb(2), typeof Symbol === "function" && (g[Symbol.iterator] = function() {
+    return this;
+  }), g;
+  function verb(n) {
+    return function(v) {
+      return step([n, v]);
+    };
+  }
+  function step(op) {
+    if (f) throw new TypeError("Generator is already executing.");
+    while (g && (g = 0, op[0] && (_ = 0)), _) try {
+      if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
+      if (y = 0, t) op = [op[0] & 2, t.value];
+      switch (op[0]) {
+        case 0:
+        case 1:
+          t = op;
+          break;
+        case 4:
+          _.label++;
+          return { value: op[1], done: false };
+        case 5:
+          _.label++;
+          y = op[1];
+          op = [0];
+          continue;
+        case 7:
+          op = _.ops.pop();
+          _.trys.pop();
+          continue;
+        default:
+          if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) {
+            _ = 0;
+            continue;
+          }
+          if (op[0] === 3 && (!t || op[1] > t[0] && op[1] < t[3])) {
+            _.label = op[1];
+            break;
+          }
+          if (op[0] === 6 && _.label < t[1]) {
+            _.label = t[1];
+            t = op;
+            break;
+          }
+          if (t && _.label < t[2]) {
+            _.label = t[2];
+            _.ops.push(op);
+            break;
+          }
+          if (t[2]) _.ops.pop();
+          _.trys.pop();
+          continue;
+      }
+      op = body.call(thisArg, _);
+    } catch (e) {
+      op = [6, e];
+      y = 0;
+    } finally {
+      f = t = 0;
+    }
+    if (op[0] & 5) throw op[1];
+    return { value: op[0] ? op[1] : void 0, done: true };
+  }
+}
+function __values(o) {
+  var s = typeof Symbol === "function" && Symbol.iterator, m = s && o[s], i = 0;
+  if (m) return m.call(o);
+  if (o && typeof o.length === "number") return {
+    next: function() {
+      if (o && i >= o.length) o = void 0;
+      return { value: o && o[i++], done: !o };
+    }
+  };
+  throw new TypeError(s ? "Object is not iterable." : "Symbol.iterator is not defined.");
+}
+function __read(o, n) {
+  var m = typeof Symbol === "function" && o[Symbol.iterator];
+  if (!m) return o;
+  var i = m.call(o), r, ar = [], e;
+  try {
+    while ((n === void 0 || n-- > 0) && !(r = i.next()).done) ar.push(r.value);
+  } catch (error) {
+    e = { error };
+  } finally {
+    try {
+      if (r && !r.done && (m = i["return"])) m.call(i);
+    } finally {
+      if (e) throw e.error;
+    }
+  }
+  return ar;
+}
+function __spreadArray(to, from, pack) {
+  if (pack || arguments.length === 2) for (var i = 0, l = from.length, ar; i < l; i++) {
+    if (ar || !(i in from)) {
+      if (!ar) ar = Array.prototype.slice.call(from, 0, i);
+      ar[i] = from[i];
+    }
+  }
+  return to.concat(ar || Array.prototype.slice.call(from));
+}
+function __await(v) {
+  return this instanceof __await ? (this.v = v, this) : new __await(v);
+}
+function __asyncGenerator(thisArg, _arguments, generator) {
+  if (!Symbol.asyncIterator) throw new TypeError("Symbol.asyncIterator is not defined.");
+  var g = generator.apply(thisArg, _arguments || []), i, q = [];
+  return i = Object.create((typeof AsyncIterator === "function" ? AsyncIterator : Object).prototype), verb("next"), verb("throw"), verb("return", awaitReturn), i[Symbol.asyncIterator] = function() {
+    return this;
+  }, i;
+  function awaitReturn(f) {
+    return function(v) {
+      return Promise.resolve(v).then(f, reject);
+    };
+  }
+  function verb(n, f) {
+    if (g[n]) {
+      i[n] = function(v) {
+        return new Promise(function(a, b) {
+          q.push([n, v, a, b]) > 1 || resume(n, v);
+        });
+      };
+      if (f) i[n] = f(i[n]);
+    }
+  }
+  function resume(n, v) {
+    try {
+      step(g[n](v));
+    } catch (e) {
+      settle(q[0][3], e);
+    }
+  }
+  function step(r) {
+    r.value instanceof __await ? Promise.resolve(r.value.v).then(fulfill, reject) : settle(q[0][2], r);
+  }
+  function fulfill(value) {
+    resume("next", value);
+  }
+  function reject(value) {
+    resume("throw", value);
+  }
+  function settle(f, v) {
+    if (f(v), q.shift(), q.length) resume(q[0][0], q[0][1]);
+  }
+}
+function __asyncValues(o) {
+  if (!Symbol.asyncIterator) throw new TypeError("Symbol.asyncIterator is not defined.");
+  var m = o[Symbol.asyncIterator], i;
+  return m ? m.call(o) : (o = typeof __values === "function" ? __values(o) : o[Symbol.iterator](), i = {}, verb("next"), verb("throw"), verb("return"), i[Symbol.asyncIterator] = function() {
+    return this;
+  }, i);
+  function verb(n) {
+    i[n] = o[n] && function(v) {
+      return new Promise(function(resolve, reject) {
+        v = o[n](v), settle(resolve, reject, v.done, v.value);
+      });
+    };
+  }
+  function settle(resolve, reject, d, v) {
+    Promise.resolve(v).then(function(v2) {
+      resolve({ value: v2, done: d });
+    }, reject);
+  }
+}
+typeof SuppressedError === "function" ? SuppressedError : function(error, suppressed, message) {
+  var e = new Error(message);
+  return e.name = "SuppressedError", e.error = error, e.suppressed = suppressed, e;
+};
+function isFunction(value) {
+  return typeof value === "function";
+}
+function createErrorClass(createImpl) {
+  var _super = function(instance) {
+    Error.call(instance);
+    instance.stack = new Error().stack;
+  };
+  var ctorFunc = createImpl(_super);
+  ctorFunc.prototype = Object.create(Error.prototype);
+  ctorFunc.prototype.constructor = ctorFunc;
+  return ctorFunc;
+}
+var UnsubscriptionError = createErrorClass(function(_super) {
+  return function UnsubscriptionErrorImpl(errors) {
+    _super(this);
+    this.message = errors ? errors.length + " errors occurred during unsubscription:\n" + errors.map(function(err, i) {
+      return i + 1 + ") " + err.toString();
+    }).join("\n  ") : "";
+    this.name = "UnsubscriptionError";
+    this.errors = errors;
+  };
+});
+function arrRemove(arr, item) {
+  if (arr) {
+    var index = arr.indexOf(item);
+    0 <= index && arr.splice(index, 1);
+  }
+}
+var Subscription = function() {
+  function Subscription2(initialTeardown) {
+    this.initialTeardown = initialTeardown;
+    this.closed = false;
+    this._parentage = null;
+    this._finalizers = null;
+  }
+  Subscription2.prototype.unsubscribe = function() {
+    var e_1, _a, e_2, _b;
+    var errors;
+    if (!this.closed) {
+      this.closed = true;
+      var _parentage = this._parentage;
+      if (_parentage) {
+        this._parentage = null;
+        if (Array.isArray(_parentage)) {
+          try {
+            for (var _parentage_1 = __values(_parentage), _parentage_1_1 = _parentage_1.next(); !_parentage_1_1.done; _parentage_1_1 = _parentage_1.next()) {
+              var parent_1 = _parentage_1_1.value;
+              parent_1.remove(this);
+            }
+          } catch (e_1_1) {
+            e_1 = { error: e_1_1 };
+          } finally {
+            try {
+              if (_parentage_1_1 && !_parentage_1_1.done && (_a = _parentage_1.return)) _a.call(_parentage_1);
+            } finally {
+              if (e_1) throw e_1.error;
+            }
+          }
+        } else {
+          _parentage.remove(this);
+        }
+      }
+      var initialFinalizer = this.initialTeardown;
+      if (isFunction(initialFinalizer)) {
+        try {
+          initialFinalizer();
+        } catch (e) {
+          errors = e instanceof UnsubscriptionError ? e.errors : [e];
+        }
+      }
+      var _finalizers = this._finalizers;
+      if (_finalizers) {
+        this._finalizers = null;
+        try {
+          for (var _finalizers_1 = __values(_finalizers), _finalizers_1_1 = _finalizers_1.next(); !_finalizers_1_1.done; _finalizers_1_1 = _finalizers_1.next()) {
+            var finalizer = _finalizers_1_1.value;
+            try {
+              execFinalizer(finalizer);
+            } catch (err) {
+              errors = errors !== null && errors !== void 0 ? errors : [];
+              if (err instanceof UnsubscriptionError) {
+                errors = __spreadArray(__spreadArray([], __read(errors)), __read(err.errors));
+              } else {
+                errors.push(err);
+              }
+            }
+          }
+        } catch (e_2_1) {
+          e_2 = { error: e_2_1 };
+        } finally {
+          try {
+            if (_finalizers_1_1 && !_finalizers_1_1.done && (_b = _finalizers_1.return)) _b.call(_finalizers_1);
+          } finally {
+            if (e_2) throw e_2.error;
+          }
+        }
+      }
+      if (errors) {
+        throw new UnsubscriptionError(errors);
+      }
+    }
+  };
+  Subscription2.prototype.add = function(teardown) {
+    var _a;
+    if (teardown && teardown !== this) {
+      if (this.closed) {
+        execFinalizer(teardown);
+      } else {
+        if (teardown instanceof Subscription2) {
+          if (teardown.closed || teardown._hasParent(this)) {
+            return;
+          }
+          teardown._addParent(this);
+        }
+        (this._finalizers = (_a = this._finalizers) !== null && _a !== void 0 ? _a : []).push(teardown);
+      }
+    }
+  };
+  Subscription2.prototype._hasParent = function(parent) {
+    var _parentage = this._parentage;
+    return _parentage === parent || Array.isArray(_parentage) && _parentage.includes(parent);
+  };
+  Subscription2.prototype._addParent = function(parent) {
+    var _parentage = this._parentage;
+    this._parentage = Array.isArray(_parentage) ? (_parentage.push(parent), _parentage) : _parentage ? [_parentage, parent] : parent;
+  };
+  Subscription2.prototype._removeParent = function(parent) {
+    var _parentage = this._parentage;
+    if (_parentage === parent) {
+      this._parentage = null;
+    } else if (Array.isArray(_parentage)) {
+      arrRemove(_parentage, parent);
+    }
+  };
+  Subscription2.prototype.remove = function(teardown) {
+    var _finalizers = this._finalizers;
+    _finalizers && arrRemove(_finalizers, teardown);
+    if (teardown instanceof Subscription2) {
+      teardown._removeParent(this);
+    }
+  };
+  Subscription2.EMPTY = function() {
+    var empty = new Subscription2();
+    empty.closed = true;
+    return empty;
+  }();
+  return Subscription2;
+}();
+Subscription.EMPTY;
+function isSubscription(value) {
+  return value instanceof Subscription || value && "closed" in value && isFunction(value.remove) && isFunction(value.add) && isFunction(value.unsubscribe);
+}
+function execFinalizer(finalizer) {
+  if (isFunction(finalizer)) {
+    finalizer();
+  } else {
+    finalizer.unsubscribe();
+  }
+}
+var config = {
+  onUnhandledError: null,
+  onStoppedNotification: null,
+  Promise: void 0,
+  useDeprecatedSynchronousErrorHandling: false,
+  useDeprecatedNextContext: false
+};
+var timeoutProvider = {
+  setTimeout: function(handler, timeout) {
+    var args = [];
+    for (var _i = 2; _i < arguments.length; _i++) {
+      args[_i - 2] = arguments[_i];
+    }
+    return setTimeout.apply(void 0, __spreadArray([handler, timeout], __read(args)));
+  },
+  clearTimeout: function(handle) {
+    var delegate = timeoutProvider.delegate;
+    return ((delegate === null || delegate === void 0 ? void 0 : delegate.clearTimeout) || clearTimeout)(handle);
+  },
+  delegate: void 0
+};
+function reportUnhandledError(err) {
+  timeoutProvider.setTimeout(function() {
+    {
+      throw err;
+    }
+  });
+}
+function noop() {
+}
+function errorContext(cb) {
+  {
+    cb();
+  }
+}
+var Subscriber = function(_super) {
+  __extends(Subscriber2, _super);
+  function Subscriber2(destination) {
+    var _this = _super.call(this) || this;
+    _this.isStopped = false;
+    if (destination) {
+      _this.destination = destination;
+      if (isSubscription(destination)) {
+        destination.add(_this);
+      }
+    } else {
+      _this.destination = EMPTY_OBSERVER;
+    }
+    return _this;
+  }
+  Subscriber2.create = function(next, error, complete) {
+    return new SafeSubscriber(next, error, complete);
+  };
+  Subscriber2.prototype.next = function(value) {
+    if (this.isStopped) ;
+    else {
+      this._next(value);
+    }
+  };
+  Subscriber2.prototype.error = function(err) {
+    if (this.isStopped) ;
+    else {
+      this.isStopped = true;
+      this._error(err);
+    }
+  };
+  Subscriber2.prototype.complete = function() {
+    if (this.isStopped) ;
+    else {
+      this.isStopped = true;
+      this._complete();
+    }
+  };
+  Subscriber2.prototype.unsubscribe = function() {
+    if (!this.closed) {
+      this.isStopped = true;
+      _super.prototype.unsubscribe.call(this);
+      this.destination = null;
+    }
+  };
+  Subscriber2.prototype._next = function(value) {
+    this.destination.next(value);
+  };
+  Subscriber2.prototype._error = function(err) {
+    try {
+      this.destination.error(err);
+    } finally {
+      this.unsubscribe();
+    }
+  };
+  Subscriber2.prototype._complete = function() {
+    try {
+      this.destination.complete();
+    } finally {
+      this.unsubscribe();
+    }
+  };
+  return Subscriber2;
+}(Subscription);
+var _bind = Function.prototype.bind;
+function bind(fn, thisArg) {
+  return _bind.call(fn, thisArg);
+}
+var ConsumerObserver = function() {
+  function ConsumerObserver2(partialObserver) {
+    this.partialObserver = partialObserver;
+  }
+  ConsumerObserver2.prototype.next = function(value) {
+    var partialObserver = this.partialObserver;
+    if (partialObserver.next) {
+      try {
+        partialObserver.next(value);
+      } catch (error) {
+        handleUnhandledError(error);
+      }
+    }
+  };
+  ConsumerObserver2.prototype.error = function(err) {
+    var partialObserver = this.partialObserver;
+    if (partialObserver.error) {
+      try {
+        partialObserver.error(err);
+      } catch (error) {
+        handleUnhandledError(error);
+      }
+    } else {
+      handleUnhandledError(err);
+    }
+  };
+  ConsumerObserver2.prototype.complete = function() {
+    var partialObserver = this.partialObserver;
+    if (partialObserver.complete) {
+      try {
+        partialObserver.complete();
+      } catch (error) {
+        handleUnhandledError(error);
+      }
+    }
+  };
+  return ConsumerObserver2;
+}();
+var SafeSubscriber = function(_super) {
+  __extends(SafeSubscriber2, _super);
+  function SafeSubscriber2(observerOrNext, error, complete) {
+    var _this = _super.call(this) || this;
+    var partialObserver;
+    if (isFunction(observerOrNext) || !observerOrNext) {
+      partialObserver = {
+        next: observerOrNext !== null && observerOrNext !== void 0 ? observerOrNext : void 0,
+        error: error !== null && error !== void 0 ? error : void 0,
+        complete: complete !== null && complete !== void 0 ? complete : void 0
+      };
+    } else {
+      var context_1;
+      if (_this && config.useDeprecatedNextContext) {
+        context_1 = Object.create(observerOrNext);
+        context_1.unsubscribe = function() {
+          return _this.unsubscribe();
+        };
+        partialObserver = {
+          next: observerOrNext.next && bind(observerOrNext.next, context_1),
+          error: observerOrNext.error && bind(observerOrNext.error, context_1),
+          complete: observerOrNext.complete && bind(observerOrNext.complete, context_1)
+        };
+      } else {
+        partialObserver = observerOrNext;
+      }
+    }
+    _this.destination = new ConsumerObserver(partialObserver);
+    return _this;
+  }
+  return SafeSubscriber2;
+}(Subscriber);
+function handleUnhandledError(error) {
+  {
+    reportUnhandledError(error);
+  }
+}
+function defaultErrorHandler(err) {
+  throw err;
+}
+var EMPTY_OBSERVER = {
+  closed: true,
+  next: noop,
+  error: defaultErrorHandler,
+  complete: noop
+};
+var observable = function() {
+  return typeof Symbol === "function" && Symbol.observable || "@@observable";
+}();
+function identity(x) {
+  return x;
+}
+function pipeFromArray(fns) {
+  if (fns.length === 0) {
+    return identity;
+  }
+  if (fns.length === 1) {
+    return fns[0];
+  }
+  return function piped(input) {
+    return fns.reduce(function(prev, fn) {
+      return fn(prev);
+    }, input);
+  };
+}
+var Observable = function() {
+  function Observable2(subscribe) {
+    if (subscribe) {
+      this._subscribe = subscribe;
+    }
+  }
+  Observable2.prototype.lift = function(operator) {
+    var observable2 = new Observable2();
+    observable2.source = this;
+    observable2.operator = operator;
+    return observable2;
+  };
+  Observable2.prototype.subscribe = function(observerOrNext, error, complete) {
+    var _this = this;
+    var subscriber = isSubscriber(observerOrNext) ? observerOrNext : new SafeSubscriber(observerOrNext, error, complete);
+    errorContext(function() {
+      var _a = _this, operator = _a.operator, source = _a.source;
+      subscriber.add(operator ? operator.call(subscriber, source) : source ? _this._subscribe(subscriber) : _this._trySubscribe(subscriber));
+    });
+    return subscriber;
+  };
+  Observable2.prototype._trySubscribe = function(sink) {
+    try {
+      return this._subscribe(sink);
+    } catch (err) {
+      sink.error(err);
+    }
+  };
+  Observable2.prototype.forEach = function(next, promiseCtor) {
+    var _this = this;
+    promiseCtor = getPromiseCtor(promiseCtor);
+    return new promiseCtor(function(resolve, reject) {
+      var subscriber = new SafeSubscriber({
+        next: function(value) {
+          try {
+            next(value);
+          } catch (err) {
+            reject(err);
+            subscriber.unsubscribe();
+          }
+        },
+        error: reject,
+        complete: resolve
+      });
+      _this.subscribe(subscriber);
+    });
+  };
+  Observable2.prototype._subscribe = function(subscriber) {
+    var _a;
+    return (_a = this.source) === null || _a === void 0 ? void 0 : _a.subscribe(subscriber);
+  };
+  Observable2.prototype[observable] = function() {
+    return this;
+  };
+  Observable2.prototype.pipe = function() {
+    var operations = [];
+    for (var _i = 0; _i < arguments.length; _i++) {
+      operations[_i] = arguments[_i];
+    }
+    return pipeFromArray(operations)(this);
+  };
+  Observable2.prototype.toPromise = function(promiseCtor) {
+    var _this = this;
+    promiseCtor = getPromiseCtor(promiseCtor);
+    return new promiseCtor(function(resolve, reject) {
+      var value;
+      _this.subscribe(function(x) {
+        return value = x;
+      }, function(err) {
+        return reject(err);
+      }, function() {
+        return resolve(value);
+      });
+    });
+  };
+  Observable2.create = function(subscribe) {
+    return new Observable2(subscribe);
+  };
+  return Observable2;
+}();
+function getPromiseCtor(promiseCtor) {
+  var _a;
+  return (_a = promiseCtor !== null && promiseCtor !== void 0 ? promiseCtor : config.Promise) !== null && _a !== void 0 ? _a : Promise;
+}
+function isObserver(value) {
+  return value && isFunction(value.next) && isFunction(value.error) && isFunction(value.complete);
+}
+function isSubscriber(value) {
+  return value && value instanceof Subscriber || isObserver(value) && isSubscription(value);
+}
+function hasLift(source) {
+  return isFunction(source === null || source === void 0 ? void 0 : source.lift);
+}
+function operate(init) {
+  return function(source) {
+    if (hasLift(source)) {
+      return source.lift(function(liftedSource) {
+        try {
+          return init(liftedSource, this);
+        } catch (err) {
+          this.error(err);
+        }
+      });
+    }
+    throw new TypeError("Unable to lift unknown Observable type");
+  };
+}
+function createOperatorSubscriber(destination, onNext, onComplete, onError, onFinalize) {
+  return new OperatorSubscriber(destination, onNext, onComplete, onError, onFinalize);
+}
+var OperatorSubscriber = function(_super) {
+  __extends(OperatorSubscriber2, _super);
+  function OperatorSubscriber2(destination, onNext, onComplete, onError, onFinalize, shouldUnsubscribe) {
+    var _this = _super.call(this, destination) || this;
+    _this.onFinalize = onFinalize;
+    _this.shouldUnsubscribe = shouldUnsubscribe;
+    _this._next = onNext ? function(value) {
+      try {
+        onNext(value);
+      } catch (err) {
+        destination.error(err);
+      }
+    } : _super.prototype._next;
+    _this._error = onError ? function(err) {
+      try {
+        onError(err);
+      } catch (err2) {
+        destination.error(err2);
+      } finally {
+        this.unsubscribe();
+      }
+    } : _super.prototype._error;
+    _this._complete = onComplete ? function() {
+      try {
+        onComplete();
+      } catch (err) {
+        destination.error(err);
+      } finally {
+        this.unsubscribe();
+      }
+    } : _super.prototype._complete;
+    return _this;
+  }
+  OperatorSubscriber2.prototype.unsubscribe = function() {
+    var _a;
+    if (!this.shouldUnsubscribe || this.shouldUnsubscribe()) {
+      var closed_1 = this.closed;
+      _super.prototype.unsubscribe.call(this);
+      !closed_1 && ((_a = this.onFinalize) === null || _a === void 0 ? void 0 : _a.call(this));
+    }
+  };
+  return OperatorSubscriber2;
+}(Subscriber);
+var isArrayLike = function(x) {
+  return x && typeof x.length === "number" && typeof x !== "function";
+};
+function isPromise(value) {
+  return isFunction(value === null || value === void 0 ? void 0 : value.then);
+}
+function isInteropObservable(input) {
+  return isFunction(input[observable]);
+}
+function isAsyncIterable(obj) {
+  return Symbol.asyncIterator && isFunction(obj === null || obj === void 0 ? void 0 : obj[Symbol.asyncIterator]);
+}
+function createInvalidObservableTypeError(input) {
+  return new TypeError("You provided " + (input !== null && typeof input === "object" ? "an invalid object" : "'" + input + "'") + " where a stream was expected. You can provide an Observable, Promise, ReadableStream, Array, AsyncIterable, or Iterable.");
+}
+function getSymbolIterator() {
+  if (typeof Symbol !== "function" || !Symbol.iterator) {
+    return "@@iterator";
+  }
+  return Symbol.iterator;
+}
+var iterator = getSymbolIterator();
+function isIterable(input) {
+  return isFunction(input === null || input === void 0 ? void 0 : input[iterator]);
+}
+function readableStreamLikeToAsyncGenerator(readableStream) {
+  return __asyncGenerator(this, arguments, function readableStreamLikeToAsyncGenerator_1() {
+    var reader, _a, value, done;
+    return __generator(this, function(_b) {
+      switch (_b.label) {
+        case 0:
+          reader = readableStream.getReader();
+          _b.label = 1;
+        case 1:
+          _b.trys.push([1, , 9, 10]);
+          _b.label = 2;
+        case 2:
+          return [4, __await(reader.read())];
+        case 3:
+          _a = _b.sent(), value = _a.value, done = _a.done;
+          if (!done) return [3, 5];
+          return [4, __await(void 0)];
+        case 4:
+          return [2, _b.sent()];
+        case 5:
+          return [4, __await(value)];
+        case 6:
+          return [4, _b.sent()];
+        case 7:
+          _b.sent();
+          return [3, 2];
+        case 8:
+          return [3, 10];
+        case 9:
+          reader.releaseLock();
+          return [7];
+        case 10:
+          return [2];
+      }
+    });
+  });
+}
+function isReadableStreamLike(obj) {
+  return isFunction(obj === null || obj === void 0 ? void 0 : obj.getReader);
+}
+function innerFrom(input) {
+  if (input instanceof Observable) {
+    return input;
+  }
+  if (input != null) {
+    if (isInteropObservable(input)) {
+      return fromInteropObservable(input);
+    }
+    if (isArrayLike(input)) {
+      return fromArrayLike(input);
+    }
+    if (isPromise(input)) {
+      return fromPromise(input);
+    }
+    if (isAsyncIterable(input)) {
+      return fromAsyncIterable(input);
+    }
+    if (isIterable(input)) {
+      return fromIterable(input);
+    }
+    if (isReadableStreamLike(input)) {
+      return fromReadableStreamLike(input);
+    }
+  }
+  throw createInvalidObservableTypeError(input);
+}
+function fromInteropObservable(obj) {
+  return new Observable(function(subscriber) {
+    var obs = obj[observable]();
+    if (isFunction(obs.subscribe)) {
+      return obs.subscribe(subscriber);
+    }
+    throw new TypeError("Provided object does not correctly implement Symbol.observable");
+  });
+}
+function fromArrayLike(array) {
+  return new Observable(function(subscriber) {
+    for (var i = 0; i < array.length && !subscriber.closed; i++) {
+      subscriber.next(array[i]);
+    }
+    subscriber.complete();
+  });
+}
+function fromPromise(promise) {
+  return new Observable(function(subscriber) {
+    promise.then(function(value) {
+      if (!subscriber.closed) {
+        subscriber.next(value);
+        subscriber.complete();
+      }
+    }, function(err) {
+      return subscriber.error(err);
+    }).then(null, reportUnhandledError);
+  });
+}
+function fromIterable(iterable) {
+  return new Observable(function(subscriber) {
+    var e_1, _a;
+    try {
+      for (var iterable_1 = __values(iterable), iterable_1_1 = iterable_1.next(); !iterable_1_1.done; iterable_1_1 = iterable_1.next()) {
+        var value = iterable_1_1.value;
+        subscriber.next(value);
+        if (subscriber.closed) {
+          return;
+        }
+      }
+    } catch (e_1_1) {
+      e_1 = { error: e_1_1 };
+    } finally {
+      try {
+        if (iterable_1_1 && !iterable_1_1.done && (_a = iterable_1.return)) _a.call(iterable_1);
+      } finally {
+        if (e_1) throw e_1.error;
+      }
+    }
+    subscriber.complete();
+  });
+}
+function fromAsyncIterable(asyncIterable) {
+  return new Observable(function(subscriber) {
+    process(asyncIterable, subscriber).catch(function(err) {
+      return subscriber.error(err);
+    });
+  });
+}
+function fromReadableStreamLike(readableStream) {
+  return fromAsyncIterable(readableStreamLikeToAsyncGenerator(readableStream));
+}
+function process(asyncIterable, subscriber) {
+  var asyncIterable_1, asyncIterable_1_1;
+  var e_2, _a;
+  return __awaiter(this, void 0, void 0, function() {
+    var value, e_2_1;
+    return __generator(this, function(_b) {
+      switch (_b.label) {
+        case 0:
+          _b.trys.push([0, 5, 6, 11]);
+          asyncIterable_1 = __asyncValues(asyncIterable);
+          _b.label = 1;
+        case 1:
+          return [4, asyncIterable_1.next()];
+        case 2:
+          if (!(asyncIterable_1_1 = _b.sent(), !asyncIterable_1_1.done)) return [3, 4];
+          value = asyncIterable_1_1.value;
+          subscriber.next(value);
+          if (subscriber.closed) {
+            return [2];
+          }
+          _b.label = 3;
+        case 3:
+          return [3, 1];
+        case 4:
+          return [3, 11];
+        case 5:
+          e_2_1 = _b.sent();
+          e_2 = { error: e_2_1 };
+          return [3, 11];
+        case 6:
+          _b.trys.push([6, , 9, 10]);
+          if (!(asyncIterable_1_1 && !asyncIterable_1_1.done && (_a = asyncIterable_1.return))) return [3, 8];
+          return [4, _a.call(asyncIterable_1)];
+        case 7:
+          _b.sent();
+          _b.label = 8;
+        case 8:
+          return [3, 10];
+        case 9:
+          if (e_2) throw e_2.error;
+          return [7];
+        case 10:
+          return [7];
+        case 11:
+          subscriber.complete();
+          return [2];
+      }
+    });
+  });
+}
+function executeSchedule(parentSubscription, scheduler, work, delay, repeat) {
+  if (delay === void 0) {
+    delay = 0;
+  }
+  if (repeat === void 0) {
+    repeat = false;
+  }
+  var scheduleSubscription = scheduler.schedule(function() {
+    work();
+    if (repeat) {
+      parentSubscription.add(this.schedule(null, delay));
+    } else {
+      this.unsubscribe();
+    }
+  }, delay);
+  parentSubscription.add(scheduleSubscription);
+  if (!repeat) {
+    return scheduleSubscription;
+  }
+}
+function map(project, thisArg) {
+  return operate(function(source, subscriber) {
+    var index = 0;
+    source.subscribe(createOperatorSubscriber(subscriber, function(value) {
+      subscriber.next(project.call(thisArg, value, index++));
+    }));
+  });
+}
+var isArray = Array.isArray;
+function callOrApply(fn, args) {
+  return isArray(args) ? fn.apply(void 0, __spreadArray([], __read(args))) : fn(args);
+}
+function mapOneOrManyArgs(fn) {
+  return map(function(args) {
+    return callOrApply(fn, args);
+  });
+}
+function mergeInternals(source, subscriber, project, concurrent, onBeforeNext, expand, innerSubScheduler, additionalFinalizer) {
+  var buffer = [];
+  var active = 0;
+  var index = 0;
+  var isComplete = false;
+  var checkComplete = function() {
+    if (isComplete && !buffer.length && !active) {
+      subscriber.complete();
+    }
+  };
+  var outerNext = function(value) {
+    return active < concurrent ? doInnerSub(value) : buffer.push(value);
+  };
+  var doInnerSub = function(value) {
+    active++;
+    var innerComplete = false;
+    innerFrom(project(value, index++)).subscribe(createOperatorSubscriber(subscriber, function(innerValue) {
+      {
+        subscriber.next(innerValue);
+      }
+    }, function() {
+      innerComplete = true;
+    }, void 0, function() {
+      if (innerComplete) {
+        try {
+          active--;
+          var _loop_1 = function() {
+            var bufferedValue = buffer.shift();
+            if (innerSubScheduler) ;
+            else {
+              doInnerSub(bufferedValue);
+            }
+          };
+          while (buffer.length && active < concurrent) {
+            _loop_1();
+          }
+          checkComplete();
+        } catch (err) {
+          subscriber.error(err);
+        }
+      }
+    }));
+  };
+  source.subscribe(createOperatorSubscriber(subscriber, outerNext, function() {
+    isComplete = true;
+    checkComplete();
+  }));
+  return function() {
+  };
+}
+function mergeMap(project, resultSelector, concurrent) {
+  if (concurrent === void 0) {
+    concurrent = Infinity;
+  }
+  if (isFunction(resultSelector)) {
+    return mergeMap(function(a, i) {
+      return map(function(b, ii) {
+        return resultSelector(a, b, i, ii);
+      })(innerFrom(project(a, i)));
+    }, concurrent);
+  } else if (typeof resultSelector === "number") {
+    concurrent = resultSelector;
+  }
+  return operate(function(source, subscriber) {
+    return mergeInternals(source, subscriber, project, concurrent);
+  });
+}
+var nodeEventEmitterMethods = ["addListener", "removeListener"];
+var eventTargetMethods = ["addEventListener", "removeEventListener"];
+var jqueryMethods = ["on", "off"];
+function fromEvent(target, eventName, options, resultSelector) {
+  if (isFunction(options)) {
+    resultSelector = options;
+    options = void 0;
+  }
+  if (resultSelector) {
+    return fromEvent(target, eventName, options).pipe(mapOneOrManyArgs(resultSelector));
+  }
+  var _a = __read(isEventTarget(target) ? eventTargetMethods.map(function(methodName) {
+    return function(handler) {
+      return target[methodName](eventName, handler, options);
+    };
+  }) : isNodeStyleEventEmitter(target) ? nodeEventEmitterMethods.map(toCommonHandlerRegistry(target, eventName)) : isJQueryStyleEventEmitter(target) ? jqueryMethods.map(toCommonHandlerRegistry(target, eventName)) : [], 2), add = _a[0], remove = _a[1];
+  if (!add) {
+    if (isArrayLike(target)) {
+      return mergeMap(function(subTarget) {
+        return fromEvent(subTarget, eventName, options);
+      })(innerFrom(target));
+    }
+  }
+  if (!add) {
+    throw new TypeError("Invalid event target");
+  }
+  return new Observable(function(subscriber) {
+    var handler = function() {
+      var args = [];
+      for (var _i = 0; _i < arguments.length; _i++) {
+        args[_i] = arguments[_i];
+      }
+      return subscriber.next(1 < args.length ? args : args[0]);
+    };
+    add(handler);
+    return function() {
+      return remove(handler);
+    };
+  });
+}
+function toCommonHandlerRegistry(target, eventName) {
+  return function(methodName) {
+    return function(handler) {
+      return target[methodName](eventName, handler);
+    };
+  };
+}
+function isNodeStyleEventEmitter(target) {
+  return isFunction(target.addListener) && isFunction(target.removeListener);
+}
+function isJQueryStyleEventEmitter(target) {
+  return isFunction(target.on) && isFunction(target.off);
+}
+function isEventTarget(target) {
+  return isFunction(target.addEventListener) && isFunction(target.removeEventListener);
+}
+var PEType = /* @__PURE__ */ ((PEType2) => {
+  PEType2["down"] = "DOWN";
+  PEType2["move"] = "MOVE";
+  PEType2["up"] = "UP";
+  return PEType2;
+})(PEType || {});
+function listenDomEvent(canavs, callback) {
+  const pointerDown$ = fromEvent(canavs, "pointerdown");
+  const pointerMove$ = fromEvent(canavs, "pointermove");
+  const pointerUp$ = fromEvent(canavs, "pointerup");
+  function normalizeCoords(evt) {
+    const rc = canavs.getBoundingClientRect();
+    let x = evt.clientX;
+    let y = evt.clientY;
+    x = x - rc.left;
+    y = y - rc.top;
+    return { x, y };
+  }
+  const downSubscribe = pointerDown$.pipe(
+    map((e) => {
+      callback("DOWN", normalizeCoords(e));
+    })
+  ).subscribe();
+  const moveSubscribe = pointerMove$.pipe(
+    map((e) => {
+      callback("MOVE", normalizeCoords(e));
+    })
+  ).subscribe();
+  const upSubscribe = pointerUp$.pipe(
+    map((e) => {
+      callback("UP", normalizeCoords(e));
+    })
+  ).subscribe();
+  const clearEvent = () => {
+    downSubscribe.unsubscribe();
+    moveSubscribe.unsubscribe();
+    upSubscribe.unsubscribe();
+  };
+  return {
+    clearEvent
+  };
+}
+function toIndexGeometry(geo, tolerance = 1e-6) {
+  if (!geo.index) {
+    bufferGeometryMergeVertices(geo);
+  }
+  return geo;
+}
+function colorUpdateByIndex(geo, cutIndex, color) {
+  const arrColor = geo.attributes.color;
+  const index = geo.index.array;
+  cutIndex.forEach((idx, i) => {
+    const idx1 = index[idx * 3 + 0];
+    arrColor.setXYZ(idx1, color[0], color[1], color[2]);
+    const idx2 = index[idx * 3 + 1];
+    arrColor.setXYZ(idx2, color[0], color[1], color[2]);
+    const idx3 = index[idx * 3 + 2];
+    arrColor.setXYZ(idx3, color[0], color[1], color[2]);
+  });
+  arrColor.needsUpdate = true;
+}
+function bufferGeometryMergeVertices(geometry) {
+  var verticesMap = {};
+  var precisionPoints = 8;
+  var precision = Math.pow(10, precisionPoints);
+  var vertices = geometry.attributes.position.array;
+  if (geometry.index) {
+    var idx = geometry.index.array;
+    var oldVertices = new Float32Array(idx.length * 3);
+    for (var i = 0, il = idx.length; i < il; i++) {
+      oldVertices[i * 3] = vertices[idx[i] * 3];
+      oldVertices[i * 3 + 1] = vertices[idx[i] * 3 + 1];
+      oldVertices[i * 3 + 2] = vertices[idx[i] * 3 + 2];
+    }
+    geometry.index = null;
+    vertices = oldVertices;
+  }
+  geometry.setIndex(new BufferAttribute(new Uint32Array(Math.floor(vertices.length / 3)), 1));
+  var indices = geometry.index.array;
+  var vCount = 0, faceIndicesToRemove = [];
+  for (let i2 = 0, il2 = vertices.length; i2 < il2; i2 += 3) {
+    var iIndex = Math.floor(i2 / 3);
+    var key = Math.round(vertices[i2] * precision) + "_" + Math.round(vertices[i2 + 1] * precision) + "_" + Math.round(vertices[i2 + 2] * precision);
+    if (verticesMap[key] === void 0) {
+      var vIndex = vCount * 3;
+      verticesMap[key] = indices[iIndex] = vCount++;
+      vertices[vIndex] = vertices[i2];
+      vertices[vIndex + 1] = vertices[i2 + 1];
+      vertices[vIndex + 2] = vertices[i2 + 2];
+    } else {
+      indices[iIndex] = verticesMap[key];
+    }
+    var prevIndex = iIndex - 2;
+    if (prevIndex >= 0 && prevIndex % 3 == 0) {
+      for (var n = 0; n < 3; n++) {
+        if (indices[prevIndex + n] == indices[prevIndex + (n + 1) % 3]) {
+          faceIndicesToRemove.push(prevIndex);
+          break;
+        }
+      }
+    }
+  }
+  var newVertices = new Float32Array(vCount * 3);
+  for (let i2 = 0, il2 = newVertices.length; i2 < il2; i2++) {
+    newVertices[i2] = vertices[i2];
+  }
+  geometry.setAttribute("position", new BufferAttribute(newVertices, 3));
+  if (faceIndicesToRemove.length > 0) {
+    var newIndices = new Uint32Array(indices.length - faceIndicesToRemove.length * 3);
+    var nIndex = 0, iRemove = 0;
+    for (let i2 = 0, il2 = indices.length; i2 < il2; i2 += 3) {
+      if (i2 == faceIndicesToRemove[iRemove]) {
+        iRemove++;
+      } else {
+        newIndices[nIndex] = indices[i2];
+        newIndices[nIndex + 1] = indices[i2 + 1];
+        newIndices[nIndex + 2] = indices[i2 + 2];
+        nIndex += 3;
+      }
+    }
+    geometry.setIndex(new BufferAttribute(newIndices, 1));
+  }
+  geometry.computeVertexNormals();
+  return vCount;
+}
+function updateMaterialColor(material, strColor) {
+  const color = new Color(strColor);
+  if (material.color) material.color.copy(color);
+}
+function updateMaterialOpacity(material, opacity) {
+  material.opacity = opacity;
+  material.transparent = !(opacity == 1);
+  material.needsUpdate = true;
+}
 export {
   FilePathLoader,
+  MarkerLines,
   MqMultiViewEditor,
-  MqUtil,
+  PEType,
   PathLoader,
   StrMesh,
   alias3,
   aliasBvh,
   bindDracoEncoder,
+  colorUpdateByIndex,
   create4ToothNumberMesh,
   createGumMesh,
   debug_ToothVisualPoint,
   eEntryCode,
-  eEventType,
   eMaterialReplace,
   eMaterialType,
   geometry2Mesh,
+  listenDomEvent,
   mat2Mesh,
   mat4Tooth,
   mesh2drc,
   mesh2ply,
   mesh2stl,
-  pickMesh,
-  toMeshWithMaterialReplace
+  toIndexGeometry,
+  toMeshWithMaterialReplace,
+  updateMaterialColor,
+  updateMaterialOpacity
 };

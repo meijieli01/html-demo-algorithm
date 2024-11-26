@@ -133,13 +133,13 @@ import SubVersion from './sub/SubVersion.vue';
 import SubProgress from './sub/SubProgress.vue';
 import { 
     getMeshMaterialOption, addColor2Mesh, 
-    arrayVectorToMatrix, bindDracoEncoder 
+    arrayVectorToMatrix, 
 } from '../third/auxThree';
 import { readFromStorage, writeToStorage } from '../third/snippet/storage';
 import elLoading from '../third/snippet/loading';
 import { 
     FilePathLoader, PathLoader, mesh2drc, MarkerLines, toIndexGeometry, colorUpdateByIndex,
-    alias3,
+    alias3, bindDracoEncoder
 } from '../third/mq-render/viewer.es';
 import { upload, getHistory, callAiRetainerNew } from '../api/all';
 import { configRetainer } from '../../config';
@@ -230,7 +230,7 @@ onMounted(async() => {
     // 缓存上传文件的时间点
     ud.timestampList = JSON.parse(readFromStorage(keyOfLocalStorage, '[]'));
     // 
-    bindDracoEncoder(`/draco/draco_encoder.js`);
+    bindDracoEncoder(`${import.meta.env.VITE_APP_PREFIX_DRACO}/draco/draco_encoder.js`);
     app3 = elViewer.value.app3;
     gScene = elViewer.value.gScene;
     if (import.meta.env.DEV) {
@@ -418,7 +418,7 @@ function updateByPath() {
         // const url = await store.dispatch('auth/getUrl', path);
         const filename = PathLoader.getName(path);
         const validPath = `${import.meta.env.VITE_APP_FILE_PREFIX}/${path}`;
-        const geo = await new PathLoader(path, {drcPath:`${import.meta.env.VITE_APP_PREFIX_PUBLIC}/draco/`}).load(validPath, (e)=>{
+        const geo = await new PathLoader(path, {drcPath:`${import.meta.env.VITE_APP_PREFIX_DRACO}/draco/`}).load(validPath, (e)=>{
             // console.log('progress', e.loaded/e.total)
         }).catch(err=>{
             if (err instanceof ProgressEvent) {
@@ -593,7 +593,7 @@ async function handleSelectFile(event) {
         ud.fetchCount = 0;
         for (let i = 0; i < files.length; i++) {
             const file = files[i];
-            const geo = await new FilePathLoader(file.name, {drcPath:`${import.meta.env.VITE_APP_PREFIX_PUBLIC}/draco/`}).load(file, (event)=>{
+            const geo = await new FilePathLoader(file.name, {drcPath:`${import.meta.env.VITE_APP_PREFIX_DRACO}/draco/`}).load(file, (event)=>{
                 // console.log('progress', event.loaded/event.total)
             }).catch(err=>{
                 if (err instanceof ProgressEvent) {
@@ -629,7 +629,7 @@ async function handleSelectFile(event) {
         const { tag } = props;
         if (true) {
             const formData = new FormData();
-            let geo = await new FilePathLoader(filename, {drcPath:`${import.meta.env.VITE_APP_PREFIX_PUBLIC}/draco/`}).load(file)
+            let geo = await new FilePathLoader(filename, {drcPath:`${import.meta.env.VITE_APP_PREFIX_DRACO}/draco/`}).load(file)
                 .catch(err=>{
                     msg.value = 'File Load failure';
                     console.error(err);
@@ -686,7 +686,7 @@ async function handleSelectFile(event) {
                 //  其他格式转换一下
                 try {
                     const noExtFilename = filename.substr(0, filename.lastIndexOf('.'));
-                    const geo = await new FilePathLoader(filename, {drcPath:`${import.meta.env.VITE_APP_PREFIX_PUBLIC}/draco/`}).load(file)
+                    const geo = await new FilePathLoader(filename, {drcPath:`${import.meta.env.VITE_APP_PREFIX_DRACO}/draco/`}).load(file)
                     .catch(err=>{
                         msg.value = 'File Load failure';
                         return null;

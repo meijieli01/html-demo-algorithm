@@ -162,10 +162,3 @@ export function arrayVectorToMatrix(arrVector) {
     )
     return mat;
 }
-
-export function bindDracoEncoder(drcPath) {
-    let elScript = document.createElement('script');
-    elScript.type = 'text/javascript';
-    elScript.src = drcPath || '/js/libs/draco/draco_encoder.js';
-    document.body.appendChild(elScript);
-}

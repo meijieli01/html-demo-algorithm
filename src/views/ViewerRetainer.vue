@@ -49,7 +49,8 @@
                         </div>
                     </div>
                     <div class="d-flex flex-column justify-content-start">
-                        <label class="form-label my-auto mx-1">upper Direction
+                        <label class="form-label my-auto mx-1">
+                            <span :style="`color:rgb(${color4Mesh[0].map(e=>e*255).join(',')})`">upper Direction</span>
                             <button class="btn btn-primary w-25 m-1 btn-sm" :disabled="m2.lockUpper" @click="clickByCode(7)">update</button>
                         </label>
                         <div class="d-flex flex-column">
@@ -62,7 +63,8 @@
                         </div>
                     </div>
                     <div class="d-flex flex-column justify-content-start">
-                        <label class="form-label my-auto mx-1">lower Direction
+                        <label class="form-label my-auto mx-1">
+                            <span :style="`color:rgb(${color4Mesh[1].map(e=>e*255).join(',')})`">lower Direction</span>
                             <button class="btn btn-primary w-25 m-1 btn-sm" :disabled="m2.lockLower" @click="clickByCode(8)">update</button>
                         </label>
                         <div class="d-flex flex-column">
@@ -158,9 +160,10 @@ const info1 = [
 const color4Mesh = [
     // [0.23, 0.76, 0.71], // upper
     // [0.44, 0.64, 0.98], // lower
-    [1, 0, 0], // upper
-    [0, 0, 1], // lower
+    [0.84, 0.2, 0.52], // upper
+    [0, 0.68, 0.94], // lower
 ];
+console.log(`color:rgb(${color4Mesh[0].map(e=>e*255).join(',')})`)
 const nameMeshs = ['cleaned_upper.mq','cleaned_lower.mq'];
 const store = useStore();
 const elViewer = ref(null);
@@ -277,6 +280,10 @@ function clickByCode(type) {
             m1.upperDir = undefined;
             m1.lowerDir = undefined;
         }
+        if (mat.upper || mat.lower) {
+            app3.remove('upper.stl');
+            app3.remove('lower.stl');
+        }
         callAiRetainerNew(m1).then(res=>{
             ud.calling = false;
             const {code, message, data} = res;            
@@ -323,6 +330,7 @@ function clickByCode(type) {
         [7,8].forEach(e=>{
             if (markers[e]) app3.add(markers[e]);
         })
+        app3.setAxes(40);
     } else if (type == 5) {
         ud.timestampList = [];
         getHistory(m1).then(res=>{
@@ -638,7 +646,7 @@ async function handleSelectFile(event) {
             } else {
                 //  其他格式转换一下
                 try {
-                    const buffer = await mesh2drc(mesh);
+                    const buffer = await mesh2drc(mesh.clone());
                     // const noExtFilename = filename.substr(0, filename.lastIndexOf('.'));
                     filename = nameMeshs[ud.type == 6 ? 0 : 1];
                     formData.append("files", new Blob([buffer.buffer], { type: 'application/octet-stream',}), filename);

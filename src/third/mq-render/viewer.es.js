@@ -29908,6 +29908,7 @@ class MqRender {
     var _a;
     const { scene, scene2, track, options, renderName } = this;
     const axes = new AxesHelper(size);
+    axes.setColors(16711680, 65280, 255);
     axes.name = "axesHelper";
     if (renderName == "editor-solution") {
       if (!scene.getObjectByName(axes.name)) {
@@ -36640,11 +36641,12 @@ function colorUpdateByIndex(geo, cutIndex, color) {
   const arrColor = geo.attributes.color;
   const index = geo.index.array;
   cutIndex.forEach((idx, i) => {
-    const idx1 = index[idx * 3 + 0];
+    const realIdx = idx * 3;
+    const idx1 = index[realIdx + 0];
     arrColor.setXYZ(idx1, color[0], color[1], color[2]);
-    const idx2 = index[idx * 3 + 1];
+    const idx2 = index[realIdx + 1];
     arrColor.setXYZ(idx2, color[0], color[1], color[2]);
-    const idx3 = index[idx * 3 + 2];
+    const idx3 = index[realIdx + 2];
     arrColor.setXYZ(idx3, color[0], color[1], color[2]);
   });
   arrColor.needsUpdate = true;

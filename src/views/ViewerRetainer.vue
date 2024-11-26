@@ -205,6 +205,7 @@ const m1 = reactive({
     isShell: configRetainer.isShell,
     thickness: '0.6',
     tightness: '0',
+    isPrint: true,    
 });
 const m2 = reactive({
     jaw: '3',
@@ -270,8 +271,8 @@ function clickByCode(type) {
         }
         ud.calling = true;
         if (m2.hasCut) {
-            m1.upperDir = { x: m2.x1, y: m2.y1, z: m2.z1 };
-            m1.lowerDir = { x: m2.x2, y: m2.y2, z: m2.z2 };
+            m1.upperDir = { x: Number(m2.x1), y: Number(m2.y1), z: Number(m2.z1) };
+            m1.lowerDir = { x: Number(m2.x2), y: Number(m2.y2), z: Number(m2.z2) };
         } else {
             m1.upperDir = undefined;
             m1.lowerDir = undefined;
@@ -488,6 +489,7 @@ function appendFileMesh(mesh, filename, isUpper) {
     app3.add(mesh);
     app3.updateFrame();
     gCache[filename] = mesh;
+    ud.lockUpload = markers[7] && markers[8] ? 1 : 0;
 }
 function addGeotoScene(geo, filename, path) {
     if (geo.type == 'BufferGeometry' && geo.attributes.position.count < 1) {
@@ -534,12 +536,12 @@ function jawInputChange() {
         m2.lockUpper = false;
         m2.lockLower = true;
         idxMarker = 7;
-        showUnderCut();    
+        // showUnderCut();    
     } else if (m2.jaw=='2') {
         m2.lockUpper = true;
         m2.lockLower = false;
         idxMarker = 8;
-        showUnderCut();
+        // showUnderCut();
     } else {
         m2.lockUpper = true;
         m2.lockLower = true;
@@ -645,8 +647,8 @@ async function handleSelectFile(event) {
                 }
             }
             appendFileMesh(mesh, filename, ud.type == 6);
-            ud.uploading = false;
-            return;
+            // ud.uploading = false;
+            // return;
             formData.append("tempDir", `${ud.timestamp}_${ud.customId}`); 
             formData.append("tag", tag); 
             const res = await upload(formData)

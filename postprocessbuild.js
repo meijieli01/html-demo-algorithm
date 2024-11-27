@@ -1,7 +1,7 @@
 const fs = require('fs')
 const map = {
-  'test-build': './dist_test/',
-  'beta-build': './dist_beta/',
+  'test-build': './dist/',
+  'beta-build': './dist/',
 }
 const typeList = [
   'test',

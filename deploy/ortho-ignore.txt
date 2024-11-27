@@ -1,0 +1,16 @@
+*.java
+*js/viewer*
+*js/manager*
+*js/component*
+*js/controller*
+*js/clincheck*
+*logback-spring*
+*log4j*
+*static/case*
+*webapps/orth*
+*applicationContext.xml
+*application.properties*
+*debug_prop.properties
+*META-INF*
+*WEB-INF*
+*.git*

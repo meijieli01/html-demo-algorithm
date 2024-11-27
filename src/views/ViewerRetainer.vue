@@ -19,7 +19,7 @@
                     </select>
                 </div>
                 <div class="d-flex flex-column flex-wrap">
-                    <div class="alert alert-info m-1 p-0 my-auto" role="alert">Current is {{msg1}}</div>
+                    <div class="alert alert-info m-1 py-2" role="alert">Current is {{msg1}}</div>
                     <button class="btn btn-primary m-1 btn-sm" @click="clickByCode(6)" :disabled="getState()" >Upload the upper scanned meshes</button>
                     <button class="btn btn-primary m-1 btn-sm" @click="clickByCode(2)" :disabled="getState()" >Upload the lower scanned meshes</button>
                 </div>
@@ -239,25 +239,30 @@ onMounted(async() => {
         }
     }
     await cut.init();
+    clickByCode(5); // 默认加载历史数据
 })
 function parseTime(timestamp) {
-    // console.log('22', timestamp)
     const ymdhms = toYYMMDDHHmmss(timestamp.tmpDir);
-    return `${timestamp.isShell} --- ${ymdhms} --- ${timestamp.tid}`;
+    return `${ymdhms} --- ${timestamp.customId}`;
 }
 function getState() {
-    const {tmpDir, tid} = ud.selTimestamp || {};
+    const {tmpDir, customId} = ud.selTimestamp || {};
     if (ud.lockUpload==1) return true;
     if (ud.lockBtn==0) return true;
-    if (!tmpDir && !tid) {
+    if (!tmpDir && !customId) {
         // 未选中时，禁用
         return true;
     }
-    if (tmpDir > 0 && tid > 0) {
+    if (tmpDir > 0 && customId > 0) {
         // 历史记录，禁用
         return true;
     }
     return false;
+}
+function resetDir(hasNormal) {
+    m2.hasCut = hasNormal;
+    m2.x1 = 0, m2.y1 = 0, m2.z1 = 0;
+    m2.x2 = 0, m2.y2 = 0, m2.z2 = 0;
 }
 function clickByCode(type) {
     ud.fetching = false;
@@ -296,9 +301,17 @@ function clickByCode(type) {
                 ud.lockUpload = 0;
                 // 新的调用需要缓存记录
                 if (m1.type == 1) {           
-                    updateTimestampData(m1.tempDir, 'history', m1.isShell, false);
+                    updateTimestampData(m1.tempDir, 'history', m1, false);
                 }
                 ud.pathList = data.files.filter(e=>filterFile(e));
+                if (m1.type == 2) {
+                    // 历史记录
+                    // ud.pathList = ud.pathList.filter(e=>!e.indexOf('/input/')>-1);
+                    app3.setAxes(40);
+                } else {
+                    // 新的调用
+                    ud.pathList = ud.pathList.filter(e=>e.indexOf('/output/')>-1);
+                }
                 if (data.lowerMat) mat.lower = arrayVectorToMatrix(data.lowerMat);
                 if (data.upperMat) mat.upper = arrayVectorToMatrix(data.upperMat);
                 updateByPath();
@@ -311,7 +324,7 @@ function clickByCode(type) {
         if (!ud.customId) ud.customId = 'A';
         ud.timestampList.unshift({
             tmpDir: Date.now(),
-            tid: '',
+            customId: '',
             isShell: configRetainer.isShell,
         });
         // 添加时自动第一个
@@ -324,6 +337,7 @@ function clickByCode(type) {
         ud.lockUpload = 0;
         ud.lockBtn = 1;        
         gScene.clear(); //不能直接清空，需要保留之前的数据
+        app3.updateFrame();
         m2.hasCut = true;
         ud.infoList = [];
         gCache = {};
@@ -331,6 +345,7 @@ function clickByCode(type) {
             if (markers[e]) app3.add(markers[e]);
         })
         app3.setAxes(40);
+        resetDir(true);
     } else if (type == 5) {
         ud.timestampList = [];
         getHistory(m1).then(res=>{
@@ -338,12 +353,30 @@ function clickByCode(type) {
                 res.data.forEach(e=>{
                     const strList = e.split(' ');
                     const tmpDir = strList[0].split('=').pop();
-                    const t1 = tmpDir.split('_');
-                    let isShell = configRetainer.isShell;
-                    if (strList.length > 1) {
-                        isShell = strList[1].split('=').pop() == 'true';
-                    }
-                    updateTimestampData(parseInt(t1[0]), t1[1] || 'history', isShell, true);
+                    const ids = tmpDir.split('_');
+                    const parameters = {};
+                    strList.forEach(str=>{
+                        const strValue = str.split('=')[1];
+                        if (str.startsWith('isShell')) {
+                            parameters.isShell = configRetainer.isShell;
+                            if (strList.length > 1) {
+                                parameters.isShell = strValue == 'true';
+                            }        
+                        }
+                        if (str.startsWith('thickness')) {
+                            parameters.thickness = parseFloat(strValue);
+                        }
+                        if (str.startsWith('tightness')) {
+                            parameters.tightness = parseFloat(strValue);
+                        }
+                        if (str.startsWith('upperDir')) {
+                            parameters.upperDir = JSON.parse(strValue);                            
+                        }
+                        if (str.startsWith('lowerDir')) {
+                            parameters.lowerDir = JSON.parse(strValue);
+                        }
+                    })
+                    updateTimestampData(parseInt(ids[0]), ids[1] || 'history', parameters, true);
                 })
             }
         })
@@ -360,18 +393,22 @@ function clickByCode(type) {
         }
     }
 }
-function updateTimestampData(tmpDir, tid, isShell, isNew) {
+function updateTimestampData(tmpDir, customId, parameters, isNew) {
     // 更新进去
     const tmp = ud.timestampList.filter(e=>e.tmpDir==tmpDir)[0];
     if (tmp) {
-        tmp.tid = tid;
-        tmp.isShell = isShell;
+        tmp.customId = customId;
+        tmp.isShell = parameters.isShell;
+        tmp.thickness = parameters.thickness;
+        tmp.tightness = parameters.tightness;
+        if (parameters.upperDir) tmp.upperDir = parameters.upperDir;
+        if (parameters.lowerDir) tmp.lowerDir = parameters.lowerDir;
     } else {
         if (isNew) {
             ud.timestampList.push({
                 tmpDir: tmpDir,
-                tid: tid,
-                isShell: isShell,
+                customId: customId,
+                ...parameters,
             });
         }
     }
@@ -379,13 +416,28 @@ function updateTimestampData(tmpDir, tid, isShell, isNew) {
     ud.timestampList = JSON.parse(readFromStorage(keyOfLocalStorage, '[]'));
 }
 function selectTimestamp() {
-    const { tmpDir, tid, isShell } = ud.selTimestamp || {};
+    const { 
+        tmpDir, customId, isShell, thickness, tightness, upperDir, lowerDir 
+    } = ud.selTimestamp || {};
     ud.customId = '';
     ud.lockBtn = 0;
     m1.isShell = isShell;
-    if (tid == 'history') m1.tempDir = `${tmpDir}`; // 旧数据，未添加自定义
-    else m1.tempDir = `${tmpDir}_${tid}`; // 有自定义ID的
-    if (tid) {
+    m1.thickness = thickness;
+    m1.tightness = tightness;
+    if (upperDir || lowerDir) {
+        m2.hasCut = true;
+        m2.x1 = upperDir.x;
+        m2.y1 = upperDir.y;
+        m2.z1 = upperDir.z;
+        m2.x2 = lowerDir.x;
+        m2.y2 = lowerDir.y;
+        m2.z2 = lowerDir.z;
+    } else {
+        m2.hasCut = false;
+    }
+    if (customId == 'history') m1.tempDir = `${tmpDir}`; // 旧数据，未添加自定义
+    else m1.tempDir = `${tmpDir}_${customId}`; // 有自定义ID的
+    if (customId) {
         // 历史记录
         m1.type = 2;
         m1.upper = 'no upper path';
@@ -398,7 +450,9 @@ function selectTimestamp() {
         ud.timestamp = tmpDir;
         ud.lockUpload = 0;
     }
-    msg1.value = `${toYYMMDDHHmmss(tmpDir)}_${tid}`;
+    msg1.value = `${toYYMMDDHHmmss(tmpDir)}_${customId}`;
+    gScene.clear();
+    ud.infoList = [];
 }
 function updateByPath() {
     elLoading.show(document.body, {message: `Loading...`, zIndex:5000});
@@ -439,18 +493,18 @@ function updateByPath() {
         addGeotoScene(geo, filename, path);
     }
     ud.pathList.forEach(path=>{        
-        if (path && path.indexOf('/input/') > 0) {
-            const str = path.toLowerCase();
-            if (str.indexOf('/input/cleaned_lower.mq') > 0 && mat.lower) {
-                gCache[nameMeshs[1]].applyMatrix4(mat.lower);
-                gCache[nameMeshs[1]].matrixWorldNeedsUpdate = true;
-            } else if (str.indexOf('/input/cleaned_upper.mq') > 0 && mat.upper) {
-                gCache[nameMeshs[0]].applyMatrix4(mat.upper);
-                gCache[nameMeshs[0]].matrixWorldNeedsUpdate = true;
-            }
-        } else {
+        // if (path && path.indexOf('/input/') > 0) {
+        //     const str = path.toLowerCase();
+        //     if (str.indexOf('/input/cleaned_lower.mq') > 0 && mat.lower) {
+        //         gCache[nameMeshs[1]].applyMatrix4(mat.lower);
+        //         gCache[nameMeshs[1]].matrixWorldNeedsUpdate = true;
+        //     } else if (str.indexOf('/input/cleaned_upper.mq') > 0 && mat.upper) {
+        //         gCache[nameMeshs[0]].applyMatrix4(mat.upper);
+        //         gCache[nameMeshs[0]].matrixWorldNeedsUpdate = true;
+        //     }
+        // } else {
             fetchSinglePath(path);
-        }
+        // }
     });
     app3.updateFrame();
     elLoading.hide();
@@ -488,6 +542,7 @@ function appendFileMesh(mesh, filename, isUpper) {
     app3.add(markers[idx]);
     cut.setData(isUpper, geo.attributes.position.array, geo.index.array);
     const info = getMeshMaterialOption(filename, {tag:props.tag});
+    if (!ud.infoList) ud.infoList = [];
     ud.infoList.push({
         filename: filename,
         check: true,
@@ -505,6 +560,7 @@ function addGeotoScene(geo, filename, path) {
         return;
     }
     const info = getMeshMaterialOption(filename, {tag:props.tag});
+    if (!ud.infoList) ud.infoList = [];    
     ud.infoList.push({
         filename:filename,
         check: true,
@@ -518,17 +574,17 @@ function addGeotoScene(geo, filename, path) {
             return t1.localeCompare(t2);
         }
     }
-    const tmp = ud.infoList.sort(compare('filename'));
+    ud.infoList.sort(compare('filename'));
     addColor2Mesh(geo, {name:filename, color:info.color, opacity: info.opacity}).then(mesh=>{
-        // if (path && path.indexOf('/input/') > 0) {
-        //     const str = path.toLowerCase();
-        //     if (str.indexOf('/input/cleaned_lower.mq') > 0 && mat.lower) {
-        //         mesh.applyMatrix4(mat.lower);
-        //     } else if (str.indexOf('/input/cleaned_upper.mq') > 0 && mat.upper) {
-        //         mesh.applyMatrix4(mat.upper);
-        //     }
-        //     mesh.matrixWorldNeedsUpdate = true;
-        // }
+        if (path && path.indexOf('/input/') > 0) {
+            const str = path.toLowerCase();
+            // if (str.indexOf('/input/cleaned_lower.mq') > 0 && mat.lower) {
+            //     mesh.applyMatrix4(mat.lower);
+            // } else if (str.indexOf('/input/cleaned_upper.mq') > 0 && mat.upper) {
+            //     mesh.applyMatrix4(mat.upper);
+            // }
+            mesh.matrixWorldNeedsUpdate = true;
+        }
         app3.add(mesh);
         app3.updateFrame();
     })
@@ -568,7 +624,6 @@ function inputChangeUnderCut() {
 }
 function inputChangeUpdate(item) {
     item.check = !item.check;
-    console.log(item);
     const mesh = gScene.children.filter(e=>e.name==item.filename)[0];
     if (mesh) {
         mesh.visible = item.check;

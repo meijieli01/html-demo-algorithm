@@ -155,7 +155,7 @@ const props = defineProps({
 const info1 = [
     {id: 1, label: 'Upper'},
     {id: 2, label: 'Lower'},
-    {id: 3, label: 'None'},
+    // {id: 3, label: 'None'},
 ]
 const color4Mesh = [
     // [0.23, 0.76, 0.71], // upper

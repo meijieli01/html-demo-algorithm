@@ -288,6 +288,7 @@ function clickByCode(type) {
         if (mat.upper || mat.lower) {
             app3.remove('upper.stl');
             app3.remove('lower.stl');
+            ud.infoList = ud.infoList.filter(e=>nameMeshs.includes(e.filename));
         }
         callAiRetainerNew(m1).then(res=>{
             ud.calling = false;
@@ -382,7 +383,7 @@ function clickByCode(type) {
         })
     } else if ([7,8].includes(type)) {
         elLoading.show(document.body, {message: `Wait for computing...`, zIndex:5000});
-        const pos = app3.getCameraPosition().normalize();
+        const pos = app3.getCameraPosition().normalize().negate();
         if (type==7) m2.x1 = pos.x, m2.y1 = pos.y, m2.z1 = pos.z;
         else m2.x2 = pos.x, m2.y2 = pos.y, m2.z2 = pos.z;
         if (!markers[type]) {            

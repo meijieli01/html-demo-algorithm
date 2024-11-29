@@ -203,7 +203,7 @@ class EventDispatcher {
     if (listenerArray !== void 0) {
       event.target = this;
       const array = listenerArray.slice(0);
-      for (let i = 0, l = array.length; i < l; i++) {
+      for (let i = 0, l2 = array.length; i < l2; i++) {
         array[i].call(this, event);
       }
       event.target = null;
@@ -268,8 +268,8 @@ function randFloat(low, high) {
 function randFloatSpread(range) {
   return range * (0.5 - Math.random());
 }
-function seededRandom(s) {
-  if (s !== void 0) _seed = s;
+function seededRandom(s2) {
+  if (s2 !== void 0) _seed = s2;
   let t = _seed += 1831565813;
   t = Math.imul(t ^ t >>> 15, t | 1);
   t ^= t + Math.imul(t ^ t >>> 7, t | 61);
@@ -462,9 +462,9 @@ class Vector2 {
     this.y += v.y;
     return this;
   }
-  addScalar(s) {
-    this.x += s;
-    this.y += s;
+  addScalar(s2) {
+    this.x += s2;
+    this.y += s2;
     return this;
   }
   addVectors(a, b) {
@@ -472,9 +472,9 @@ class Vector2 {
     this.y = a.y + b.y;
     return this;
   }
-  addScaledVector(v, s) {
-    this.x += v.x * s;
-    this.y += v.y * s;
+  addScaledVector(v, s2) {
+    this.x += v.x * s2;
+    this.y += v.y * s2;
     return this;
   }
   sub(v) {
@@ -482,9 +482,9 @@ class Vector2 {
     this.y -= v.y;
     return this;
   }
-  subScalar(s) {
-    this.x -= s;
-    this.y -= s;
+  subScalar(s2) {
+    this.x -= s2;
+    this.y -= s2;
     return this;
   }
   subVectors(a, b) {
@@ -636,11 +636,11 @@ class Vector2 {
     return this;
   }
   rotateAround(center, angle) {
-    const c = Math.cos(angle), s = Math.sin(angle);
+    const c = Math.cos(angle), s2 = Math.sin(angle);
     const x = this.x - center.x;
     const y = this.y - center.y;
-    this.x = x * c - y * s + center.x;
-    this.y = x * s + y * c + center.y;
+    this.x = x * c - y * s2 + center.x;
+    this.y = x * s2 + y * c + center.y;
     return this;
   }
   random() {
@@ -760,17 +760,17 @@ class Matrix3 {
     te[8] = a31 * b13 + a32 * b23 + a33 * b33;
     return this;
   }
-  multiplyScalar(s) {
+  multiplyScalar(s2) {
     const te = this.elements;
-    te[0] *= s;
-    te[3] *= s;
-    te[6] *= s;
-    te[1] *= s;
-    te[4] *= s;
-    te[7] *= s;
-    te[2] *= s;
-    te[5] *= s;
-    te[8] *= s;
+    te[0] *= s2;
+    te[3] *= s2;
+    te[6] *= s2;
+    te[1] *= s2;
+    te[4] *= s2;
+    te[7] *= s2;
+    te[2] *= s2;
+    te[5] *= s2;
+    te[8] *= s2;
     return this;
   }
   determinant() {
@@ -825,14 +825,14 @@ class Matrix3 {
   }
   setUvTransform(tx, ty, sx, sy, rotation, cx, cy) {
     const c = Math.cos(rotation);
-    const s = Math.sin(rotation);
+    const s2 = Math.sin(rotation);
     this.set(
       sx * c,
-      sx * s,
-      -sx * (c * cx + s * cy) + cx + tx,
-      -sy * s,
+      sx * s2,
+      -sx * (c * cx + s2 * cy) + cx + tx,
+      -sy * s2,
       sy * c,
-      -sy * (-s * cx + c * cy) + cy + ty,
+      -sy * (-s2 * cx + c * cy) + cy + ty,
       0,
       0,
       1
@@ -883,12 +883,12 @@ class Matrix3 {
   }
   makeRotation(theta) {
     const c = Math.cos(theta);
-    const s = Math.sin(theta);
+    const s2 = Math.sin(theta);
     this.set(
       c,
-      -s,
+      -s2,
       0,
-      s,
+      s2,
       c,
       0,
       0,
@@ -1183,7 +1183,7 @@ class Source {
       let url;
       if (Array.isArray(data)) {
         url = [];
-        for (let i = 0, l = data.length; i < l; i++) {
+        for (let i = 0, l2 = data.length; i < l2; i++) {
           if (data[i].isDataTexture) {
             url.push(serializeImage(data[i].image));
           } else {
@@ -1495,11 +1495,11 @@ class Vector4 {
     this.w += v.w;
     return this;
   }
-  addScalar(s) {
-    this.x += s;
-    this.y += s;
-    this.z += s;
-    this.w += s;
+  addScalar(s2) {
+    this.x += s2;
+    this.y += s2;
+    this.z += s2;
+    this.w += s2;
     return this;
   }
   addVectors(a, b) {
@@ -1509,11 +1509,11 @@ class Vector4 {
     this.w = a.w + b.w;
     return this;
   }
-  addScaledVector(v, s) {
-    this.x += v.x * s;
-    this.y += v.y * s;
-    this.z += v.z * s;
-    this.w += v.w * s;
+  addScaledVector(v, s2) {
+    this.x += v.x * s2;
+    this.y += v.y * s2;
+    this.z += v.z * s2;
+    this.w += v.w * s2;
     return this;
   }
   sub(v) {
@@ -1523,11 +1523,11 @@ class Vector4 {
     this.w -= v.w;
     return this;
   }
-  subScalar(s) {
-    this.x -= s;
-    this.y -= s;
-    this.z -= s;
-    this.w -= s;
+  subScalar(s2) {
+    this.x -= s2;
+    this.y -= s2;
+    this.z -= s2;
+    this.w -= s2;
     return this;
   }
   subVectors(a, b) {
@@ -1565,15 +1565,15 @@ class Vector4 {
   }
   setAxisAngleFromQuaternion(q) {
     this.w = 2 * Math.acos(q.w);
-    const s = Math.sqrt(1 - q.w * q.w);
-    if (s < 1e-4) {
+    const s2 = Math.sqrt(1 - q.w * q.w);
+    if (s2 < 1e-4) {
       this.x = 1;
       this.y = 0;
       this.z = 0;
     } else {
-      this.x = q.x / s;
-      this.y = q.y / s;
-      this.z = q.z / s;
+      this.x = q.x / s2;
+      this.y = q.y / s2;
+      this.z = q.z / s2;
     }
     return this;
   }
@@ -1626,11 +1626,11 @@ class Vector4 {
       this.set(x, y, z, angle);
       return this;
     }
-    let s = Math.sqrt((m32 - m23) * (m32 - m23) + (m13 - m31) * (m13 - m31) + (m21 - m12) * (m21 - m12));
-    if (Math.abs(s) < 1e-3) s = 1;
-    this.x = (m32 - m23) / s;
-    this.y = (m13 - m31) / s;
-    this.z = (m21 - m12) / s;
+    let s2 = Math.sqrt((m32 - m23) * (m32 - m23) + (m13 - m31) * (m13 - m31) + (m21 - m12) * (m21 - m12));
+    if (Math.abs(s2) < 1e-3) s2 = 1;
+    this.x = (m32 - m23) / s2;
+    this.y = (m13 - m31) / s2;
+    this.z = (m21 - m12) / s2;
     this.w = Math.acos((m11 + m22 + m33 - 1) / 2);
     return this;
   }
@@ -1934,19 +1934,19 @@ class Quaternion {
       return;
     }
     if (w0 !== w1 || x0 !== x1 || y0 !== y1 || z0 !== z1) {
-      let s = 1 - t;
+      let s2 = 1 - t;
       const cos = x0 * x1 + y0 * y1 + z0 * z1 + w0 * w1, dir = cos >= 0 ? 1 : -1, sqrSin = 1 - cos * cos;
       if (sqrSin > Number.EPSILON) {
         const sin = Math.sqrt(sqrSin), len = Math.atan2(sin, cos * dir);
-        s = Math.sin(s * len) / sin;
+        s2 = Math.sin(s2 * len) / sin;
         t = Math.sin(t * len) / sin;
       }
       const tDir = t * dir;
-      x0 = x0 * s + x1 * tDir;
-      y0 = y0 * s + y1 * tDir;
-      z0 = z0 * s + z1 * tDir;
-      w0 = w0 * s + w1 * tDir;
-      if (s === 1 - t) {
+      x0 = x0 * s2 + x1 * tDir;
+      y0 = y0 * s2 + y1 * tDir;
+      z0 = z0 * s2 + z1 * tDir;
+      w0 = w0 * s2 + w1 * tDir;
+      if (s2 === 1 - t) {
         const f = 1 / Math.sqrt(x0 * x0 + y0 * y0 + z0 * z0 + w0 * w0);
         x0 *= f;
         y0 *= f;
@@ -2075,10 +2075,10 @@ class Quaternion {
     return this;
   }
   setFromAxisAngle(axis, angle) {
-    const halfAngle = angle / 2, s = Math.sin(halfAngle);
-    this._x = axis.x * s;
-    this._y = axis.y * s;
-    this._z = axis.z * s;
+    const halfAngle = angle / 2, s2 = Math.sin(halfAngle);
+    this._x = axis.x * s2;
+    this._y = axis.y * s2;
+    this._z = axis.z * s2;
     this._w = Math.cos(halfAngle);
     this._onChangeCallback();
     return this;
@@ -2086,29 +2086,29 @@ class Quaternion {
   setFromRotationMatrix(m) {
     const te = m.elements, m11 = te[0], m12 = te[4], m13 = te[8], m21 = te[1], m22 = te[5], m23 = te[9], m31 = te[2], m32 = te[6], m33 = te[10], trace = m11 + m22 + m33;
     if (trace > 0) {
-      const s = 0.5 / Math.sqrt(trace + 1);
-      this._w = 0.25 / s;
-      this._x = (m32 - m23) * s;
-      this._y = (m13 - m31) * s;
-      this._z = (m21 - m12) * s;
+      const s2 = 0.5 / Math.sqrt(trace + 1);
+      this._w = 0.25 / s2;
+      this._x = (m32 - m23) * s2;
+      this._y = (m13 - m31) * s2;
+      this._z = (m21 - m12) * s2;
     } else if (m11 > m22 && m11 > m33) {
-      const s = 2 * Math.sqrt(1 + m11 - m22 - m33);
-      this._w = (m32 - m23) / s;
-      this._x = 0.25 * s;
-      this._y = (m12 + m21) / s;
-      this._z = (m13 + m31) / s;
+      const s2 = 2 * Math.sqrt(1 + m11 - m22 - m33);
+      this._w = (m32 - m23) / s2;
+      this._x = 0.25 * s2;
+      this._y = (m12 + m21) / s2;
+      this._z = (m13 + m31) / s2;
     } else if (m22 > m33) {
-      const s = 2 * Math.sqrt(1 + m22 - m11 - m33);
-      this._w = (m13 - m31) / s;
-      this._x = (m12 + m21) / s;
-      this._y = 0.25 * s;
-      this._z = (m23 + m32) / s;
+      const s2 = 2 * Math.sqrt(1 + m22 - m11 - m33);
+      this._w = (m13 - m31) / s2;
+      this._x = (m12 + m21) / s2;
+      this._y = 0.25 * s2;
+      this._z = (m23 + m32) / s2;
     } else {
-      const s = 2 * Math.sqrt(1 + m33 - m11 - m22);
-      this._w = (m21 - m12) / s;
-      this._x = (m13 + m31) / s;
-      this._y = (m23 + m32) / s;
-      this._z = 0.25 * s;
+      const s2 = 2 * Math.sqrt(1 + m33 - m11 - m22);
+      this._w = (m21 - m12) / s2;
+      this._x = (m13 + m31) / s2;
+      this._y = (m23 + m32) / s2;
+      this._z = 0.25 * s2;
     }
     this._onChangeCallback();
     return this;
@@ -2169,18 +2169,18 @@ class Quaternion {
     return Math.sqrt(this._x * this._x + this._y * this._y + this._z * this._z + this._w * this._w);
   }
   normalize() {
-    let l = this.length();
-    if (l === 0) {
+    let l2 = this.length();
+    if (l2 === 0) {
       this._x = 0;
       this._y = 0;
       this._z = 0;
       this._w = 1;
     } else {
-      l = 1 / l;
-      this._x = this._x * l;
-      this._y = this._y * l;
-      this._z = this._z * l;
-      this._w = this._w * l;
+      l2 = 1 / l2;
+      this._x = this._x * l2;
+      this._y = this._y * l2;
+      this._z = this._z * l2;
+      this._w = this._w * l2;
     }
     this._onChangeCallback();
     return this;
@@ -2224,11 +2224,11 @@ class Quaternion {
     }
     const sqrSinHalfTheta = 1 - cosHalfTheta * cosHalfTheta;
     if (sqrSinHalfTheta <= Number.EPSILON) {
-      const s = 1 - t;
-      this._w = s * w + t * this._w;
-      this._x = s * x + t * this._x;
-      this._y = s * y + t * this._y;
-      this._z = s * z + t * this._z;
+      const s2 = 1 - t;
+      this._w = s2 * w + t * this._w;
+      this._x = s2 * x + t * this._x;
+      this._y = s2 * y + t * this._y;
+      this._z = s2 * z + t * this._z;
       this.normalize();
       return this;
     }
@@ -2375,10 +2375,10 @@ class Vector3 {
     this.z += v.z;
     return this;
   }
-  addScalar(s) {
-    this.x += s;
-    this.y += s;
-    this.z += s;
+  addScalar(s2) {
+    this.x += s2;
+    this.y += s2;
+    this.z += s2;
     return this;
   }
   addVectors(a, b) {
@@ -2387,10 +2387,10 @@ class Vector3 {
     this.z = a.z + b.z;
     return this;
   }
-  addScaledVector(v, s) {
-    this.x += v.x * s;
-    this.y += v.y * s;
-    this.z += v.z * s;
+  addScaledVector(v, s2) {
+    this.x += v.x * s2;
+    this.y += v.y * s2;
+    this.z += v.z * s2;
     return this;
   }
   sub(v) {
@@ -2399,10 +2399,10 @@ class Vector3 {
     this.z -= v.z;
     return this;
   }
-  subScalar(s) {
-    this.x -= s;
-    this.y -= s;
-    this.z -= s;
+  subScalar(s2) {
+    this.x -= s2;
+    this.y -= s2;
+    this.z -= s2;
     return this;
   }
   subVectors(a, b) {
@@ -2618,8 +2618,8 @@ class Vector3 {
   manhattanDistanceTo(v) {
     return Math.abs(this.x - v.x) + Math.abs(this.y - v.y) + Math.abs(this.z - v.z);
   }
-  setFromSpherical(s) {
-    return this.setFromSphericalCoords(s.radius, s.phi, s.theta);
+  setFromSpherical(s2) {
+    return this.setFromSphericalCoords(s2.radius, s2.phi, s2.theta);
   }
   setFromSphericalCoords(radius, phi, theta) {
     const sinPhiRadius = Math.sin(phi) * radius;
@@ -2800,7 +2800,7 @@ class Box3 {
     if (geometry !== void 0) {
       const positionAttribute = geometry.getAttribute("position");
       if (precise === true && positionAttribute !== void 0 && object.isInstancedMesh !== true) {
-        for (let i = 0, l = positionAttribute.count; i < l; i++) {
+        for (let i = 0, l2 = positionAttribute.count; i < l2; i++) {
           if (object.isMesh === true) {
             object.getVertexPosition(i, _vector$b);
           } else {
@@ -2826,7 +2826,7 @@ class Box3 {
       }
     }
     const children = object.children;
-    for (let i = 0, l = children.length; i < l; i++) {
+    for (let i = 0, l2 = children.length; i < l2; i++) {
       this.expandByObject(children[i], precise);
     }
     return this;
@@ -3142,7 +3142,7 @@ const _diff = /* @__PURE__ */ new Vector3();
 const _edge1 = /* @__PURE__ */ new Vector3();
 const _edge2 = /* @__PURE__ */ new Vector3();
 const _normal$1 = /* @__PURE__ */ new Vector3();
-class Ray {
+let Ray$1 = class Ray {
   constructor(origin = new Vector3(), direction2 = new Vector3(0, 0, -1)) {
     this.origin = origin;
     this.direction = direction2;
@@ -3373,7 +3373,7 @@ class Ray {
   clone() {
     return new this.constructor().copy(this);
   }
-}
+};
 class Matrix4 {
   constructor(n11, n12, n13, n14, n21, n22, n23, n24, n31, n32, n33, n34, n41, n42, n43, n44) {
     Matrix4.prototype.isMatrix4 = true;
@@ -3695,24 +3695,24 @@ class Matrix4 {
     te[15] = a41 * b14 + a42 * b24 + a43 * b34 + a44 * b44;
     return this;
   }
-  multiplyScalar(s) {
+  multiplyScalar(s2) {
     const te = this.elements;
-    te[0] *= s;
-    te[4] *= s;
-    te[8] *= s;
-    te[12] *= s;
-    te[1] *= s;
-    te[5] *= s;
-    te[9] *= s;
-    te[13] *= s;
-    te[2] *= s;
-    te[6] *= s;
-    te[10] *= s;
-    te[14] *= s;
-    te[3] *= s;
-    te[7] *= s;
-    te[11] *= s;
-    te[15] *= s;
+    te[0] *= s2;
+    te[4] *= s2;
+    te[8] *= s2;
+    te[12] *= s2;
+    te[1] *= s2;
+    te[5] *= s2;
+    te[9] *= s2;
+    te[13] *= s2;
+    te[2] *= s2;
+    te[6] *= s2;
+    te[10] *= s2;
+    te[14] *= s2;
+    te[3] *= s2;
+    te[7] *= s2;
+    te[11] *= s2;
+    te[15] *= s2;
     return this;
   }
   determinant() {
@@ -3849,7 +3849,7 @@ class Matrix4 {
     return this;
   }
   makeRotationX(theta) {
-    const c = Math.cos(theta), s = Math.sin(theta);
+    const c = Math.cos(theta), s2 = Math.sin(theta);
     this.set(
       1,
       0,
@@ -3857,10 +3857,10 @@ class Matrix4 {
       0,
       0,
       c,
-      -s,
+      -s2,
       0,
       0,
-      s,
+      s2,
       c,
       0,
       0,
@@ -3871,17 +3871,17 @@ class Matrix4 {
     return this;
   }
   makeRotationY(theta) {
-    const c = Math.cos(theta), s = Math.sin(theta);
+    const c = Math.cos(theta), s2 = Math.sin(theta);
     this.set(
       c,
       0,
-      s,
+      s2,
       0,
       0,
       1,
       0,
       0,
-      -s,
+      -s2,
       0,
       c,
       0,
@@ -3893,13 +3893,13 @@ class Matrix4 {
     return this;
   }
   makeRotationZ(theta) {
-    const c = Math.cos(theta), s = Math.sin(theta);
+    const c = Math.cos(theta), s2 = Math.sin(theta);
     this.set(
       c,
-      -s,
+      -s2,
       0,
       0,
-      s,
+      s2,
       c,
       0,
       0,
@@ -3916,21 +3916,21 @@ class Matrix4 {
   }
   makeRotationAxis(axis, angle) {
     const c = Math.cos(angle);
-    const s = Math.sin(angle);
+    const s2 = Math.sin(angle);
     const t = 1 - c;
     const x = axis.x, y = axis.y, z = axis.z;
     const tx = t * x, ty = t * y;
     this.set(
       tx * x + c,
-      tx * y - s * z,
-      tx * z + s * y,
+      tx * y - s2 * z,
+      tx * z + s2 * y,
       0,
-      tx * y + s * z,
+      tx * y + s2 * z,
       ty * y + c,
-      ty * z - s * x,
+      ty * z - s2 * x,
       0,
-      tx * z - s * y,
-      ty * z + s * x,
+      tx * z - s2 * y,
+      ty * z + s2 * x,
       t * z * z + c,
       0,
       0,
@@ -4599,7 +4599,7 @@ class Object3D extends EventDispatcher {
   }
   getObjectByProperty(name, value) {
     if (this[name] === value) return this;
-    for (let i = 0, l = this.children.length; i < l; i++) {
+    for (let i = 0, l2 = this.children.length; i < l2; i++) {
       const child = this.children[i];
       const object = child.getObjectByProperty(name, value);
       if (object !== void 0) {
@@ -4611,7 +4611,7 @@ class Object3D extends EventDispatcher {
   getObjectsByProperty(name, value, result = []) {
     if (this[name] === value) result.push(this);
     const children = this.children;
-    for (let i = 0, l = children.length; i < l; i++) {
+    for (let i = 0, l2 = children.length; i < l2; i++) {
       children[i].getObjectsByProperty(name, value, result);
     }
     return result;
@@ -4640,7 +4640,7 @@ class Object3D extends EventDispatcher {
   traverse(callback) {
     callback(this);
     const children = this.children;
-    for (let i = 0, l = children.length; i < l; i++) {
+    for (let i = 0, l2 = children.length; i < l2; i++) {
       children[i].traverse(callback);
     }
   }
@@ -4648,7 +4648,7 @@ class Object3D extends EventDispatcher {
     if (this.visible === false) return;
     callback(this);
     const children = this.children;
-    for (let i = 0, l = children.length; i < l; i++) {
+    for (let i = 0, l2 = children.length; i < l2; i++) {
       children[i].traverseVisible(callback);
     }
   }
@@ -4677,7 +4677,7 @@ class Object3D extends EventDispatcher {
       force = true;
     }
     const children = this.children;
-    for (let i = 0, l = children.length; i < l; i++) {
+    for (let i = 0, l2 = children.length; i < l2; i++) {
       const child = children[i];
       child.updateMatrixWorld(force);
     }
@@ -4697,7 +4697,7 @@ class Object3D extends EventDispatcher {
     }
     if (updateChildren === true) {
       const children = this.children;
-      for (let i = 0, l = children.length; i < l; i++) {
+      for (let i = 0, l2 = children.length; i < l2; i++) {
         const child = children[i];
         child.updateWorldMatrix(false, true);
       }
@@ -4802,7 +4802,7 @@ class Object3D extends EventDispatcher {
       if (parameters !== void 0 && parameters.shapes !== void 0) {
         const shapes = parameters.shapes;
         if (Array.isArray(shapes)) {
-          for (let i = 0, l = shapes.length; i < l; i++) {
+          for (let i = 0, l2 = shapes.length; i < l2; i++) {
             const shape = shapes[i];
             serialize(meta.shapes, shape);
           }
@@ -4822,7 +4822,7 @@ class Object3D extends EventDispatcher {
     if (this.material !== void 0) {
       if (Array.isArray(this.material)) {
         const uuids = [];
-        for (let i = 0, l = this.material.length; i < l; i++) {
+        for (let i = 0, l2 = this.material.length; i < l2; i++) {
           uuids.push(serialize(meta.materials, this.material[i]));
         }
         object.material = uuids;
@@ -5288,15 +5288,15 @@ class Color {
     ColorManagement.toWorkingColorSpace(this, colorSpace);
     return this;
   }
-  setHSL(h, s, l, colorSpace = ColorManagement.workingColorSpace) {
+  setHSL(h, s2, l2, colorSpace = ColorManagement.workingColorSpace) {
     h = euclideanModulo(h, 1);
-    s = clamp(s, 0, 1);
-    l = clamp(l, 0, 1);
-    if (s === 0) {
-      this.r = this.g = this.b = l;
+    s2 = clamp(s2, 0, 1);
+    l2 = clamp(l2, 0, 1);
+    if (s2 === 0) {
+      this.r = this.g = this.b = l2;
     } else {
-      const p = l <= 0.5 ? l * (1 + s) : l + s - l * s;
-      const q = 2 * l - p;
+      const p = l2 <= 0.5 ? l2 * (1 + s2) : l2 + s2 - l2 * s2;
+      const q = 2 * l2 - p;
       this.r = hue2rgb(q, p, h + 1 / 3);
       this.g = hue2rgb(q, p, h);
       this.b = hue2rgb(q, p, h - 1 / 3);
@@ -5464,9 +5464,9 @@ class Color {
     }
     return `rgb(${Math.round(r * 255)},${Math.round(g * 255)},${Math.round(b * 255)})`;
   }
-  offsetHSL(h, s, l) {
+  offsetHSL(h, s2, l2) {
     this.getHSL(_hslA);
-    return this.setHSL(_hslA.h + h, _hslA.s + s, _hslA.l + l);
+    return this.setHSL(_hslA.h + h, _hslA.s + s2, _hslA.l + l2);
   }
   add(color) {
     this.r += color.r;
@@ -5480,10 +5480,10 @@ class Color {
     this.b = color1.b + color2.b;
     return this;
   }
-  addScalar(s) {
-    this.r += s;
-    this.g += s;
-    this.b += s;
+  addScalar(s2) {
+    this.r += s2;
+    this.g += s2;
+    this.b += s2;
     return this;
   }
   sub(color) {
@@ -5498,10 +5498,10 @@ class Color {
     this.b *= color.b;
     return this;
   }
-  multiplyScalar(s) {
-    this.r *= s;
-    this.g *= s;
-    this.b *= s;
+  multiplyScalar(s2) {
+    this.r *= s2;
+    this.g *= s2;
+    this.b *= s2;
     return this;
   }
   lerp(color, alpha) {
@@ -5520,9 +5520,9 @@ class Color {
     this.getHSL(_hslA);
     color.getHSL(_hslB);
     const h = lerp(_hslA.h, _hslB.h, alpha);
-    const s = lerp(_hslA.s, _hslB.s, alpha);
-    const l = lerp(_hslA.l, _hslB.l, alpha);
-    this.setHSL(h, s, l);
+    const s2 = lerp(_hslA.s, _hslB.s, alpha);
+    const l2 = lerp(_hslA.l, _hslB.l, alpha);
+    this.setHSL(h, s2, l2);
     return this;
   }
   setFromVector3(v) {
@@ -6003,7 +6003,7 @@ class BufferAttribute {
   copyAt(index1, attribute, index2) {
     index1 *= this.itemSize;
     index2 *= attribute.itemSize;
-    for (let i = 0, l = this.itemSize; i < l; i++) {
+    for (let i = 0, l2 = this.itemSize; i < l2; i++) {
       this.array[index1 + i] = attribute.array[index2 + i];
     }
     return this;
@@ -6014,13 +6014,13 @@ class BufferAttribute {
   }
   applyMatrix3(m) {
     if (this.itemSize === 2) {
-      for (let i = 0, l = this.count; i < l; i++) {
+      for (let i = 0, l2 = this.count; i < l2; i++) {
         _vector2$1.fromBufferAttribute(this, i);
         _vector2$1.applyMatrix3(m);
         this.setXY(i, _vector2$1.x, _vector2$1.y);
       }
     } else if (this.itemSize === 3) {
-      for (let i = 0, l = this.count; i < l; i++) {
+      for (let i = 0, l2 = this.count; i < l2; i++) {
         _vector$9.fromBufferAttribute(this, i);
         _vector$9.applyMatrix3(m);
         this.setXYZ(i, _vector$9.x, _vector$9.y, _vector$9.z);
@@ -6029,7 +6029,7 @@ class BufferAttribute {
     return this;
   }
   applyMatrix4(m) {
-    for (let i = 0, l = this.count; i < l; i++) {
+    for (let i = 0, l2 = this.count; i < l2; i++) {
       _vector$9.fromBufferAttribute(this, i);
       _vector$9.applyMatrix4(m);
       this.setXYZ(i, _vector$9.x, _vector$9.y, _vector$9.z);
@@ -6037,7 +6037,7 @@ class BufferAttribute {
     return this;
   }
   applyNormalMatrix(m) {
-    for (let i = 0, l = this.count; i < l; i++) {
+    for (let i = 0, l2 = this.count; i < l2; i++) {
       _vector$9.fromBufferAttribute(this, i);
       _vector$9.applyNormalMatrix(m);
       this.setXYZ(i, _vector$9.x, _vector$9.y, _vector$9.z);
@@ -6045,7 +6045,7 @@ class BufferAttribute {
     return this;
   }
   transformDirection(m) {
-    for (let i = 0, l = this.count; i < l; i++) {
+    for (let i = 0, l2 = this.count; i < l2; i++) {
       _vector$9.fromBufferAttribute(this, i);
       _vector$9.transformDirection(m);
       this.setXYZ(i, _vector$9.x, _vector$9.y, _vector$9.z);
@@ -6309,7 +6309,7 @@ class BufferGeometry extends EventDispatcher {
   }
   setFromPoints(points) {
     const position = [];
-    for (let i = 0, l = points.length; i < l; i++) {
+    for (let i = 0, l2 = points.length; i < l2; i++) {
       const point = points[i];
       position.push(point.x, point.y, point.z || 0);
     }
@@ -6563,7 +6563,7 @@ class BufferGeometry extends EventDispatcher {
       const normalized = attribute.normalized;
       const array2 = new array.constructor(indices2.length * itemSize);
       let index = 0, index2 = 0;
-      for (let i = 0, l = indices2.length; i < l; i++) {
+      for (let i = 0, l2 = indices2.length; i < l2; i++) {
         if (attribute.isInterleavedBufferAttribute) {
           index = indices2[i] * attribute.data.stride + attribute.offset;
         } else {
@@ -6600,7 +6600,7 @@ class BufferGeometry extends EventDispatcher {
     }
     geometry2.morphTargetsRelative = this.morphTargetsRelative;
     const groups = this.groups;
-    for (let i = 0, l = groups.length; i < l; i++) {
+    for (let i = 0, l2 = groups.length; i < l2; i++) {
       const group = groups[i];
       geometry2.addGroup(group.start, group.count, group.materialIndex);
     }
@@ -6694,14 +6694,14 @@ class BufferGeometry extends EventDispatcher {
     for (const name in morphAttributes) {
       const array = [];
       const morphAttribute = morphAttributes[name];
-      for (let i = 0, l = morphAttribute.length; i < l; i++) {
+      for (let i = 0, l2 = morphAttribute.length; i < l2; i++) {
         array.push(morphAttribute[i].clone(data));
       }
       this.morphAttributes[name] = array;
     }
     this.morphTargetsRelative = source.morphTargetsRelative;
     const groups = source.groups;
-    for (let i = 0, l = groups.length; i < l; i++) {
+    for (let i = 0, l2 = groups.length; i < l2; i++) {
       const group = groups[i];
       this.addGroup(group.start, group.count, group.materialIndex);
     }
@@ -6723,7 +6723,7 @@ class BufferGeometry extends EventDispatcher {
   }
 }
 const _inverseMatrix$3 = /* @__PURE__ */ new Matrix4();
-const _ray$3 = /* @__PURE__ */ new Ray();
+const _ray$3 = /* @__PURE__ */ new Ray$1();
 const _sphere$6 = /* @__PURE__ */ new Sphere();
 const _sphereHitAt = /* @__PURE__ */ new Vector3();
 const _vA$1$1 = /* @__PURE__ */ new Vector3();
@@ -7629,7 +7629,7 @@ class WebGLCubeRenderTarget extends WebGLRenderTarget {
 const _vector1 = /* @__PURE__ */ new Vector3();
 const _vector2 = /* @__PURE__ */ new Vector3();
 const _normalMatrix = /* @__PURE__ */ new Matrix3();
-class Plane {
+let Plane$1 = class Plane {
   constructor(normal = new Vector3(1, 0, 0), constant = 0) {
     this.isPlane = true;
     this.normal = normal;
@@ -7726,11 +7726,11 @@ class Plane {
   clone() {
     return new this.constructor().copy(this);
   }
-}
+};
 const _sphere$5 = /* @__PURE__ */ new Sphere();
 const _vector$7 = /* @__PURE__ */ new Vector3();
 class Frustum {
-  constructor(p0 = new Plane(), p1 = new Plane(), p2 = new Plane(), p3 = new Plane(), p4 = new Plane(), p5 = new Plane()) {
+  constructor(p0 = new Plane$1(), p1 = new Plane$1(), p2 = new Plane$1(), p3 = new Plane$1(), p4 = new Plane$1(), p5 = new Plane$1()) {
     this.planes = [p0, p1, p2, p3, p4, p5];
   }
   set(p0, p1, p2, p3, p4, p5) {
@@ -7905,7 +7905,7 @@ function WebGLAttributes(gl) {
       gl.bufferSubData(bufferType, 0, array);
     }
     if (updateRanges.length !== 0) {
-      for (let i = 0, l = updateRanges.length; i < l; i++) {
+      for (let i = 0, l2 = updateRanges.length; i < l2; i++) {
         const range = updateRanges[i];
         gl.bufferSubData(
           bufferType,
@@ -9364,7 +9364,7 @@ function WebGLCapabilities(gl, extensions, parameters, utils) {
 function WebGLClipping(properties) {
   const scope = this;
   let globalState = null, numGlobalPlanes = 0, localClippingEnabled = false, renderingShadows = false;
-  const plane = new Plane(), viewNormalMatrix = new Matrix3(), uniform = { value: null, needsUpdate: false };
+  const plane = new Plane$1(), viewNormalMatrix = new Matrix3(), uniform = { value: null, needsUpdate: false };
   this.uniform = uniform;
   this.numPlanes = 0;
   this.numIntersection = 0;
@@ -10345,7 +10345,7 @@ function WebGLGeometries(gl, attributes, info, bindingStates) {
     }
     for (const name in geometry.morphAttributes) {
       const array = geometry.morphAttributes[name];
-      for (let i = 0, l = array.length; i < l; i++) {
+      for (let i = 0, l2 = array.length; i < l2; i++) {
         attributes.remove(array[i]);
       }
     }
@@ -10377,7 +10377,7 @@ function WebGLGeometries(gl, attributes, info, bindingStates) {
     const morphAttributes = geometry.morphAttributes;
     for (const name in morphAttributes) {
       const array = morphAttributes[name];
-      for (let i = 0, l = array.length; i < l; i++) {
+      for (let i = 0, l2 = array.length; i < l2; i++) {
         attributes.update(array[i], gl.ARRAY_BUFFER);
       }
     }
@@ -10390,7 +10390,7 @@ function WebGLGeometries(gl, attributes, info, bindingStates) {
     if (geometryIndex !== null) {
       const array = geometryIndex.array;
       version = geometryIndex.version;
-      for (let i = 0, l = array.length; i < l; i += 3) {
+      for (let i = 0, l2 = array.length; i < l2; i += 3) {
         const a = array[i + 0];
         const b = array[i + 1];
         const c = array[i + 2];
@@ -10399,7 +10399,7 @@ function WebGLGeometries(gl, attributes, info, bindingStates) {
     } else if (geometryPosition !== void 0) {
       const array = geometryPosition.array;
       version = geometryPosition.version;
-      for (let i = 0, l = array.length / 3 - 1; i < l; i += 3) {
+      for (let i = 0, l2 = array.length / 3 - 1; i < l2; i += 3) {
         const a = i + 0;
         const b = i + 1;
         const c = i + 2;
@@ -10732,13 +10732,13 @@ function flatten(array, nBlocks, blockSize) {
 }
 function arraysEqual(a, b) {
   if (a.length !== b.length) return false;
-  for (let i = 0, l = a.length; i < l; i++) {
+  for (let i = 0, l2 = a.length; i < l2; i++) {
     if (a[i] !== b[i]) return false;
   }
   return true;
 }
 function copyArray(a, b) {
-  for (let i = 0, l = b.length; i < l; i++) {
+  for (let i = 0, l2 = b.length; i < l2; i++) {
     a[i] = b[i];
   }
 }
@@ -12788,7 +12788,7 @@ function WebGLLights(extensions) {
     let numSpotShadowsWithMaps = 0;
     let numLightProbes = 0;
     lights.sort(shadowCastingAndTexturingLightsFirst);
-    for (let i = 0, l = lights.length; i < l; i++) {
+    for (let i = 0, l2 = lights.length; i < l2; i++) {
       const light = lights[i];
       const color = light.color;
       const intensity = light.intensity;
@@ -12938,7 +12938,7 @@ function WebGLLights(extensions) {
     let rectAreaLength = 0;
     let hemiLength = 0;
     const viewMatrix = camera.matrixWorldInverse;
-    for (let i = 0, l = lights.length; i < l; i++) {
+    for (let i = 0, l2 = lights.length; i < l2; i++) {
       const light = lights[i];
       if (light.isDirectionalLight) {
         const uniforms = state.directional[directionalLength];
@@ -13308,7 +13308,7 @@ function WebGLShadowMap(renderer, objects, capabilities) {
       }
     }
     const children = object.children;
-    for (let i = 0, l = children.length; i < l; i++) {
+    for (let i = 0, l2 = children.length; i < l2; i++) {
       renderObject(children[i], camera, shadowCamera, light, type);
     }
   }
@@ -16512,7 +16512,7 @@ function WebGLUniformsGroups(gl, info, capabilities, state) {
     const uniforms = uniformsGroup.uniforms;
     let offset = 0;
     const chunkSize = 16;
-    for (let i = 0, l = uniforms.length; i < l; i++) {
+    for (let i = 0, l2 = uniforms.length; i < l2; i++) {
       const uniformArray = Array.isArray(uniforms[i]) ? uniforms[i] : [uniforms[i]];
       for (let j = 0, jl = uniformArray.length; j < jl; j++) {
         const uniform = uniformArray[j];
@@ -17204,13 +17204,13 @@ class WebGLRenderer {
       if (camera.isArrayCamera) {
         const cameras = camera.cameras;
         if (transmissiveObjects.length > 0) {
-          for (let i = 0, l = cameras.length; i < l; i++) {
+          for (let i = 0, l2 = cameras.length; i < l2; i++) {
             const camera2 = cameras[i];
             renderTransmissionPass(opaqueObjects, transmissiveObjects, scene, camera2);
           }
         }
         if (_renderBackground) background.render(scene);
-        for (let i = 0, l = cameras.length; i < l; i++) {
+        for (let i = 0, l2 = cameras.length; i < l2; i++) {
           const camera2 = cameras[i];
           renderScene(currentRenderList, scene, camera2, camera2.viewport);
         }
@@ -17281,7 +17281,7 @@ class WebGLRenderer {
             }
             if (Array.isArray(material)) {
               const groups = geometry.groups;
-              for (let i = 0, l = groups.length; i < l; i++) {
+              for (let i = 0, l2 = groups.length; i < l2; i++) {
                 const group = groups[i];
                 const groupMaterial = material[group.materialIndex];
                 if (groupMaterial && groupMaterial.visible) {
@@ -17295,7 +17295,7 @@ class WebGLRenderer {
         }
       }
       const children = object.children;
-      for (let i = 0, l = children.length; i < l; i++) {
+      for (let i = 0, l2 = children.length; i < l2; i++) {
         projectObject(children[i], camera, groupOrder, sortObjects);
       }
     }
@@ -17352,7 +17352,7 @@ class WebGLRenderer {
       textures.updateRenderTargetMipmap(transmissionRenderTarget);
       if (extensions.has("WEBGL_multisampled_render_to_texture") === false) {
         let renderTargetNeedsUpdate = false;
-        for (let i = 0, l = transmissiveObjects.length; i < l; i++) {
+        for (let i = 0, l2 = transmissiveObjects.length; i < l2; i++) {
           const renderItem = transmissiveObjects[i];
           const object = renderItem.object;
           const geometry = renderItem.geometry;
@@ -17380,7 +17380,7 @@ class WebGLRenderer {
     }
     function renderObjects(renderList, scene, camera) {
       const overrideMaterial = scene.isScene === true ? scene.overrideMaterial : null;
-      for (let i = 0, l = renderList.length; i < l; i++) {
+      for (let i = 0, l2 = renderList.length; i < l2; i++) {
         const renderItem = renderList[i];
         const object = renderItem.object;
         const geometry = renderItem.geometry;
@@ -17677,7 +17677,7 @@ class WebGLRenderer {
       p_uniforms.setValue(_gl, "modelMatrix", object.matrixWorld);
       if (material.isShaderMaterial || material.isRawShaderMaterial) {
         const groups = material.uniformsGroups;
-        for (let i = 0, l = groups.length; i < l; i++) {
+        for (let i = 0, l2 = groups.length; i < l2; i++) {
           const group = groups[i];
           uniformsGroups.update(group, program);
           uniformsGroups.bind(group, program);
@@ -18187,7 +18187,7 @@ class InterleavedBuffer {
   copyAt(index1, attribute, index2) {
     index1 *= this.stride;
     index2 *= attribute.stride;
-    for (let i = 0, l = this.stride; i < l; i++) {
+    for (let i = 0, l2 = this.stride; i < l2; i++) {
       this.array[index1 + i] = attribute.array[index2 + i];
     }
     return this;
@@ -18253,7 +18253,7 @@ class InterleavedBufferAttribute {
     this.data.needsUpdate = value;
   }
   applyMatrix4(m) {
-    for (let i = 0, l = this.data.count; i < l; i++) {
+    for (let i = 0, l2 = this.data.count; i < l2; i++) {
       _vector$6.fromBufferAttribute(this, i);
       _vector$6.applyMatrix4(m);
       this.setXYZ(i, _vector$6.x, _vector$6.y, _vector$6.z);
@@ -18261,7 +18261,7 @@ class InterleavedBufferAttribute {
     return this;
   }
   applyNormalMatrix(m) {
-    for (let i = 0, l = this.count; i < l; i++) {
+    for (let i = 0, l2 = this.count; i < l2; i++) {
       _vector$6.fromBufferAttribute(this, i);
       _vector$6.applyNormalMatrix(m);
       this.setXYZ(i, _vector$6.x, _vector$6.y, _vector$6.z);
@@ -18269,7 +18269,7 @@ class InterleavedBufferAttribute {
     return this;
   }
   transformDirection(m) {
-    for (let i = 0, l = this.count; i < l; i++) {
+    for (let i = 0, l2 = this.count; i < l2; i++) {
       _vector$6.fromBufferAttribute(this, i);
       _vector$6.transformDirection(m);
       this.setXYZ(i, _vector$6.x, _vector$6.y, _vector$6.z);
@@ -18576,7 +18576,7 @@ class LOD extends Object3D {
   copy(source) {
     super.copy(source, false);
     const levels = source.levels;
-    for (let i = 0, l = levels.length; i < l; i++) {
+    for (let i = 0, l2 = levels.length; i < l2; i++) {
       const level = levels[i];
       this.addLevel(level.object.clone(), level.distance, level.hysteresis);
     }
@@ -18586,13 +18586,13 @@ class LOD extends Object3D {
   addLevel(object, distance = 0, hysteresis = 0) {
     distance = Math.abs(distance);
     const levels = this.levels;
-    let l;
-    for (l = 0; l < levels.length; l++) {
-      if (distance < levels[l].distance) {
+    let l2;
+    for (l2 = 0; l2 < levels.length; l2++) {
+      if (distance < levels[l2].distance) {
         break;
       }
     }
-    levels.splice(l, 0, { distance, hysteresis, object });
+    levels.splice(l2, 0, { distance, hysteresis, object });
     this.add(object);
     return this;
   }
@@ -18602,8 +18602,8 @@ class LOD extends Object3D {
   getObjectForDistance(distance) {
     const levels = this.levels;
     if (levels.length > 0) {
-      let i, l;
-      for (i = 1, l = levels.length; i < l; i++) {
+      let i, l2;
+      for (i = 1, l2 = levels.length; i < l2; i++) {
         let levelDistance = levels[i].distance;
         if (levels[i].object.visible) {
           levelDistance -= levelDistance * levels[i].hysteresis;
@@ -18631,8 +18631,8 @@ class LOD extends Object3D {
       _v2$1.setFromMatrixPosition(this.matrixWorld);
       const distance = _v1$2.distanceTo(_v2$1) / camera.zoom;
       levels[0].object.visible = true;
-      let i, l;
-      for (i = 1, l = levels.length; i < l; i++) {
+      let i, l2;
+      for (i = 1, l2 = levels.length; i < l2; i++) {
         let levelDistance = levels[i].distance;
         if (levels[i].object.visible) {
           levelDistance -= levelDistance * levels[i].hysteresis;
@@ -18645,7 +18645,7 @@ class LOD extends Object3D {
         }
       }
       this._currentLevel = i - 1;
-      for (; i < l; i++) {
+      for (; i < l2; i++) {
         levels[i].object.visible = false;
       }
     }
@@ -18655,7 +18655,7 @@ class LOD extends Object3D {
     if (this.autoUpdate === false) data.object.autoUpdate = false;
     data.object.levels = [];
     const levels = this.levels;
-    for (let i = 0, l = levels.length; i < l; i++) {
+    for (let i = 0, l2 = levels.length; i < l2; i++) {
       const level = levels[i];
       data.object.levels.push({
         object: level.object.uuid,
@@ -18674,7 +18674,7 @@ const _matrix4 = /* @__PURE__ */ new Matrix4();
 const _vertex = /* @__PURE__ */ new Vector3();
 const _sphere$4 = /* @__PURE__ */ new Sphere();
 const _inverseMatrix$2 = /* @__PURE__ */ new Matrix4();
-const _ray$2 = /* @__PURE__ */ new Ray();
+const _ray$2 = /* @__PURE__ */ new Ray$1();
 class SkinnedMesh extends Mesh {
   constructor(geometry, material) {
     super(geometry, material);
@@ -18756,7 +18756,7 @@ class SkinnedMesh extends Mesh {
   normalizeSkinWeights() {
     const vector = new Vector4();
     const skinWeight = this.geometry.attributes.skinWeight;
-    for (let i = 0, l = skinWeight.count; i < l; i++) {
+    for (let i = 0, l2 = skinWeight.count; i < l2; i++) {
       vector.fromBufferAttribute(skinWeight, i);
       const scale = 1 / vector.manhattanLength();
       if (scale !== Infinity) {
@@ -18915,7 +18915,7 @@ class Skeleton {
   }
   fromJSON(json, bones) {
     this.uuid = json.uuid;
-    for (let i = 0, l = json.bones.length; i < l; i++) {
+    for (let i = 0, l2 = json.bones.length; i < l2; i++) {
       const uuid = json.bones[i];
       let bone = bones[uuid];
       if (bone === void 0) {
@@ -18941,7 +18941,7 @@ class Skeleton {
     data.uuid = this.uuid;
     const bones = this.bones;
     const boneInverses = this.boneInverses;
-    for (let i = 0, l = bones.length; i < l; i++) {
+    for (let i = 0, l2 = bones.length; i < l2; i++) {
       const bone = bones[i];
       data.bones.push(bone.uuid);
       const boneInverse = boneInverses[i];
@@ -19061,7 +19061,7 @@ class InstancedMesh extends Mesh {
       _instanceWorldMatrix.multiplyMatrices(matrixWorld, _instanceLocalMatrix);
       _mesh$1.matrixWorld = _instanceWorldMatrix;
       _mesh$1.raycast(raycaster, _instanceIntersects);
-      for (let i = 0, l = _instanceIntersects.length; i < l; i++) {
+      for (let i = 0, l2 = _instanceIntersects.length; i < l2; i++) {
         const intersect2 = _instanceIntersects[i];
         intersect2.instanceId = instanceId;
         intersect2.object = this;
@@ -19288,7 +19288,7 @@ class BatchedMesh extends Mesh {
     const boundingSphere = this.boundingSphere;
     const drawInfo = this._drawInfo;
     boundingSphere.makeEmpty();
-    for (let i = 0, l = drawInfo.length; i < l; i++) {
+    for (let i = 0, l2 = drawInfo.length; i < l2; i++) {
       if (drawInfo[i].active === false) continue;
       const geometryId = drawInfo[i].geometryIndex;
       this.getMatrixAt(i, _matrix$1);
@@ -19399,7 +19399,7 @@ class BatchedMesh extends Mesh {
       const dstAttribute = batchGeometry.getAttribute(attributeName);
       copyAttributeData(srcAttribute, dstAttribute, vertexStart);
       const itemSize = srcAttribute.itemSize;
-      for (let i = srcAttribute.count, l = vertexCount; i < l; i++) {
+      for (let i = srcAttribute.count, l2 = vertexCount; i < l2; i++) {
         const index = vertexStart + i;
         for (let c = 0; c < itemSize; c++) {
           dstAttribute.setComponent(index, c, 0);
@@ -19413,7 +19413,7 @@ class BatchedMesh extends Mesh {
       for (let i = 0; i < srcIndex.count; i++) {
         dstIndex.setX(indexStart + i, vertexStart + srcIndex.getX(i));
       }
-      for (let i = srcIndex.count, l = reservedRange.indexCount; i < l; i++) {
+      for (let i = srcIndex.count, l2 = reservedRange.indexCount; i < l2; i++) {
         dstIndex.setX(indexStart + i, vertexStart);
       }
       dstIndex.needsUpdate = true;
@@ -19477,7 +19477,7 @@ class BatchedMesh extends Mesh {
       const index = geometry.index;
       const position = geometry.attributes.position;
       const drawRange = this._drawRanges[geometryId];
-      for (let i = drawRange.start, l = drawRange.start + drawRange.count; i < l; i++) {
+      for (let i = drawRange.start, l2 = drawRange.start + drawRange.count; i < l2; i++) {
         let iv = i;
         if (index) {
           iv = index.getX(iv);
@@ -19505,7 +19505,7 @@ class BatchedMesh extends Mesh {
       const position = geometry.attributes.position;
       const drawRange = this._drawRanges[geometryId];
       let maxRadiusSq = 0;
-      for (let i = drawRange.start, l = drawRange.start + drawRange.count; i < l; i++) {
+      for (let i = drawRange.start, l2 = drawRange.start + drawRange.count; i < l2; i++) {
         let iv = i;
         if (index) {
           iv = index.getX(iv);
@@ -19590,7 +19590,7 @@ class BatchedMesh extends Mesh {
     if (_mesh$2.geometry.boundingSphere === null) {
       _mesh$2.geometry.boundingSphere = new Sphere();
     }
-    for (let i = 0, l = drawInfo.length; i < l; i++) {
+    for (let i = 0, l2 = drawInfo.length; i < l2; i++) {
       if (!drawInfo[i].visible || !drawInfo[i].active) {
         continue;
       }
@@ -19601,7 +19601,7 @@ class BatchedMesh extends Mesh {
       this.getBoundingBoxAt(geometryId, _mesh$2.geometry.boundingBox);
       this.getBoundingSphereAt(geometryId, _mesh$2.geometry.boundingSphere);
       _mesh$2.raycast(raycaster, _batchIntersects$1);
-      for (let j = 0, l2 = _batchIntersects$1.length; j < l2; j++) {
+      for (let j = 0, l3 = _batchIntersects$1.length; j < l3; j++) {
         const intersect2 = _batchIntersects$1[j];
         intersect2.object = this;
         intersect2.batchId = i;
@@ -19682,7 +19682,7 @@ class BatchedMesh extends Mesh {
       _invMatrixWorld.copy(this.matrixWorld).invert();
       _vector$5.setFromMatrixPosition(camera.matrixWorld).applyMatrix4(_invMatrixWorld);
       _forward.set(0, 0, -1).transformDirection(camera.matrixWorld).transformDirection(_invMatrixWorld);
-      for (let i = 0, l = drawInfo.length; i < l; i++) {
+      for (let i = 0, l2 = drawInfo.length; i < l2; i++) {
         if (drawInfo[i].visible && drawInfo[i].active) {
           const geometryId = drawInfo[i].geometryIndex;
           this.getMatrixAt(i, _matrix$1);
@@ -19704,7 +19704,7 @@ class BatchedMesh extends Mesh {
       } else {
         customSort.call(this, list, camera);
       }
-      for (let i = 0, l = list.length; i < l; i++) {
+      for (let i = 0, l2 = list.length; i < l2; i++) {
         const item = list[i];
         multiDrawStarts[count] = item.start * bytesPerElement;
         multiDrawCounts[count] = item.count;
@@ -19713,7 +19713,7 @@ class BatchedMesh extends Mesh {
       }
       _renderList.reset();
     } else {
-      for (let i = 0, l = drawInfo.length; i < l; i++) {
+      for (let i = 0, l2 = drawInfo.length; i < l2; i++) {
         if (drawInfo[i].visible && drawInfo[i].active) {
           const geometryId = drawInfo[i].geometryIndex;
           let culled = false;
@@ -19767,7 +19767,7 @@ class LineBasicMaterial extends Material {
 const _vStart = /* @__PURE__ */ new Vector3();
 const _vEnd = /* @__PURE__ */ new Vector3();
 const _inverseMatrix$1 = /* @__PURE__ */ new Matrix4();
-const _ray$1 = /* @__PURE__ */ new Ray();
+const _ray$1 = /* @__PURE__ */ new Ray$1();
 const _sphere$1 = /* @__PURE__ */ new Sphere();
 const _intersectPointOnRay = /* @__PURE__ */ new Vector3();
 const _intersectPointOnSegment = /* @__PURE__ */ new Vector3();
@@ -19791,7 +19791,7 @@ class Line extends Object3D {
     if (geometry.index === null) {
       const positionAttribute = geometry.attributes.position;
       const lineDistances = [0];
-      for (let i = 1, l = positionAttribute.count; i < l; i++) {
+      for (let i = 1, l2 = positionAttribute.count; i < l2; i++) {
         _vStart.fromBufferAttribute(positionAttribute, i - 1);
         _vEnd.fromBufferAttribute(positionAttribute, i);
         lineDistances[i] = lineDistances[i - 1];
@@ -19824,7 +19824,7 @@ class Line extends Object3D {
     if (index !== null) {
       const start = Math.max(0, drawRange.start);
       const end = Math.min(index.count, drawRange.start + drawRange.count);
-      for (let i = start, l = end - 1; i < l; i += step) {
+      for (let i = start, l2 = end - 1; i < l2; i += step) {
         const a = index.getX(i);
         const b = index.getX(i + 1);
         const intersect2 = checkIntersection$2(this, raycaster, _ray$1, localThresholdSq, a, b);
@@ -19843,7 +19843,7 @@ class Line extends Object3D {
     } else {
       const start = Math.max(0, drawRange.start);
       const end = Math.min(positionAttribute.count, drawRange.start + drawRange.count);
-      for (let i = start, l = end - 1; i < l; i += step) {
+      for (let i = start, l2 = end - 1; i < l2; i += step) {
         const intersect2 = checkIntersection$2(this, raycaster, _ray$1, localThresholdSq, i, i + 1);
         if (intersect2) {
           intersects2.push(intersect2);
@@ -19908,7 +19908,7 @@ class LineSegments extends Line {
     if (geometry.index === null) {
       const positionAttribute = geometry.attributes.position;
       const lineDistances = [];
-      for (let i = 0, l = positionAttribute.count; i < l; i += 2) {
+      for (let i = 0, l2 = positionAttribute.count; i < l2; i += 2) {
         _start.fromBufferAttribute(positionAttribute, i);
         _end.fromBufferAttribute(positionAttribute, i + 1);
         lineDistances[i] = i === 0 ? 0 : lineDistances[i - 1];
@@ -19953,7 +19953,7 @@ class PointsMaterial extends Material {
   }
 }
 const _inverseMatrix = /* @__PURE__ */ new Matrix4();
-const _ray = /* @__PURE__ */ new Ray();
+const _ray = /* @__PURE__ */ new Ray$1();
 const _sphere = /* @__PURE__ */ new Sphere();
 const _position$2 = /* @__PURE__ */ new Vector3();
 class Points extends Object3D {
@@ -19999,7 +19999,7 @@ class Points extends Object3D {
     } else {
       const start = Math.max(0, drawRange.start);
       const end = Math.min(positionAttribute.count, drawRange.start + drawRange.count);
-      for (let i = start, l = end; i < l; i++) {
+      for (let i = start, l2 = end; i < l2; i++) {
         _position$2.fromBufferAttribute(positionAttribute, i);
         testPoint(_position$2, i, localThresholdSq, matrixWorld, raycaster, intersects2, this);
       }
@@ -20375,29 +20375,29 @@ class CatmullRomCurve3 extends Curve {
   getPoint(t, optionalTarget = new Vector3()) {
     const point = optionalTarget;
     const points = this.points;
-    const l = points.length;
-    const p = (l - (this.closed ? 0 : 1)) * t;
+    const l2 = points.length;
+    const p = (l2 - (this.closed ? 0 : 1)) * t;
     let intPoint = Math.floor(p);
     let weight = p - intPoint;
     if (this.closed) {
-      intPoint += intPoint > 0 ? 0 : (Math.floor(Math.abs(intPoint) / l) + 1) * l;
-    } else if (weight === 0 && intPoint === l - 1) {
-      intPoint = l - 2;
+      intPoint += intPoint > 0 ? 0 : (Math.floor(Math.abs(intPoint) / l2) + 1) * l2;
+    } else if (weight === 0 && intPoint === l2 - 1) {
+      intPoint = l2 - 2;
       weight = 1;
     }
     let p0, p3;
     if (this.closed || intPoint > 0) {
-      p0 = points[(intPoint - 1) % l];
+      p0 = points[(intPoint - 1) % l2];
     } else {
       tmp.subVectors(points[0], points[1]).add(points[0]);
       p0 = tmp;
     }
-    const p1 = points[intPoint % l];
-    const p2 = points[(intPoint + 1) % l];
-    if (this.closed || intPoint + 2 < l) {
-      p3 = points[(intPoint + 2) % l];
+    const p1 = points[intPoint % l2];
+    const p2 = points[(intPoint + 1) % l2];
+    if (this.closed || intPoint + 2 < l2) {
+      p3 = points[(intPoint + 2) % l2];
     } else {
-      tmp.subVectors(points[l - 1], points[l - 2]).add(points[l - 1]);
+      tmp.subVectors(points[l2 - 1], points[l2 - 2]).add(points[l2 - 1]);
       p3 = tmp;
     }
     if (this.curveType === "centripetal" || this.curveType === "chordal") {
@@ -20426,7 +20426,7 @@ class CatmullRomCurve3 extends Curve {
   copy(source) {
     super.copy(source);
     this.points = [];
-    for (let i = 0, l = source.points.length; i < l; i++) {
+    for (let i = 0, l2 = source.points.length; i < l2; i++) {
       const point = source.points[i];
       this.points.push(point.clone());
     }
@@ -20438,7 +20438,7 @@ class CatmullRomCurve3 extends Curve {
   toJSON() {
     const data = super.toJSON();
     data.points = [];
-    for (let i = 0, l = this.points.length; i < l; i++) {
+    for (let i = 0, l2 = this.points.length; i < l2; i++) {
       const point = this.points[i];
       data.points.push(point.toArray());
     }
@@ -20450,7 +20450,7 @@ class CatmullRomCurve3 extends Curve {
   fromJSON(json) {
     super.fromJSON(json);
     this.points = [];
-    for (let i = 0, l = json.points.length; i < l; i++) {
+    for (let i = 0, l2 = json.points.length; i < l2; i++) {
       const point = json.points[i];
       this.points.push(new Vector3().fromArray(point));
     }
@@ -20787,7 +20787,7 @@ class SplineCurve extends Curve {
   copy(source) {
     super.copy(source);
     this.points = [];
-    for (let i = 0, l = source.points.length; i < l; i++) {
+    for (let i = 0, l2 = source.points.length; i < l2; i++) {
       const point = source.points[i];
       this.points.push(point.clone());
     }
@@ -20796,7 +20796,7 @@ class SplineCurve extends Curve {
   toJSON() {
     const data = super.toJSON();
     data.points = [];
-    for (let i = 0, l = this.points.length; i < l; i++) {
+    for (let i = 0, l2 = this.points.length; i < l2; i++) {
       const point = this.points[i];
       data.points.push(point.toArray());
     }
@@ -20805,7 +20805,7 @@ class SplineCurve extends Curve {
   fromJSON(json) {
     super.fromJSON(json);
     this.points = [];
-    for (let i = 0, l = json.points.length; i < l; i++) {
+    for (let i = 0, l2 = json.points.length; i < l2; i++) {
       const point = json.points[i];
       this.points.push(new Vector2().fromArray(point));
     }
@@ -20888,7 +20888,7 @@ class CurvePath extends Curve {
     }
     const lengths = [];
     let sums = 0;
-    for (let i = 0, l = this.curves.length; i < l; i++) {
+    for (let i = 0, l2 = this.curves.length; i < l2; i++) {
       sums += this.curves[i].getLength();
       lengths.push(sums);
     }
@@ -20927,7 +20927,7 @@ class CurvePath extends Curve {
   copy(source) {
     super.copy(source);
     this.curves = [];
-    for (let i = 0, l = source.curves.length; i < l; i++) {
+    for (let i = 0, l2 = source.curves.length; i < l2; i++) {
       const curve = source.curves[i];
       this.curves.push(curve.clone());
     }
@@ -20938,7 +20938,7 @@ class CurvePath extends Curve {
     const data = super.toJSON();
     data.autoClose = this.autoClose;
     data.curves = [];
-    for (let i = 0, l = this.curves.length; i < l; i++) {
+    for (let i = 0, l2 = this.curves.length; i < l2; i++) {
       const curve = this.curves[i];
       data.curves.push(curve.toJSON());
     }
@@ -20948,7 +20948,7 @@ class CurvePath extends Curve {
     super.fromJSON(json);
     this.autoClose = json.autoClose;
     this.curves = [];
-    for (let i = 0, l = json.curves.length; i < l; i++) {
+    for (let i = 0, l2 = json.curves.length; i < l2; i++) {
       const curve = json.curves[i];
       this.curves.push(new Curves[curve.type]().fromJSON(curve));
     }
@@ -20966,7 +20966,7 @@ class Path extends CurvePath {
   }
   setFromPoints(points) {
     this.moveTo(points[0].x, points[0].y);
-    for (let i = 1, l = points.length; i < l; i++) {
+    for (let i = 1, l2 = points.length; i < l2; i++) {
       this.lineTo(points[i].x, points[i].y);
     }
     return this;
@@ -21197,8 +21197,8 @@ class CircleGeometry extends BufferGeometry {
     vertices.push(0, 0, 0);
     normals.push(0, 0, 1);
     uvs.push(0.5, 0.5);
-    for (let s = 0, i = 3; s <= segments; s++, i += 3) {
-      const segment = thetaStart + s / segments * thetaLength;
+    for (let s2 = 0, i = 3; s2 <= segments; s2++, i += 3) {
+      const segment = thetaStart + s2 / segments * thetaLength;
       vertex2.x = radius * Math.cos(segment);
       vertex2.y = radius * Math.sin(segment);
       vertices.push(vertex2.x, vertex2.y, vertex2.z);
@@ -21812,7 +21812,7 @@ class Shape extends Path {
   }
   getPointsHoles(divisions) {
     const holesPts = [];
-    for (let i = 0, l = this.holes.length; i < l; i++) {
+    for (let i = 0, l2 = this.holes.length; i < l2; i++) {
       holesPts[i] = this.holes[i].getPoints(divisions);
     }
     return holesPts;
@@ -21827,7 +21827,7 @@ class Shape extends Path {
   copy(source) {
     super.copy(source);
     this.holes = [];
-    for (let i = 0, l = source.holes.length; i < l; i++) {
+    for (let i = 0, l2 = source.holes.length; i < l2; i++) {
       const hole = source.holes[i];
       this.holes.push(hole.clone());
     }
@@ -21837,7 +21837,7 @@ class Shape extends Path {
     const data = super.toJSON();
     data.uuid = this.uuid;
     data.holes = [];
-    for (let i = 0, l = this.holes.length; i < l; i++) {
+    for (let i = 0, l2 = this.holes.length; i < l2; i++) {
       const hole = this.holes[i];
       data.holes.push(hole.toJSON());
     }
@@ -21847,7 +21847,7 @@ class Shape extends Path {
     super.fromJSON(json);
     this.uuid = json.uuid;
     this.holes = [];
-    for (let i = 0, l = json.holes.length; i < l; i++) {
+    for (let i = 0, l2 = json.holes.length; i < l2; i++) {
       const hole = json.holes[i];
       this.holes.push(new Path().fromJSON(hole));
     }
@@ -22281,8 +22281,8 @@ class ShapeUtils {
   }
 }
 function removeDupEndPts(points) {
-  const l = points.length;
-  if (l > 2 && points[l - 1].equals(points[0])) {
+  const l2 = points.length;
+  if (l2 > 2 && points[l2 - 1].equals(points[0])) {
     points.pop();
   }
 }
@@ -22304,7 +22304,7 @@ class ExtrudeGeometry extends BufferGeometry {
     const scope = this;
     const verticesArray = [];
     const uvArray = [];
-    for (let i = 0, l = shapes.length; i < l; i++) {
+    for (let i = 0, l2 = shapes.length; i < l2; i++) {
       const shape = shapes[i];
       addShape(shape);
     }
@@ -22463,15 +22463,15 @@ class ExtrudeGeometry extends BufferGeometry {
           v(position2.x, position2.y, position2.z);
         }
       }
-      for (let s = 1; s <= steps; s++) {
+      for (let s2 = 1; s2 <= steps; s2++) {
         for (let i = 0; i < vlen; i++) {
           const vert = bevelEnabled ? scalePt2(vertices[i], verticesMovements[i], bs) : vertices[i];
           if (!extrudeByPath) {
-            v(vert.x, vert.y, depth / steps * s);
+            v(vert.x, vert.y, depth / steps * s2);
           } else {
-            normal.copy(splineTube.normals[s]).multiplyScalar(vert.x);
-            binormal.copy(splineTube.binormals[s]).multiplyScalar(vert.y);
-            position2.copy(extrudePts[s]).add(normal).add(binormal);
+            normal.copy(splineTube.normals[s2]).multiplyScalar(vert.x);
+            binormal.copy(splineTube.binormals[s2]).multiplyScalar(vert.y);
+            position2.copy(extrudePts[s2]).add(normal).add(binormal);
             v(position2.x, position2.y, position2.z);
           }
         }
@@ -22544,9 +22544,9 @@ class ExtrudeGeometry extends BufferGeometry {
           const j = i;
           let k = i - 1;
           if (k < 0) k = contour2.length - 1;
-          for (let s = 0, sl = steps + bevelSegments * 2; s < sl; s++) {
-            const slen1 = vlen * s;
-            const slen2 = vlen * (s + 1);
+          for (let s2 = 0, sl = steps + bevelSegments * 2; s2 < sl; s2++) {
+            const slen1 = vlen * s2;
+            const slen2 = vlen * (s2 + 1);
             const a = layeroffset + j + slen1, b = layeroffset + k + slen1, c = layeroffset + k + slen2, d = layeroffset + j + slen2;
             f4(a, b, c, d);
           }
@@ -22665,7 +22665,7 @@ const WorldUVGenerator = {
 function toJSON$1(shapes, options, data) {
   data.shapes = [];
   if (Array.isArray(shapes)) {
-    for (let i = 0, l = shapes.length; i < l; i++) {
+    for (let i = 0, l2 = shapes.length; i < l2; i++) {
       const shape = shapes[i];
       data.shapes.push(shape.uuid);
     }
@@ -22946,24 +22946,24 @@ class ShapeGeometry extends BufferGeometry {
       if (ShapeUtils.isClockWise(shapeVertices) === false) {
         shapeVertices = shapeVertices.reverse();
       }
-      for (let i = 0, l = shapeHoles.length; i < l; i++) {
+      for (let i = 0, l2 = shapeHoles.length; i < l2; i++) {
         const shapeHole = shapeHoles[i];
         if (ShapeUtils.isClockWise(shapeHole) === true) {
           shapeHoles[i] = shapeHole.reverse();
         }
       }
       const faces = ShapeUtils.triangulateShape(shapeVertices, shapeHoles);
-      for (let i = 0, l = shapeHoles.length; i < l; i++) {
+      for (let i = 0, l2 = shapeHoles.length; i < l2; i++) {
         const shapeHole = shapeHoles[i];
         shapeVertices = shapeVertices.concat(shapeHole);
       }
-      for (let i = 0, l = shapeVertices.length; i < l; i++) {
+      for (let i = 0, l2 = shapeVertices.length; i < l2; i++) {
         const vertex2 = shapeVertices[i];
         vertices.push(vertex2.x, vertex2.y, 0);
         normals.push(0, 0, 1);
         uvs.push(vertex2.x, vertex2.y);
       }
-      for (let i = 0, l = faces.length; i < l; i++) {
+      for (let i = 0, l2 = faces.length; i < l2; i++) {
         const face = faces[i];
         const a = face[0] + indexOffset;
         const b = face[1] + indexOffset;
@@ -22995,7 +22995,7 @@ class ShapeGeometry extends BufferGeometry {
 function toJSON(shapes, data) {
   data.shapes = [];
   if (Array.isArray(shapes)) {
-    for (let i = 0, l = shapes.length; i < l; i++) {
+    for (let i = 0, l2 = shapes.length; i < l2; i++) {
       const shape = shapes[i];
       data.shapes.push(shape.uuid);
     }
@@ -23377,7 +23377,7 @@ class WireframeGeometry extends BufferGeometry {
           const group = groups[o];
           const groupStart = group.start;
           const groupCount = group.count;
-          for (let i = groupStart, l = groupStart + groupCount; i < l; i += 3) {
+          for (let i = groupStart, l2 = groupStart + groupCount; i < l2; i += 3) {
             for (let j = 0; j < 3; j++) {
               const index1 = indices.getX(i + j);
               const index2 = indices.getX(i + (j + 1) % 3);
@@ -23392,7 +23392,7 @@ class WireframeGeometry extends BufferGeometry {
         }
       } else {
         const position = geometry.attributes.position;
-        for (let i = 0, l = position.count / 3; i < l; i++) {
+        for (let i = 0, l2 = position.count / 3; i < l2; i++) {
           for (let j = 0; j < 3; j++) {
             const index1 = 3 * i + j;
             const index2 = 3 * i + (j + 1) % 3;
@@ -24861,7 +24861,7 @@ class LoadingManager {
       return this;
     };
     this.getHandler = function(file) {
-      for (let i = 0, l = handlers.length; i < l; i += 2) {
+      for (let i = 0, l2 = handlers.length; i < l2; i += 2) {
         const regex = handlers[i];
         const loader = handlers[i + 1];
         if (regex.global) regex.lastIndex = 0;
@@ -25541,15 +25541,15 @@ class SphericalHarmonics3 {
     }
     return this;
   }
-  addScaledSH(sh, s) {
+  addScaledSH(sh, s2) {
     for (let i = 0; i < 9; i++) {
-      this.coefficients[i].addScaledVector(sh.coefficients[i], s);
+      this.coefficients[i].addScaledVector(sh.coefficients[i], s2);
     }
     return this;
   }
-  scale(s) {
+  scale(s2) {
     for (let i = 0; i < 9; i++) {
-      this.coefficients[i].multiplyScalar(s);
+      this.coefficients[i].multiplyScalar(s2);
     }
     return this;
   }
@@ -25863,14 +25863,14 @@ class LoaderUtils {
     if (typeof TextDecoder !== "undefined") {
       return new TextDecoder().decode(array);
     }
-    let s = "";
+    let s2 = "";
     for (let i = 0, il = array.length; i < il; i++) {
-      s += String.fromCharCode(array[i]);
+      s2 += String.fromCharCode(array[i]);
     }
     try {
-      return decodeURIComponent(escape(s));
+      return decodeURIComponent(escape(s2));
     } catch (e) {
-      return s;
+      return s2;
     }
   }
   static extractUrlBase(url) {
@@ -26107,7 +26107,7 @@ class ObjectLoader extends Loader {
   parseShapes(json) {
     const shapes = {};
     if (json !== void 0) {
-      for (let i = 0, l = json.length; i < l; i++) {
+      for (let i = 0, l2 = json.length; i < l2; i++) {
         const shape = new Shape().fromJSON(json[i]);
         shapes[shape.uuid] = shape;
       }
@@ -26121,7 +26121,7 @@ class ObjectLoader extends Loader {
       if (child.isBone) bones[child.uuid] = child;
     });
     if (json !== void 0) {
-      for (let i = 0, l = json.length; i < l; i++) {
+      for (let i = 0, l2 = json.length; i < l2; i++) {
         const skeleton = new Skeleton().fromJSON(json[i], bones);
         skeletons[skeleton.uuid] = skeleton;
       }
@@ -26132,7 +26132,7 @@ class ObjectLoader extends Loader {
     const geometries = {};
     if (json !== void 0) {
       const bufferGeometryLoader = new BufferGeometryLoader();
-      for (let i = 0, l = json.length; i < l; i++) {
+      for (let i = 0, l2 = json.length; i < l2; i++) {
         let geometry;
         const data = json[i];
         switch (data.type) {
@@ -26161,7 +26161,7 @@ class ObjectLoader extends Loader {
     if (json !== void 0) {
       const loader = new MaterialLoader();
       loader.setTextures(textures);
-      for (let i = 0, l = json.length; i < l; i++) {
+      for (let i = 0, l2 = json.length; i < l2; i++) {
         const data = json[i];
         if (cache[data.uuid] === void 0) {
           cache[data.uuid] = loader.parse(data);
@@ -26298,7 +26298,7 @@ class ObjectLoader extends Loader {
     }
     const textures = {};
     if (json !== void 0) {
-      for (let i = 0, l = json.length; i < l; i++) {
+      for (let i = 0, l2 = json.length; i < l2; i++) {
         const data = json[i];
         if (data.image === void 0) {
           console.warn('THREE.ObjectLoader: No "image" specified for', data.uuid);
@@ -26363,7 +26363,7 @@ class ObjectLoader extends Loader {
       if (name === void 0) return void 0;
       if (Array.isArray(name)) {
         const array = [];
-        for (let i = 0, l = name.length; i < l; i++) {
+        for (let i = 0, l2 = name.length; i < l2; i++) {
           const uuid = name[i];
           if (materials[uuid] === void 0) {
             console.warn("THREE.ObjectLoader: Undefined material", uuid);
@@ -26577,8 +26577,8 @@ class ObjectLoader extends Loader {
     if (data.type === "LOD") {
       if (data.autoUpdate !== void 0) object.autoUpdate = data.autoUpdate;
       const levels = data.levels;
-      for (let l = 0; l < levels.length; l++) {
-        const level = levels[l];
+      for (let l2 = 0; l2 < levels.length; l2++) {
+        const level = levels[l2];
         const child = object.getObjectByProperty("uuid", level.object);
         if (child !== void 0) {
           object.addLevel(child, level.distance, level.hysteresis);
@@ -26638,7 +26638,7 @@ const TEXTURE_FILTER = {
 const _matrix = /* @__PURE__ */ new Matrix4();
 class Raycaster {
   constructor(origin, direction2, near = 0, far = Infinity) {
-    this.ray = new Ray(origin, direction2);
+    this.ray = new Ray$1(origin, direction2);
     this.near = near;
     this.far = far;
     this.camera = null;
@@ -26679,7 +26679,7 @@ class Raycaster {
     return intersects2;
   }
   intersectObjects(objects, recursive = true, intersects2 = []) {
-    for (let i = 0, l = objects.length; i < l; i++) {
+    for (let i = 0, l2 = objects.length; i < l2; i++) {
       intersect(objects[i], this, intersects2, recursive);
     }
     intersects2.sort(ascSort);
@@ -26697,7 +26697,7 @@ function intersect(object, raycaster, intersects2, recursive) {
   }
   if (propagate === true && recursive === true) {
     const children = object.children;
-    for (let i = 0, l = children.length; i < l; i++) {
+    for (let i = 0, l2 = children.length; i < l2; i++) {
       intersect(children[i], raycaster, intersects2, true);
     }
   }
@@ -27190,7 +27190,7 @@ class PLYLoader extends Loader {
         return property.name;
       });
       function findAttrName(names) {
-        for (let i = 0, l = names.length; i < l; i++) {
+        for (let i = 0, l2 = names.length; i < l2; i++) {
           const name = names[i];
           if (elementNames.includes(name)) return name;
         }
@@ -27380,7 +27380,7 @@ class PLYLoader extends Loader {
             }, size: 8 };
         }
       }
-      for (let i = 0, l = properties.length; i < l; i++) {
+      for (let i = 0, l2 = properties.length; i < l2; i++) {
         const property = properties[i];
         if (property.type === "list") {
           property.countReader = getBinaryReader(body, property.countType, little_endian);
@@ -27682,7 +27682,7 @@ function ParserState() {
     addPointGeometry: function(vertices) {
       this.object.geometry.type = "Points";
       const vLen = this.vertices.length;
-      for (let vi = 0, l = vertices.length; vi < l; vi++) {
+      for (let vi = 0, l2 = vertices.length; vi < l2; vi++) {
         const index = this.parseVertexIndex(vertices[vi], vLen);
         this.addVertexPoint(index);
         this.addColor(index);
@@ -27692,10 +27692,10 @@ function ParserState() {
       this.object.geometry.type = "Line";
       const vLen = this.vertices.length;
       const uvLen = this.uvs.length;
-      for (let vi = 0, l = vertices.length; vi < l; vi++) {
+      for (let vi = 0, l2 = vertices.length; vi < l2; vi++) {
         this.addVertexLine(this.parseVertexIndex(vertices[vi], vLen));
       }
-      for (let uvi = 0, l = uvs.length; uvi < l; uvi++) {
+      for (let uvi = 0, l2 = uvs.length; uvi < l2; uvi++) {
         this.addUVLine(this.parseUVIndex(uvs[uvi], uvLen));
       }
     }
@@ -27741,7 +27741,7 @@ class OBJLoader extends Loader {
     }
     const lines = text.split("\n");
     let result = [];
-    for (let i = 0, l = lines.length; i < l; i++) {
+    for (let i = 0, l2 = lines.length; i < l2; i++) {
       const line = lines[i].trimStart();
       if (line.length === 0) continue;
       const lineFirstChar = line.charAt(0);
@@ -27854,7 +27854,7 @@ class OBJLoader extends Loader {
     container.materialLibraries = [].concat(state.materialLibraries);
     const hasPrimitives = !(state.objects.length === 1 && state.objects[0].geometry.vertices.length === 0);
     if (hasPrimitives === true) {
-      for (let i = 0, l = state.objects.length; i < l; i++) {
+      for (let i = 0, l2 = state.objects.length; i < l2; i++) {
         const object = state.objects[i];
         const geometry = object.geometry;
         const materials = object.materials;
@@ -28623,7 +28623,7 @@ property list uchar int vertex_index
         const colors = geometry.getAttribute("color");
         const indices = geometry.getIndex();
         normalMatrixWorld.getNormalMatrix(mesh.matrixWorld);
-        for (let i = 0, l = vertices.count; i < l; i++) {
+        for (let i = 0, l2 = vertices.count; i < l2; i++) {
           vertex2.fromBufferAttribute(vertices, i);
           vertex2.applyMatrix4(mesh.matrixWorld);
           output.setFloat32(vOffset, vertex2.x, options.littleEndian);
@@ -28685,7 +28685,7 @@ property list uchar int vertex_index
         }
         if (includeIndices === true) {
           if (indices !== null) {
-            for (let i = 0, l = indices.count; i < l; i += 3) {
+            for (let i = 0, l2 = indices.count; i < l2; i += 3) {
               output.setUint8(fOffset, 3);
               fOffset += 1;
               output.setUint32(fOffset, indices.getX(i + 0) + writtenVertices, options.littleEndian);
@@ -28696,7 +28696,7 @@ property list uchar int vertex_index
               fOffset += indexByteCount;
             }
           } else {
-            for (let i = 0, l = vertices.count; i < l; i += 3) {
+            for (let i = 0, l2 = vertices.count; i < l2; i += 3) {
               output.setUint8(fOffset, 3);
               fOffset += 1;
               output.setUint32(fOffset, writtenVertices + i, options.littleEndian);
@@ -28722,7 +28722,7 @@ property list uchar int vertex_index
         const colors = geometry.getAttribute("color");
         const indices = geometry.getIndex();
         normalMatrixWorld.getNormalMatrix(mesh.matrixWorld);
-        for (let i = 0, l = vertices.count; i < l; i++) {
+        for (let i = 0, l2 = vertices.count; i < l2; i++) {
           vertex2.fromBufferAttribute(vertices, i);
           vertex2.applyMatrix4(mesh.matrixWorld);
           let line = vertex2.x + " " + vertex2.y + " " + vertex2.z;
@@ -28754,14 +28754,14 @@ property list uchar int vertex_index
         }
         if (includeIndices === true) {
           if (indices !== null) {
-            for (let i = 0, l = indices.count; i < l; i += 3) {
+            for (let i = 0, l2 = indices.count; i < l2; i += 3) {
               faceList += `3 ${indices.getX(i + 0) + writtenVertices}`;
               faceList += ` ${indices.getX(i + 1) + writtenVertices}`;
               faceList += ` ${indices.getX(i + 2) + writtenVertices}
 `;
             }
           } else {
-            for (let i = 0, l = vertices.count; i < l; i += 3) {
+            for (let i = 0, l2 = vertices.count; i < l2; i += 3) {
               faceList += `3 ${writtenVertices + i} ${writtenVertices + i + 1} ${writtenVertices + i + 2}
 `;
             }
@@ -29335,6 +29335,273 @@ class SwitchCamera extends Camera {
     this.fov = inMinMax(hFov, this.fovMin, this.fovMax);
   }
 }
+function linearInterpolate(begin, end, percentage) {
+  return begin + percentage * (end - begin);
+}
+function toTypedArray(t, e) {
+  const n = new t(e.length);
+  e.forEach((t2, e2) => n[e2] = t2);
+  return n;
+}
+class Plane2 {
+  constructor(origin, normal) {
+    this.origin = origin;
+    this.normal = normal;
+  }
+}
+class BasePath {
+  constructor(hasHead = true, hasTail = true) {
+    this.hasHead = hasHead;
+    this.hasTail = hasTail;
+  }
+  getSteps(begin, end, n, offset, options = {}) {
+    const r = this.getSegmentPoints(begin, end, n, offset, options), i = [];
+    for (let a = 0; a < r.length - 1; a++) i.push({ a: r[a], b: r[a + 1], i: a });
+    return i;
+  }
+  getSegmentPoints(begin, end, n, offset, options = {}) {
+    let showTail = true, showHead = true;
+    if (typeof options.showTail == "boolean") showTail = options.showTail;
+    if (typeof options.showHead == "boolean") showHead = options.showHead;
+    const a = [], s2 = 1e-5, c = [
+      new Vector3(0, s2, 1),
+      new Vector3(s2, s2, 0),
+      new Vector3(0.99997, n, 0),
+      new Vector3(0.99998, n, -1),
+      new Vector3(1 - s2, 1, -1)
+    ], l2 = [...c].reverse(), iterateTotal = this.getIterations(end - begin);
+    if (showHead && 0 !== offset) {
+      for (const o of c) a.push({
+        p: begin + o.x * offset,
+        r: o.y,
+        tangent: o.z
+      });
+    }
+    const d = 0 !== offset ? 1 : 3;
+    for (let o = 0; o <= iterateTotal; o++) {
+      a.push({
+        p: linearInterpolate(begin + offset, end - offset, o / iterateTotal),
+        r: d
+      });
+    }
+    console.log("tail", showTail);
+    if (showTail && 0 !== offset) {
+      for (const o of l2) a.push({
+        p: end - o.x * offset,
+        r: o.y,
+        tangent: -o.z
+      });
+    }
+    return a;
+  }
+  getIterations(times) {
+    if (!times) return 1;
+    return 1;
+  }
+  getPointAt(e) {
+    return {
+      point: new Vector3(),
+      tangent: new Vector3()
+    };
+  }
+  getPathNormal() {
+    return new Vector3();
+  }
+}
+class Arc extends BasePath {
+  constructor(plane, radius, start) {
+    super();
+    this.plane = plane;
+    this.radius = radius;
+    this.start = start;
+  }
+  getPoints(t) {
+    const e = this.getBasis(), { normal, origin } = this.plane, i = [], a = 2 * Math.PI;
+    for (let s2 = 0; s2 < t; ++s2) {
+      const c = new Vector3(), l2 = s2 / t;
+      c.add(e.x.clone().multiplyScalar(this.radius * Math.cos(l2 * a))), c.add(e.y.clone().multiplyScalar(this.radius * Math.sin(l2 * a)));
+      const u = new Vector3().crossVectors(c, e.z).normalize();
+      i.push({
+        point: c.clone().add(origin),
+        tangent: u,
+        normal,
+        pointNormal: c.clone()
+      });
+    }
+    return i;
+  }
+  getIterations(t) {
+    const e = Math.abs(t) / (2 * Math.PI);
+    return Math.floor(60 * e);
+  }
+  getPathNormal() {
+    return this.plane.normal;
+  }
+  getPointAt(t) {
+    const e = this.getBasis(), n = this.getCirclePoint(t, this.radius), r = new Vector3().crossVectors(e.z, n.clone().sub(this.plane.origin)).normalize();
+    return { point: n, tangent: r };
+  }
+  getBasis() {
+    const { normal: t } = this.plane;
+    if (this.start) {
+      const e = this.start.clone(), n = t.clone();
+      return { x: e, y: new Vector3().crossVectors(e, n).normalize(), z: n };
+    }
+    const z = new Vector3(0, 0, 1), y = new Vector3(0, 1, 0), x = new Vector3(1, 0, 0), i = t.angleTo(z), a = new Vector3().crossVectors(t, z).normalize();
+    y.applyAxisAngle(a, -i), x.applyAxisAngle(a, -i), z.applyAxisAngle(a, -i);
+    return { x, y, z };
+  }
+  getCirclePoint(t, e) {
+    const n = this.getBasis(), r = new Vector3();
+    return r.add(n.x.clone().multiplyScalar(e * Math.cos(t))), r.add(n.y.clone().multiplyScalar(e * Math.sin(t))), r;
+  }
+}
+class Ray2 extends BasePath {
+  constructor(origin, ray2, planeNormal) {
+    super();
+    this.origin = origin;
+    this.ray = ray2;
+    this.planeNormal = planeNormal;
+  }
+  getPathNormal() {
+    return this.planeNormal;
+  }
+  getPointAt(length) {
+    const dir = this.ray.clone();
+    return {
+      point: this.origin.clone().add(dir.clone().multiplyScalar(length)),
+      tangent: dir.multiplyScalar(-1)
+    };
+  }
+  getIterations() {
+    return 2;
+  }
+}
+function l(point, points) {
+  const n = function(t, e) {
+    const [n2, o, r] = e.map((t2) => t2.clone());
+    o.sub(n2);
+    r.sub(n2);
+    o.multiplyScalar(1 / 3);
+    r.multiplyScalar(1 / 3);
+    n2.add(o).add(r);
+    return n2.sub(t);
+  }(point, points).normalize(), planeNormal = function(t) {
+    const [e, n2, r] = t.map((t2) => t2.clone());
+    n2.sub(e);
+    r.sub(e);
+    return new Vector3().crossVectors(n2, r).normalize();
+  }(points);
+  return n.dot(planeNormal);
+}
+const s = Math.PI;
+class ArrowOnPathGeometry extends BufferGeometry {
+  constructor(ray2, begin, end, radius, total, d = 2, offset = s / 4, options = {}) {
+    const cache = {}, arrPosition = [], arrNormal = [];
+    let g = 0;
+    const index = [], b = ray2.getSteps(begin, end, d, offset, options);
+    for (const o of b) {
+      const e = [o.a, o.b], [n, i] = e.map((e2) => {
+        const { point, tangent } = ray2.getPointAt(e2.p), i2 = ray2.getPathNormal();
+        return new Arc(new Plane2(point, tangent), radius * e2.r, i2.clone()).getPoints(Math.max(3, total));
+      }), [s2] = e.map((e2) => ray2.getPointAt(e2.p));
+      for (let t = 0; t < total; ++t) {
+        const e2 = (t + 1) % total, r = w(
+          o.i,
+          t,
+          n[t].point.clone(),
+          o.a.tangent ? s2.tangent.clone().multiplyScalar(o.a.tangent) : n[t].pointNormal.clone().normalize()
+        ), a = w(
+          o.i + 1,
+          t,
+          i[t].point.clone(),
+          o.b.tangent ? s2.tangent.clone().multiplyScalar(o.b.tangent) : n[t].pointNormal.clone().normalize()
+        ), c = w(
+          o.i + 1,
+          e2,
+          i[e2].point.clone(),
+          o.b.tangent ? s2.tangent.clone().multiplyScalar(o.b.tangent) : n[e2].pointNormal.clone().normalize()
+        ), l2 = w(
+          o.i,
+          e2,
+          n[e2].point.clone(),
+          o.a.tangent ? s2.tangent.clone().multiplyScalar(o.a.tangent) : n[e2].pointNormal.clone().normalize()
+        );
+        y(index, r, a, c, s2.point);
+        y(index, r, c, l2, s2.point);
+      }
+    }
+    function y(index2, e, n, r, i) {
+      const a = [e, n, r].map((t) => new Vector3(...arrPosition.slice(3 * t, 3 * t + 3)));
+      l(i.clone(), a) > 0 ? index2.push(e, n, r) : index2.push(e, r, n);
+    }
+    function w(t, e, n, o) {
+      const key = `${t},${e}`;
+      if (!cache[key]) {
+        arrPosition.push(n.x);
+        arrPosition.push(n.y);
+        arrPosition.push(n.z);
+        arrNormal.push(o.x);
+        arrNormal.push(o.y);
+        arrNormal.push(o.z);
+        cache[key] = g;
+        g++;
+      }
+      return cache[key];
+    }
+    const A = toTypedArray(Float32Array, arrPosition), x = toTypedArray(Float32Array, arrNormal), S = toTypedArray(Uint32Array, index);
+    super();
+    this.setAttribute("position", new BufferAttribute(A, 3)), this.setAttribute("normal", new BufferAttribute(x, 3, true)), this.setAttribute("tangent", new BufferAttribute(x, 3, true)), this.setAttribute("uv", new BufferAttribute(new Float32Array(A.length / 3 * 2), 2)), this.setIndex(new BufferAttribute(S, 1));
+    console.log("ArrowOnPathGeometry", cache);
+  }
+}
+class AxesArrow extends Object3D {
+  constructor(size = 0.035, radius = 2e-4, options = {}) {
+    super();
+    this.size = size;
+    this.radius = radius;
+    const scaleFactor = options.textScaleFactor || radius;
+    const xOptions = Object.assign(Object.assign({}, options), {
+      color: "#ff0000",
+      label: "+x",
+      showTail: true,
+      showHead: false,
+      scaleFactor
+    });
+    this.add(this.newAxis(xOptions));
+    const yOptions = Object.assign(Object.assign({}, options), {
+      color: "#00ff00",
+      label: "+y",
+      showTail: false,
+      showHead: true,
+      scaleFactor
+    });
+    this.add(this.newAxis(yOptions));
+    const zOptions = Object.assign(Object.assign({}, options), {
+      color: "#0000ff",
+      label: "+z",
+      showTail: true,
+      showHead: false,
+      scaleFactor
+    });
+    this.add(this.newAxis(zOptions));
+  }
+  newAxis(options = {}) {
+    const { size, radius } = this;
+    const color = options.color || "#00ff00";
+    const label = options.label || "+x";
+    const offset = radius * 7000000000000001e-19 / 2e-4, n = new Ray2(new Vector3(0, 0, -175e-5), new Vector3(0, 0, 1), new Vector3(1, 0, 0)), geo = new ArrowOnPathGeometry(n, -size, size, radius, 10, 1.7, offset, options);
+    const arrow = new Mesh(geo, new MeshBasicMaterial({ color, side: DoubleSide }));
+    arrow.scale.set(100, 100, 100);
+    arrow.position.set(0, 0, 0);
+    if (label == "+x") {
+      arrow.rotateOnAxis(new Vector3(0, 1, 0), Math.PI / 2);
+    } else if (label == "+y") {
+      arrow.rotateOnAxis(new Vector3(1, 0, 0), Math.PI / 2);
+    } else ;
+    return arrow;
+  }
+}
 const _changeEvent = { type: "change" };
 const _startEvent = { type: "start" };
 const _endEvent = { type: "end" };
@@ -29904,11 +30171,10 @@ class MqRender {
       box3
     };
   }
-  setAxes(size) {
+  setAxes(size, radius = 0.01, axesOptions = {}) {
     var _a;
     const { scene, scene2, track, options, renderName } = this;
-    const axes = new AxesHelper(size);
-    axes.setColors(16711680, 65280, 255);
+    const axes = new AxesArrow(size, radius, axesOptions);
     axes.name = "axesHelper";
     if (renderName == "editor-solution") {
       if (!scene.getObjectByName(axes.name)) {
@@ -31832,7 +32098,7 @@ function _populateBuffer(byteOffset, node) {
     if (node.buffer) {
       const buffer = node.buffer;
       uint8Array.set(new Uint8Array(buffer), byteOffset);
-      for (let offset = byteOffset, l = byteOffset + buffer.byteLength; offset < l; offset += BYTES_PER_NODE) {
+      for (let offset = byteOffset, l2 = byteOffset + buffer.byteLength; offset < l2; offset += BYTES_PER_NODE) {
         const offset2 = offset / 2;
         if (!IS_LEAF(offset2, uint16Array)) {
           uint32Array[offset / 4 + 6] += stride4Offset;
@@ -31868,7 +32134,7 @@ function generateIndirectBuffer(geometry, useSharedArrayBuffer) {
   const byteCount = useUint32 ? 4 : 2;
   const buffer = useSharedArrayBuffer ? new SharedArrayBuffer(triCount * byteCount) : new ArrayBuffer(triCount * byteCount);
   const indirectBuffer = useUint32 ? new Uint32Array(buffer) : new Uint16Array(buffer);
-  for (let i = 0, l = indirectBuffer.length; i < l; i++) {
+  for (let i = 0, l2 = indirectBuffer.length; i < l2; i++) {
     indirectBuffer[i] = i;
   }
   return indirectBuffer;
@@ -31974,7 +32240,7 @@ class SeparatingAxisBounds {
   setFromPointsField(points, field) {
     let min = Infinity;
     let max = -Infinity;
-    for (let i = 0, l = points.length; i < l; i++) {
+    for (let i = 0, l2 = points.length; i < l2; i++) {
       const p = points[i];
       const val = p[field];
       min = val < min ? val : min;
@@ -31986,7 +32252,7 @@ class SeparatingAxisBounds {
   setFromPoints(axis, points) {
     let min = Infinity;
     let max = -Infinity;
-    for (let i = 0, l = points.length; i < l; i++) {
+    for (let i = 0, l2 = points.length; i < l2; i++) {
       const p = points[i];
       const val = axis.dot(p);
       min = val < min ? val : min;
@@ -32111,7 +32377,7 @@ const closestPointsSegmentToSegment = function() {
 const sphereIntersectTriangle = function() {
   const closestPointTemp = new Vector3();
   const projectedPointTemp = new Vector3();
-  const planeTemp = new Plane();
+  const planeTemp = new Plane$1();
   const lineTemp = new Line3();
   return function sphereIntersectTriangle2(sphere, triangle3) {
     const { radius, center } = sphere;
@@ -32150,7 +32416,7 @@ class ExtendedTriangle extends Triangle {
     this.satBounds = new Array(4).fill().map(() => new SeparatingAxisBounds());
     this.points = [this.a, this.b, this.c];
     this.sphere = new Sphere();
-    this.plane = new Plane();
+    this.plane = new Plane$1();
     this.needsUpdate = true;
   }
   intersectsSphere(sphere) {
@@ -33048,7 +33314,7 @@ function iterateOverTriangles(offset, count, bvh, intersectsTriangleFunc, contai
   const { geometry } = bvh;
   const { index } = geometry;
   const pos = geometry.attributes.position;
-  for (let i = offset, l = count + offset; i < l; i++) {
+  for (let i = offset, l2 = count + offset; i < l2; i++) {
     let tri;
     tri = i;
     setTriangle(triangle3, tri * 3, index, pos);
@@ -33069,7 +33335,7 @@ function refit(bvh, nodeIndices = null) {
   let buffer, uint32Array2, uint16Array2, float32Array2;
   let byteOffset = 0;
   const roots = bvh._roots;
-  for (let i = 0, l = roots.length; i < l; i++) {
+  for (let i = 0, l2 = roots.length; i < l2; i++) {
     buffer = roots[i];
     uint32Array2 = new Uint32Array(buffer);
     uint16Array2 = new Uint16Array(buffer);
@@ -33089,7 +33355,7 @@ function refit(bvh, nodeIndices = null) {
       let maxx = -Infinity;
       let maxy = -Infinity;
       let maxz = -Infinity;
-      for (let i = 3 * offset, l = 3 * (offset + count); i < l; i++) {
+      for (let i = 3 * offset, l2 = 3 * (offset + count); i < l2; i++) {
         let index = indexArr[i];
         const x = posAttr.getX(index);
         const y = posAttr.getY(index);
@@ -33223,7 +33489,7 @@ function iterateOverTriangles_indirect(offset, count, bvh, intersectsTriangleFun
   const { geometry } = bvh;
   const { index } = geometry;
   const pos = geometry.attributes.position;
-  for (let i = offset, l = count + offset; i < l; i++) {
+  for (let i = offset, l2 = count + offset; i < l2; i++) {
     let tri;
     tri = bvh.resolveTriangleIndex(i);
     setTriangle(triangle3, tri * 3, index, pos);
@@ -33350,7 +33616,7 @@ function _intersectsGeometry$1(nodeIndex32, bvh, otherGeometry, geometryToBvh, c
           tri.b.applyMatrix4(geometryToBvh);
           tri.c.applyMatrix4(geometryToBvh);
           tri.needsUpdate = true;
-          for (let i = offset * 3, l = (count + offset) * 3; i < l; i += 3) {
+          for (let i = offset * 3, l2 = (count + offset) * 3; i < l2; i += 3) {
             setTriangle(triangle2$1, i, thisIndex, thisPos);
             triangle2$1.needsUpdate = true;
             if (tri.intersectsTriangle(triangle2$1)) {
@@ -33362,13 +33628,13 @@ function _intersectsGeometry$1(nodeIndex32, bvh, otherGeometry, geometryToBvh, c
       });
       return res;
     } else {
-      for (let i = offset * 3, l = (count + offset) * 3; i < l; i += 3) {
+      for (let i = offset * 3, l2 = (count + offset) * 3; i < l2; i += 3) {
         setTriangle(triangle$1, i, thisIndex, thisPos);
         triangle$1.a.applyMatrix4(invertedMat$1);
         triangle$1.b.applyMatrix4(invertedMat$1);
         triangle$1.c.applyMatrix4(invertedMat$1);
         triangle$1.needsUpdate = true;
-        for (let i2 = 0, l2 = index.count; i2 < l2; i2 += 3) {
+        for (let i2 = 0, l22 = index.count; i2 < l22; i2 += 3) {
           setTriangle(triangle2$1, i2, index, pos);
           triangle2$1.needsUpdate = true;
           if (triangle$1.intersectsTriangle(triangle2$1)) {
@@ -33455,7 +33721,7 @@ function closestPointToGeometry(bvh, otherGeometry, geometryToBvh, target1 = {},
                 triangle22.b.applyMatrix4(geometryToBvh);
                 triangle22.c.applyMatrix4(geometryToBvh);
                 triangle22.needsUpdate = true;
-                for (let i = offset, l = offset + count; i < l; i++) {
+                for (let i = offset, l3 = offset + count; i < l3; i++) {
                   setTriangle(triangle3, 3 * i, index, pos);
                   triangle3.needsUpdate = true;
                   const dist = triangle3.distanceToTriangle(triangle22, tempTarget1, tempTarget2);
@@ -33483,7 +33749,7 @@ function closestPointToGeometry(bvh, otherGeometry, geometryToBvh, target1 = {},
             triangle22.b.applyMatrix4(geometryToBvh);
             triangle22.c.applyMatrix4(geometryToBvh);
             triangle22.needsUpdate = true;
-            for (let i = offset, l = offset + count; i < l; i++) {
+            for (let i = offset, l3 = offset + count; i < l3; i++) {
               setTriangle(triangle3, 3 * i, index, pos);
               triangle3.needsUpdate = true;
               const dist = triangle3.distanceToTriangle(triangle22, tempTarget1, tempTarget2);
@@ -33536,7 +33802,7 @@ function refit_indirect(bvh, nodeIndices = null) {
   let buffer, uint32Array2, uint16Array2, float32Array2;
   let byteOffset = 0;
   const roots = bvh._roots;
-  for (let i = 0, l = roots.length; i < l; i++) {
+  for (let i = 0, l2 = roots.length; i < l2; i++) {
     buffer = roots[i];
     uint32Array2 = new Uint32Array(buffer);
     uint16Array2 = new Uint16Array(buffer);
@@ -33556,7 +33822,7 @@ function refit_indirect(bvh, nodeIndices = null) {
       let maxx = -Infinity;
       let maxy = -Infinity;
       let maxz = -Infinity;
-      for (let i = offset, l = offset + count; i < l; i++) {
+      for (let i = offset, l2 = offset + count; i < l2; i++) {
         const t = 3 * bvh.resolveTriangleIndex(i);
         for (let j = 0; j < 3; j++) {
           let index = t + j;
@@ -33744,7 +34010,7 @@ function _intersectsGeometry(nodeIndex32, bvh, otherGeometry, geometryToBvh, cac
           tri.b.applyMatrix4(geometryToBvh);
           tri.c.applyMatrix4(geometryToBvh);
           tri.needsUpdate = true;
-          for (let i = offset, l = count + offset; i < l; i++) {
+          for (let i = offset, l2 = count + offset; i < l2; i++) {
             setTriangle(triangle2, 3 * bvh.resolveTriangleIndex(i), thisIndex, thisPos);
             triangle2.needsUpdate = true;
             if (tri.intersectsTriangle(triangle2)) {
@@ -33756,14 +34022,14 @@ function _intersectsGeometry(nodeIndex32, bvh, otherGeometry, geometryToBvh, cac
       });
       return res;
     } else {
-      for (let i = offset, l = count + offset; i < l; i++) {
+      for (let i = offset, l2 = count + offset; i < l2; i++) {
         const ti = bvh.resolveTriangleIndex(i);
         setTriangle(triangle, 3 * ti, thisIndex, thisPos);
         triangle.a.applyMatrix4(invertedMat);
         triangle.b.applyMatrix4(invertedMat);
         triangle.c.applyMatrix4(invertedMat);
         triangle.needsUpdate = true;
-        for (let i2 = 0, l2 = index.count; i2 < l2; i2 += 3) {
+        for (let i2 = 0, l22 = index.count; i2 < l22; i2 += 3) {
           setTriangle(triangle2, i2, index, pos);
           triangle2.needsUpdate = true;
           if (triangle.intersectsTriangle(triangle2)) {
@@ -33851,7 +34117,7 @@ function closestPointToGeometry_indirect(bvh, otherGeometry, geometryToBvh, targ
                 triangle22.b.applyMatrix4(geometryToBvh);
                 triangle22.c.applyMatrix4(geometryToBvh);
                 triangle22.needsUpdate = true;
-                for (let i = offset, l = offset + count; i < l; i++) {
+                for (let i = offset, l3 = offset + count; i < l3; i++) {
                   const ti = bvh.resolveTriangleIndex(i);
                   setTriangle(triangle3, 3 * ti, index, pos);
                   triangle3.needsUpdate = true;
@@ -33880,7 +34146,7 @@ function closestPointToGeometry_indirect(bvh, otherGeometry, geometryToBvh, targ
             triangle22.b.applyMatrix4(geometryToBvh);
             triangle22.c.applyMatrix4(geometryToBvh);
             triangle22.needsUpdate = true;
-            for (let i = offset, l = offset + count; i < l; i++) {
+            for (let i = offset, l3 = offset + count; i < l3; i++) {
               const ti = bvh.resolveTriangleIndex(i);
               setTriangle(triangle3, 3 * ti, index, pos);
               triangle3.needsUpdate = true;
@@ -34324,7 +34590,7 @@ class MeshBVH {
     const groups = geometry.groups;
     const side = isMaterial ? materialOrSide.side : materialOrSide;
     const raycastFunc = this.indirect ? raycast_indirect : raycast;
-    for (let i = 0, l = roots.length; i < l; i++) {
+    for (let i = 0, l2 = roots.length; i < l2; i++) {
       const materialSide = isArrayMaterial ? materialOrSide[groups[i].materialIndex].side : side;
       const startCount = intersects2.length;
       raycastFunc(this, i, materialSide, ray2, intersects2, near, far);
@@ -34346,7 +34612,7 @@ class MeshBVH {
     const groups = geometry.groups;
     const side = isMaterial ? materialOrSide.side : materialOrSide;
     const raycastFirstFunc = this.indirect ? raycastFirst_indirect : raycastFirst;
-    for (let i = 0, l = roots.length; i < l; i++) {
+    for (let i = 0, l2 = roots.length; i < l2; i++) {
       const materialSide = isArrayMaterial ? materialOrSide[groups[i].materialIndex].side : side;
       const result = raycastFirstFunc(this, i, materialSide, ray2, near, far);
       if (result != null && (closestResult == null || result.distance < closestResult.distance)) {
@@ -34362,7 +34628,7 @@ class MeshBVH {
     let result = false;
     const roots = this._roots;
     const intersectsGeometryFunc = this.indirect ? intersectsGeometry_indirect : intersectsGeometry;
-    for (let i = 0, l = roots.length; i < l; i++) {
+    for (let i = 0, l2 = roots.length; i < l2; i++) {
       result = intersectsGeometryFunc(this, i, otherGeometry, geomToMesh);
       if (result) {
         break;
@@ -34401,7 +34667,7 @@ class MeshBVH {
     let result = false;
     let byteOffset = 0;
     const roots = this._roots;
-    for (let i = 0, l = roots.length; i < l; i++) {
+    for (let i = 0, l2 = roots.length; i < l2; i++) {
       const root = roots[i];
       result = shapecast(this, i, intersectsBounds, intersectsRange, boundsTraverseOrder, byteOffset);
       if (result) {
@@ -34526,7 +34792,7 @@ function convertRaycastIntersect(hit, object, raycaster) {
   hit.object = object;
   return hit;
 }
-const ray = /* @__PURE__ */ new Ray();
+const ray = /* @__PURE__ */ new Ray$1();
 const direction = /* @__PURE__ */ new Vector3();
 const tmpInverseMatrix = /* @__PURE__ */ new Matrix4();
 const origMeshRaycastFunc = Mesh.prototype.raycast;
@@ -34554,7 +34820,7 @@ function acceleratedBatchedMeshRaycast(raycaster, intersects2) {
     if (_mesh.geometry.boundingSphere === null) {
       _mesh.geometry.boundingSphere = new Sphere();
     }
-    for (let i = 0, l = drawInfo.length; i < l; i++) {
+    for (let i = 0, l2 = drawInfo.length; i < l2; i++) {
       if (!this.getVisibleAt(i)) {
         continue;
       }
@@ -34568,7 +34834,7 @@ function acceleratedBatchedMeshRaycast(raycaster, intersects2) {
         _mesh.geometry.setDrawRange(drawRange.start, drawRange.count);
       }
       _mesh.raycast(raycaster, _batchIntersects);
-      for (let j = 0, l2 = _batchIntersects.length; j < l2; j++) {
+      for (let j = 0, l3 = _batchIntersects.length; j < l3; j++) {
         const intersect2 = _batchIntersects[j];
         intersect2.object = this;
         intersect2.batchId = i;
@@ -34602,7 +34868,7 @@ function acceleratedMeshRaycast(raycaster, intersects2) {
       }
     } else {
       const hits = bvh.raycast(ray, this.material, near, far);
-      for (let i = 0, l = hits.length; i < l; i++) {
+      for (let i = 0, l2 = hits.length; i < l2; i++) {
         const hit = convertRaycastIntersect(hits[i], this, raycaster);
         if (hit) {
           intersects2.push(hit);
@@ -34852,7 +35118,7 @@ function mergeAttributes(attributes) {
     const attribute = attributes[i];
     if (attribute.isInterleavedBufferAttribute) {
       const tupleOffset = offset / itemSize;
-      for (let j = 0, l = attribute.count; j < l; j++) {
+      for (let j = 0, l2 = attribute.count; j < l2; j++) {
         for (let c = 0; c < itemSize; c++) {
           const value = attribute.getComponent(j, c);
           result.setComponent(j + tupleOffset, c, value);
@@ -34881,7 +35147,7 @@ function interleaveAttributes(attributes) {
   let TypedArray;
   let arrayLength = 0;
   let stride = 0;
-  for (let i = 0, l = attributes.length; i < l; ++i) {
+  for (let i = 0, l2 = attributes.length; i < l2; ++i) {
     const attribute = attributes[i];
     if (TypedArray === void 0) TypedArray = attribute.array.constructor;
     if (TypedArray !== attribute.array.constructor) {
@@ -34896,7 +35162,7 @@ function interleaveAttributes(attributes) {
   const res = [];
   const getters = ["getX", "getY", "getZ", "getW"];
   const setters = ["setX", "setY", "setZ", "setW"];
-  for (let j = 0, l = attributes.length; j < l; j++) {
+  for (let j = 0, l2 = attributes.length; j < l2; j++) {
     const attribute = attributes[j];
     const itemSize = attribute.itemSize;
     const count = attribute.count;
@@ -34983,7 +35249,7 @@ function mergeVertices(geometry, tolerance = 1e-4) {
   const newIndices = [];
   const getters = ["getX", "getY", "getZ", "getW"];
   const setters = ["setX", "setY", "setZ", "setW"];
-  for (let i = 0, l = attributeNames.length; i < l; i++) {
+  for (let i = 0, l2 = attributeNames.length; i < l2; i++) {
     const name = attributeNames[i];
     const attr = geometry.attributes[name];
     tmpAttributes[name] = new attr.constructor(
@@ -35007,7 +35273,7 @@ function mergeVertices(geometry, tolerance = 1e-4) {
   for (let i = 0; i < vertexCount; i++) {
     const index = indices ? indices.getX(i) : i;
     let hash = "";
-    for (let j = 0, l = attributeNames.length; j < l; j++) {
+    for (let j = 0, l2 = attributeNames.length; j < l2; j++) {
       const name = attributeNames[j];
       const attribute = geometry.getAttribute(name);
       const itemSize = attribute.itemSize;
@@ -35018,7 +35284,7 @@ function mergeVertices(geometry, tolerance = 1e-4) {
     if (hash in hashToIndex) {
       newIndices.push(hashToIndex[hash]);
     } else {
-      for (let j = 0, l = attributeNames.length; j < l; j++) {
+      for (let j = 0, l2 = attributeNames.length; j < l2; j++) {
         const name = attributeNames[j];
         const attribute = geometry.getAttribute(name);
         const morphAttributes = geometry.morphAttributes[name];
@@ -35385,7 +35651,7 @@ function toCreasedNormals(geometry, creaseAngle = Math.PI / 3) {
   const resultGeometry = geometry.index ? geometry.toNonIndexed() : geometry;
   const posAttr = resultGeometry.attributes.position;
   const vertexMap = {};
-  for (let i = 0, l = posAttr.count / 3; i < l; i++) {
+  for (let i = 0, l2 = posAttr.count / 3; i < l2; i++) {
     const i3 = 3 * i;
     const a = verts[0].fromBufferAttribute(posAttr, i3 + 0);
     const b = verts[1].fromBufferAttribute(posAttr, i3 + 1);
@@ -35404,7 +35670,7 @@ function toCreasedNormals(geometry, creaseAngle = Math.PI / 3) {
   }
   const normalArray = new Float32Array(posAttr.count * 3);
   const normAttr = new BufferAttribute(normalArray, 3, false);
-  for (let i = 0, l = posAttr.count / 3; i < l; i++) {
+  for (let i = 0, l2 = posAttr.count / 3; i < l2; i++) {
     const i3 = 3 * i;
     const a = verts[0].fromBufferAttribute(posAttr, i3 + 0);
     const b = verts[1].fromBufferAttribute(posAttr, i3 + 1);
@@ -35462,7 +35728,7 @@ const alias3 = {
   Quaternion,
   Matrix4,
   Line3,
-  Plane,
+  Plane: Plane$1,
   PerspectiveCamera,
   OrthographicCamera,
   BufferAttribute,
@@ -35604,7 +35870,7 @@ function __generator(thisArg, body) {
   }
 }
 function __values(o) {
-  var s = typeof Symbol === "function" && Symbol.iterator, m = s && o[s], i = 0;
+  var s2 = typeof Symbol === "function" && Symbol.iterator, m = s2 && o[s2], i = 0;
   if (m) return m.call(o);
   if (o && typeof o.length === "number") return {
     next: function() {
@@ -35612,7 +35878,7 @@ function __values(o) {
       return { value: o && o[i++], done: !o };
     }
   };
-  throw new TypeError(s ? "Object is not iterable." : "Symbol.iterator is not defined.");
+  throw new TypeError(s2 ? "Object is not iterable." : "Symbol.iterator is not defined.");
 }
 function __read(o, n) {
   var m = typeof Symbol === "function" && o[Symbol.iterator];
@@ -35632,7 +35898,7 @@ function __read(o, n) {
   return ar;
 }
 function __spreadArray(to, from, pack) {
-  if (pack || arguments.length === 2) for (var i = 0, l = from.length, ar; i < l; i++) {
+  if (pack || arguments.length === 2) for (var i = 0, l2 = from.length, ar; i < l2; i++) {
     if (ar || !(i in from)) {
       if (!ar) ar = Array.prototype.slice.call(from, 0, i);
       ar[i] = from[i];

@@ -259,6 +259,9 @@ function getState() {
     }
     return false;
 }
+function resetAxes() {
+    app3.setAxes(0.5, 2e-3, {textScaleFactor: 0.1});
+}
 function resetDir(hasNormal) {
     m2.hasCut = hasNormal;
     m2.x1 = 0, m2.y1 = 0, m2.z1 = 0;
@@ -308,7 +311,7 @@ function clickByCode(type) {
                 if (m1.type == 2) {
                     // 历史记录
                     // ud.pathList = ud.pathList.filter(e=>!e.indexOf('/input/')>-1);
-                    app3.setAxes(40);
+                    resetAxes();
                 } else {
                     // 新的调用
                     ud.pathList = ud.pathList.filter(e=>e.indexOf('/output/')>-1);
@@ -345,7 +348,7 @@ function clickByCode(type) {
         [7,8].forEach(e=>{
             if (markers[e]) app3.add(markers[e]);
         })
-        app3.setAxes(40);
+        resetAxes();
         resetDir(true);
     } else if (type == 5) {
         ud.timestampList = [];
@@ -492,6 +495,18 @@ function updateByPath() {
         if (!geo) return;
         elLoading.hide();
         addGeotoScene(geo, filename, path);
+        if (path.indexOf('/input/') > 0) {
+            const isUpper = path.indexOf('cleaned_upper.mq') > 0;
+            const idx = isUpper ? 7 : 8;
+            const pos = new alias3.Vector3(0, 0, 1);
+            markers[idx] = new MarkerLines([pos], 40, {
+                showX: true,
+                color1: color4Mesh[isUpper ? 0 : 1],
+            });     
+            markers[idx].name = `marker${idx}`;
+            app3.add(markers[idx]);
+            cut.setData(isUpper, geo.attributes.position.array, geo.index.array);            
+        }
     }
     ud.pathList.forEach(path=>{        
         // if (path && path.indexOf('/input/') > 0) {
@@ -584,6 +599,7 @@ function addGeotoScene(geo, filename, path) {
             // } else if (str.indexOf('/input/cleaned_upper.mq') > 0 && mat.upper) {
             //     mesh.applyMatrix4(mat.upper);
             // }
+            gCache[filename] = mesh;
             mesh.matrixWorldNeedsUpdate = true;
         }
         app3.add(mesh);

@@ -14,16 +14,40 @@
                         <option v-for="(item,i) in ud.timestampList" :key="i" :value="item" v-html="elViewer.parseTime(tag, item)"></option>
                     </select>
                 </div>
-                <div class="d-flex flex-wrap">
-                    <button class="btn btn-primary m-1 btn-sm" @click="clickLoadShowData(2)" :disabled="getState()">Upload the upper scanned meshes</button>
-                    <button class="btn btn-primary m-1 btn-sm" @click="clickLoadShowData(6)" :disabled="getState()">Upload the lower scanned meshes</button>
+                <div class="d-flex justify-content-center my-2">
+                    <button class="btn btn-primary w-75 btn-sm" @click="clickLoadShowData(2)" :disabled="getState()">Upload the scan mesh with scanbody<span class="text-danger">*</span></button>
+                </div>
+                <div class="d-flex justify-content-between">
+                    <button class="btn btn-primary m-1 btn-sm" @click="clickLoadShowData(6)" v-html="'Upload the original upper scan mesh'"></button>
+                    <button class="btn btn-primary m-1 btn-sm" @click="clickLoadShowData(7)" v-html="'Upload the original lower scan mesh'"></button>
                 </div>
             </div>
             <div class="d-flex flex-wrap">                
-                <div class="alert alert-warning m-1 p-0" role="alert" v-html="'Enter the prep tooth id'"></div>
-                <select class="form-select" v-model="m1.missId" @change="selectMissingTid" :disabled="getState()">
-                    <option v-for="(tid,i) in ud.tidList" :key="i" :value="tid" v-html="tid"></option>
+                <div>tooth id <span class="text-danger">*</span></div>
+                <select v-model="m1.tooth_id" class="form-select">
+                    <option v-for="(item,i) in ud.tidList" :key="i" value="item.id" v-html="item.label"></option>
                 </select>
+            </div>            
+            <div class="d-flex flex-wrap">                
+                <div>scanbody id <span class="text-danger">*</span></div>
+                <select v-model="m1.scanbody_id" class="form-select">
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                </select>
+            </div>            
+            <div class="d-flex flex-column justify-content-start">
+                <label class="form-label my-auto mx-1">
+                    <span>Direction point</span>
+                    <!-- <button class="btn btn-primary w-25 m-1 btn-sm" :disabled="m2.lockLower" @click="clickByCode(8)">update</button> -->
+                </label>
+                <div class="d-flex flex-column">
+                    <label class="d-flex mx-3">X
+                        <input class="form-control form-control-sm ms-2 w-50" :disabled="m2.lockLower" v-model="m2.x" @change="positionInputChange($event, 2)"></label>
+                    <label class="d-flex mx-3">Y
+                        <input class="form-control form-control-sm ms-2 w-50" :disabled="m2.lockLower" v-model="m2.y" @change="positionInputChange($event, 2)"></label>
+                    <label class="d-flex mx-3">Z
+                        <input class="form-control form-control-sm ms-2 w-50" :disabled="m2.lockLower" v-model="m2.z" @change="positionInputChange($event, 2)"></label>                            
+                </div>
             </div>
             <div class="d-flex flex-wrap">                
                 <button class="btn btn-primary m-1" @click="clickLoadShowData(3)" :disabled="ud.lockCall" v-html="'Call the AI Algorithm'"></button>
@@ -46,20 +70,19 @@
                 <div class="alert alert-danger p-1 m-1" role="alert" v-html="item.name"></div>
             </div>
         </div>
+        <SubChangeLog :tag="tag" />
         <div class="">
-            <div class="d-flex my-1" v-for="(item,i) in ud.infoList" :key="i">
+            <div class="d-flex" v-for="(item,i) in ud.infoList" :key="i">
                 <input type="color" class="form-control" :value="item.color" @change="elViewer.colorUpdate($event,item)" style="width:60px;" />
                 <input type="range" class="form-range" min="0" max="1" step="0.01" :value="item.opacity" @change="elViewer.opacityUpdate($event,item)" style="width:160px;" />
-                <div class="form-check form-switch mx-1">
+                <div class="form-check form-switch mx-3">
                     <input class="form-check-input" type="checkbox" :checked="item.check" @change="inputChangeUpdate(item)" />
                     <label class="form-check-label" for="flexSwitchCheckDefault" v-html="item.filename"></label>
                 </div>
-                <button class="btn btn-primary btn-sm" @click="showDownload($event, item, 'download')">Download</button>
             </div>
         </div>
-        <SubChangeLog :tag="tag" />
-        <!-- <input type="file" webkitdirectory ref="refFile" @change="handleSelectFile($event)" hidden /> -->
-        <input type="file" ref="refFile" @change="handleSelectFile($event)" hidden />
+        <input type="file" webkitdirectory ref="refFile" @change="handleSelectFile($event)" hidden />
+        <!-- <input type="file" ref="refFile" @change="handleSelectFile($event)" hidden /> -->
         <!-- <input type="file" multiple ref="refFile" @change="handleSelectFile($event)" hidden /> -->
     </ViewerBase>
 </template>
@@ -73,13 +96,12 @@ import SubProgress from './sub/SubProgress.vue';
 import { getMeshMaterialOption, addColor2Mesh } from '../third/auxThree';
 import { readFromStorage, writeToStorage } from '../third/snippet/storage';
 import { FilePathLoader, PathLoader } from '../third/mq-render/viewer.es';
-import { upload, getHistoryCrown, callAiCrown } from '../api/crown';
-import { ext, filterFile } from '../utils/util';
+import { upload, callAi, getHistory } from '../api/all';
+import { calcPer, filterFile } from '../utils/util';
 const props = defineProps({
     tag: {
         type:String,
-        default: 'CROWN',
-        // require: true,
+        default: 'IMPLANTCROWN',
     }
 });
 const elViewer = ref(null);
@@ -92,32 +114,45 @@ const ud = reactive({
     count: 0,
     countError: 0,
     uploading:false,
+    cacheList: {},
     errorList: [],
     pathList: [],
     timestampList: [],
-    timestamp: '1680514251226',
+    timestamp: '1683618615792',
     tidList: [
         18,17,16,15,14,13,12,11,21,22,23,24,25,26,27,28,
         48,47,46,45,44,43,42,41,31,32,33,34,35,36,37,38,
-    ],
+    ].map(e=>({id:e,label:e})).filter(e=>[4,5,6,7].includes(e.id%10)),
     fetchTotal: 0,
     fetchCount: 0,
     fetching: false,
     calling: false,
     lockCall: true,
     selTimestamp: {},
+    script: null,
 });
 const m1 = reactive({
-    missId: '',
+    missTids: '',
     tempDir: '',
+});
+const m2 = reactive({
+    x: '',
+    y: '',
+    z: '',
 });
 let app3 = null;
 let gScene = null;
-const keyOfLocalStorage = 'keyOfLocalStorage4Crown';
+const keyOfLocalStorage = 'keyOfLocalStorage';
 onMounted(() => {
+    // 缓存上传文件的时间点
     ud.timestampList = JSON.parse(readFromStorage(keyOfLocalStorage, '[]'));
     app3 = elViewer.value.app3;
     gScene = elViewer.value.gScene;
+    if (import.meta.env.DEV) {
+        window.app = {
+            app3,
+        }
+    }
 })
 function getState() {
     const {tmpDir, tid} = ud.selTimestamp || {};
@@ -131,31 +166,40 @@ function getState() {
     }
     return false;
 }
-function clickLoadShowData(type, item) {
+function clickLoadShowData(type) {
     ud.fetching = false;
     msg.value = '';
     ud.infoList = [];
     msg.errorList = [];
     msg.countError = 0;
     ud.type = type;
-    app3.empty();
-    if ([1,2,6].includes(type)) {
+    gScene.clear();
+    if ([1,2,6,7].includes(type)) {
         refFile.value.dispatchEvent(new MouseEvent('click'))
     } else if (type == 3) {
-        if (!m1.missId) {
-            msg.value = 'Must select a teeth id to continue';
-            return;
+        const { tmpDir, tid } = ud.selTimestamp || {};
+        // 兼容历史数据
+        if (typeof tid == 'string') {
+            if (!m1 || m1.missTids.length < 1) {
+                msg.value = 'Must select some missing teeth id';
+                return;
+            }
+        } else {
+            if (!m1.missId) {
+                msg.value = 'Must select a missing teeth id';
+                return;
+            }
         }
         ud.calling = true;
-        callAiCrown(m1).then(res=>{
+        callAi(m1).then(res=>{
             ud.calling = false;
             if (res.code == 200) {
                 ud.lockCall = true;
                 // 新的调用需要缓存记录
                 if (m1.type == 1) {           
-                    updateTimestampData(m1.tempDir, m1.missId, false);
+                    updateTimestampData(m1.tempDir, m1.missTids, false);
                 }
-                ud.pathList = res.data.filter(e=>filterFile(e));                
+                ud.pathList = res.data.filter(e=>filterFile(e));
                 updateByPath();
             } else {
                 msg.value = res.message;
@@ -164,23 +208,25 @@ function clickLoadShowData(type, item) {
     } else if (type == 4) {
         ud.timestampList.unshift({
             tmpDir: Date.now(),
+            // tmpDir: 1683618615792,
             tid: '',
         });
+        // 添加时自动第一个
         ud.selTimestamp = ud.timestampList[0];
         ud.timestamp = ud.selTimestamp.tmpDir;
-        m1.type = 1;        
-        m1.tempDir = `${ud.selTimestamp.tmpDir}`;
         ud.lockCall = false;
+        m1.type = 1;
+        m1.tempDir = ud.timestamp;
     } else if (type == 5) {
         // 删除
         ud.timestampList = [];
-        getHistoryCrown().then(res=>{
+        getHistory().then(res=>{
             if (res.code ==200) {
                 res.data.forEach(e=>{
                     const strList = e.split(' ');
                     const tmpDir = parseInt(strList[0].split('=').pop());
-                    const tid = parseInt(strList[1].split('=').pop());
-                    updateTimestampData(tmpDir, tid, true);
+                    const idInfo = strList[1].split('=').pop();
+                    updateTimestampData(tmpDir, idInfo.startsWith('[') ? idInfo : parseInt(idInfo), true);
                 })
             }
         })
@@ -208,10 +254,17 @@ function selectTimestamp() {
     m1.tempDir = tmpDir;
     if (tid) {
         // 历史记录
-        m1.missId = tid;
+        if (typeof tid == 'string' && tid.startsWith('[')) {
+            m1.missTids = tid;
+            m1.missId = null;
+        } else {
+            // 兼容之前的单颗数据
+            m1.missId = tid;
+            m1.missTids = null;
+        }
         m1.type = 2;
     } else {
-        m1.missId = '';
+        m1.missTids = [];
         m1.type = 1;
         ud.timestamp = tmpDir;
     }
@@ -290,10 +343,8 @@ function inputChangeUpdate(item) {
     }
 }
 function getPer() {
-    if (ud.fetching) {
-        return Math.round(100 * ud.fetchCount / ud.fetchTotal).toFixed(0);     
-    }
-    return Math.round(100 * ud.count / ud.total).toFixed(0); 
+    if (ud.fetching) return calcPer(ud.fetchCount, ud.fetchTotal);
+    return calcPer(ud.count, ud.total);
 }
 async function handleSelectFile(event) {
     const files = event.target.files;
@@ -321,46 +372,63 @@ async function handleSelectFile(event) {
                 msg.value = 'File Load failure';
                 app3.loading(false);
                 return null;
-            });
-            ud.fetchCount++;
+            })
             if (!geo) return;
             const filename = FilePathLoader.getName(file.name);
+            ud.fetchCount++;
             app3.loading(false);
             addGeotoScene(geo, filename);
         }
-    } else if ([2,6].includes(ud.type)) {
+    } else if (ud.type == 2) {
         // 上传文件
         if (!ud.timestamp || ud.timestamp.length < 1) {
             msg.value = 'Please Select Timestamp to Continue';
             return;
         }
-        const auxiliary = ud.type == 2 ? 'upper' : 'lower';
         ud.uploading = true;
-        ud.count = 0.5;
-        ud.total = 1;
-        const file = files[0];
-        const filename = `${auxiliary}${ext(file.name)}`;
-        const formData = new FormData();
-        formData.append("files", file, filename);
-        formData.append("tempDir", ud.timestamp); 
-        const res = await upload(formData)
-        if (res.code == 200) {
-            ud.count = 1;
-            ud.uploading = false;
-        } else {
-            msg.value += `File ${file.name} upload failed`;
+        ud.countError = 0;
+        ud.count = 1;
+        ud.total = files.length;
+        ud.cacheList[ud.timestamp] = {};
+        const uploadSingleFile = async (file) => {
+            const formData = new FormData();
+            const tmp = ud.cacheList[ud.timestamp][file.name];
+            if (tmp && tmp.size > 0 && tmp.loading == false) {
+                msg.value += `Repeat upload ${file.name}`;
+                // 已经上传了的文件，退出
+                return;
+            } else {
+            }
+            ud.cacheList[ud.timestamp][file.name] = {
+                name: file.name,
+                size: file.size,
+                loading: true,
+            };
+            formData.append("files", file, file.name);
+            formData.append("tempDir", ud.timestamp); 
+            const res = await upload(formData)
+            if (res.code == 200) {
+                ud.cacheList[ud.timestamp][res.data[0]].loading = false;
+                if (ud.count + ud.countError == ud.total) {                    
+                    ud.uploading = false;
+                    if (ud.countError > 0) {
+                        msg.value = 'The above file failed to upload';
+                        ud.errorList = [];
+                        for (let k in ud.cacheList[ud.timestamp]) {
+                            if (k && k.loading) ud.errorList.push(k);
+                        }
+                    }
+                } else {
+                    ud.count++;
+                }
+            } else {
+                ud.countError++;
+                msg.value += `File ${file.name} upload failed`;
+            }
+        }
+        for (let i = 0; i < files.length; i++) {
+            uploadSingleFile(files[i]);
         }
     }
-}
-function showDownload(event, item, type) {
-    if (event) {
-        event.preventDefault();
-        event.stopPropagation();
-    }    
-    if (type == 'download') {
-        return elViewer.value.donwloadByName(item.filename, {prefix:'Crown'});
-    }
-    // 是否显示
-    return item.filename.startsWith('crown');
 }
 </script>

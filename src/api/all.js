@@ -14,6 +14,7 @@ export function upload(data) {
 }
 
 /**
+ * 通用的
  * @description 调用AI
  */
 export function callAi(data) {

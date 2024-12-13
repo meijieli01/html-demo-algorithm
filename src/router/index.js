@@ -22,6 +22,13 @@ export const mapComponent2LocalFile = {
   //   functionCode: 'ViewerCrown',
   //   functionId: '102',
   // },
+  // 2024-12-12
+  'IMPLANTCROWN': {
+    component: () => import('../views/ViewerImplantCrown.vue'),
+    functionName: 'ImplantCrown',
+    functionCode: 'ViewerImplantCrown',
+    functionId: '109',
+  },
   'NIGHT': {
     component: () => import('../views/one/NightGuard.vue'),
     functionName: 'NightGuard',
@@ -73,7 +80,7 @@ const router = createRouter({
 })
 
 if (import.meta.env.DEV) {
-  window.mjrouter = router
+  window.router = router
 }
 
 export default router

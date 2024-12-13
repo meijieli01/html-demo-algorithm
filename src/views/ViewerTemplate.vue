@@ -11,7 +11,7 @@
                 <div class="d-flex flex-wrap">                
                     <div class="alert alert-warning m-1 p-0" role="alert" v-html="'Use the timestamp to differentiate processed and un-processed data'"></div>
                     <select class="form-select" v-model="ud.selTimestamp" @change="selectTimestamp">
-                        <option v-for="(item,i) in ud.timestampList" :key="i" :value="item" v-html="parseTime(item)"></option>
+                        <option v-for="(item,i) in ud.timestampList" :key="i" :value="item" v-html="elViewer.parseTime(tag, item)"></option>
                     </select>
                 </div>
                 <div class="d-flex flex-wrap">
@@ -217,21 +217,6 @@ onMounted(() => {
     app3 = elViewer.value.app3;
     gScene = elViewer.value.gScene;
 })
-function parseTime(timestamp) {
-    const date = new Date(parseInt(timestamp.tmpDir));
-    let strTid = timestamp.tid ? `${ timestamp.tid}--` : '';
-    if (props.tag == 'AI_NightGuard') {
-        if (timestamp.param) {
-            strTid = '';
-            const t2 = timestamp.param;
-            // strTid += `${t2.move_distance}--`;
-            strTid += `${t2.mode}--`;
-            strTid += `${t2.openbite}--`;
-            strTid += `${t2.occ_thickness}--`;
-        }
-    }
-    return `${strTid}${date.getFullYear()}-${date.getMonth()+1}-${date.getDate()} ${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`;
-}
 function getState() {
     const {tmpDir, tid} = ud.selTimestamp || {};
     if (!tmpDir && !tid) {

@@ -111,6 +111,17 @@ export const vInfo = {
         changelog: [
         ],
     },
+    // 2024-12-12
+    'IMPLANTCROWN': {
+        version: '0.1.0',
+        changelog: [
+            '2024-12-5',
+            '1. The original upper and lower scan meshes are used for crown shape constraints and result visualization.',
+            '2. Currently, the generation of implant crown only supports individual teeth numbered \'4-7\'.',
+            '3. Currently, we have two sets of scanbody templates.',
+            '4. If direction point coordinates are input, the system will enter semi-automatic registration mode.'
+        ],
+    },
 }
 
 export const configRetainer = {

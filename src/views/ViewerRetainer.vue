@@ -15,7 +15,7 @@
                 <div class="d-flex flex-wrap">                
                     <div class="alert alert-warning m-1 p-0" role="alert" v-html="'Use the timestamp to differentiate processed and un-processed data'"></div>
                     <select class="form-select" v-model="ud.selTimestamp" @change="selectTimestamp">
-                        <option v-for="(item,i) in ud.timestampList" :key="i" :value="item" v-html="parseTime(item)"></option>
+                        <option v-for="(item,i) in ud.timestampList" :key="i" :value="item" v-html="elViewer.parseTime(tag, item)"></option>
                     </select>
                 </div>
                 <div class="d-flex flex-column flex-wrap">
@@ -241,10 +241,6 @@ onMounted(async() => {
     await cut.init();
     clickByCode(5); // 默认加载历史数据
 })
-function parseTime(timestamp) {
-    const ymdhms = toYYMMDDHHmmss(timestamp.tmpDir);
-    return `${ymdhms} --- ${timestamp.customId}`;
-}
 function getState() {
     const {tmpDir, customId} = ud.selTimestamp || {};
     if (ud.lockUpload==1) return true;
@@ -340,7 +336,7 @@ function clickByCode(type) {
         msg1.value = `${toYYMMDDHHmmss(ud.selTimestamp.tmpDir)}_${ud.customId}`;
         ud.lockUpload = 0;
         ud.lockBtn = 1;        
-        gScene.clear(); //不能直接清空，需要保留之前的数据
+        gScene.clear();
         app3.updateFrame();
         m2.hasCut = true;
         ud.infoList = [];

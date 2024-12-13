@@ -11,13 +11,15 @@ import {
     updateMaterialColor, updateMaterialOpacity, 
 } from '../third/mq-render/viewer.es';
 import { saveBinaryFile } from '../third/snippet/toolkit';
+import { toYYMMDDHHmmss } from '../utils/util';
+import { useRoute } from 'vue-router'
 const props = defineProps({
     entry: {
         type:String,
         default: '',
     }
 });
-
+const route = useRoute();
 const gScene = new alias3.Scene();
 const viewState = [
     {
@@ -47,6 +49,9 @@ onMounted(() => {
     });
     app3.callAnimate();
     app3.updateFrame();    
+    let title = '';
+    if (route.meta && route.meta.label) title = ` - ${route.meta.label}`;
+    document.title = `AiDemo${title}`
 });
 onBeforeUnmount(() => {
     app3.dispose();
@@ -100,11 +105,28 @@ function opacityUpdate(event, item) {
         app3.updateFrame();
     }
 }
+function parseTime(tag, timestamp) {
+    const ymdhms = toYYMMDDHHmmss(timestamp.tmpDir);
+    let id = '';
+    if (timestamp.customId) id = timestamp.customId;
+    let param = '';
+    if (tag == 'AI_NightGuard') {
+        if (timestamp.param) {
+            const t2 = timestamp.param;
+            // param += `${t2.move_distance}-`;
+            param += `${t2.mode}-`;
+            param += `${t2.openbite}-`;
+            param += `${t2.occ_thickness}-`;
+        }
+    }
+    return `${ymdhms}${id ? ' - ' + id : ''}${param?' - ' + param:''}`;
+}
 defineExpose({
     app3,
     gScene,
     eventByType,
     colorUpdate,
     opacityUpdate,
+    parseTime,
 });
 </script>

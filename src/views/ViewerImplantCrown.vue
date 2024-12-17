@@ -196,9 +196,7 @@ onMounted(() => {
                 }
                 if (app3.control) app3.control.enabled = false;
                 const points = target.point.toArray();
-                m2.x = points[0];
-                m2.y = points[1];
-                m2.z = points[2];
+                updateDirectionPoint(points);
                 gMark = createMarkSphere(alias3, {sphereRadius:0.75, name: nameOfPick, point: points });
                 app3.add(gMark);
                 // console.log(target);
@@ -206,6 +204,7 @@ onMounted(() => {
                 // 右键点击，清空
                 ud.canPick = true;
                 ud.isDown = false;
+                updateDirectionPoint();
                 if (app3.control) app3.control.enabled = true;
                 app3.remove(nameOfPick)
                 gMark = null;
@@ -220,7 +219,13 @@ onMounted(() => {
 })
 onUnmounted(()=>{
     if (gClearEvent) gClearEvent();
-})
+});
+function updateDirectionPoint(points) {
+    const isNew = points && Array.isArray(points);
+    m2.x = isNew ? points[0] : '';
+    m2.y = isNew ? points[1] : '';
+    m2.z = isNew ? points[2] : '';
+}
 function getState() {
     const {tmpDir, tid} = ud.selTimestamp || {};
     if (!tmpDir && !tid) {
@@ -339,13 +344,9 @@ function selectTimestamp() {
         // 历史记录
         m1.type = 2;
         if (param.direction_point.length > 0) {
-            m2.x = param.direction_point[0];
-            m2.y = param.direction_point[1];
-            m2.z = param.direction_point[2];
+            updateDirectionPoint(param.direction_point);
         } else {
-            m2.x = '';
-            m2.y = '';
-            m2.z = '';
+            updateDirectionPoint();
         }
         m3.tooth_id = param.tooth_id;
         m3.scanbody_id = param.scanbody_id;

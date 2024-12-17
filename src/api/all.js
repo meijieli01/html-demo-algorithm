@@ -15,6 +15,7 @@ export function upload(data) {
 
 /**
  * 通用的
+ * 算法的参数放置在param对象中，是一个字符串，很早之前的是放置param同一级的
  * @description 调用AI
  */
 export function callAi(data) {

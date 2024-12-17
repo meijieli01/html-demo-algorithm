@@ -99,6 +99,16 @@ export function getMeshMaterialOption(name, options = {}) {
                     info.color = colorOfTeethList[tid] || colorModelDefault;
                 }
             }
+        } else if (tag == 'IMPLANTCROWN') {
+            if (name.startsWith('crown')) {
+                info.color = colorImplantGuid;
+            } else if (name.startsWith('trans_scanbody')) {
+                info.color = colorTransXXX;
+            // } else if (name.startsWith('trans_lower')) {
+            //     info.color = colorTransXXX;
+            // } else if (name.startsWith('trans_upper')) {
+            //     info.color = colorTransXXX;
+            }
         }
     }
     return info;

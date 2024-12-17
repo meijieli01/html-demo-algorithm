@@ -29982,7 +29982,6 @@ class ArrowOnPathGeometry extends BufferGeometry {
     const A = toTypedArray(Float32Array, arrPosition), x = toTypedArray(Float32Array, arrNormal), S = toTypedArray(Uint32Array, index);
     super();
     this.setAttribute("position", new BufferAttribute(A, 3)), this.setAttribute("normal", new BufferAttribute(x, 3, true)), this.setAttribute("tangent", new BufferAttribute(x, 3, true)), this.setAttribute("uv", new BufferAttribute(new Float32Array(A.length / 3 * 2), 2)), this.setIndex(new BufferAttribute(S, 1));
-    console.log("ArrowOnPathGeometry", cache);
   }
 }
 class AxesArrow extends Object3D {
@@ -31173,7 +31172,7 @@ class StrMesh {
 var eEntryCode = /* @__PURE__ */ ((eEntryCode2) => {
   eEntryCode2[eEntryCode2["none"] = 0] = "none";
   eEntryCode2[eEntryCode2["aiwebUi"] = 1] = "aiwebUi";
-  eEntryCode2[eEntryCode2["aiWebUiRetainer"] = 2] = "aiWebUiRetainer";
+  eEntryCode2[eEntryCode2["aiWebUiNoFitViewport"] = 2] = "aiWebUiNoFitViewport";
   eEntryCode2[eEntryCode2["moonSmile"] = 3] = "moonSmile";
   return eEntryCode2;
 })(eEntryCode || {});
@@ -31850,7 +31849,6 @@ function materialToothCrown(geometry, isUpper, options) {
     uniforms: {
       diffuse: { value: new Color().setRGB(0.92, 0.88, 0.89, LinearSRGBColorSpace) },
       lightColor: { value: new Color().setHex(10457232, LinearSRGBColorSpace) },
-      // lightColor: { value: new Color().setHex(0xafa0a0, LinearSRGBColorSpace) },
       pointLights: {
         value: [
           {
@@ -36389,6 +36387,7 @@ const alias3 = {
   ConeGeometry,
   PlaneGeometry,
   MeshBasicMaterial,
+  MeshLambertMaterial,
   MeshStandardMaterial,
   MeshPhongMaterial,
   DoubleSide,
@@ -37514,19 +37513,31 @@ var PEType = /* @__PURE__ */ ((PEType2) => {
   PEType2["down"] = "DOWN";
   PEType2["move"] = "MOVE";
   PEType2["up"] = "UP";
+  PEType2["enter"] = "ENTER";
+  PEType2["leave"] = "LEAVE";
   return PEType2;
 })(PEType || {});
-function listenDomEvent(canavs, callback) {
+function listenDomEvent(canavs, callback, options = {}) {
   const pointerDown$ = fromEvent(canavs, "pointerdown");
   const pointerMove$ = fromEvent(canavs, "pointermove");
   const pointerUp$ = fromEvent(canavs, "pointerup");
+  const testIn = options.testIn || false;
+  let pointerEnter$;
+  let pointerLeave$;
+  if (testIn) {
+    pointerEnter$ = fromEvent(canavs, "pointerenter");
+    pointerLeave$ = fromEvent(canavs, "pointerleave");
+  }
+  let beIn = false;
   function normalizeCoords(evt) {
     const rc = canavs.getBoundingClientRect();
     let x = evt.clientX;
     let y = evt.clientY;
+    let button = -1;
+    if ([0, 1, 2].includes(evt.button)) button = evt.button;
     x = x - rc.left;
     y = y - rc.top;
-    return { x, y };
+    return { x, y, button, beIn, buttons: evt.buttons };
   }
   const downSubscribe = pointerDown$.pipe(
     map((e) => {
@@ -37543,10 +37554,30 @@ function listenDomEvent(canavs, callback) {
       callback("UP", normalizeCoords(e));
     })
   ).subscribe();
+  let enterSubscribe;
+  let leaveSubscribe;
+  if (testIn) {
+    enterSubscribe = pointerEnter$.pipe(
+      map((e) => {
+        beIn = true;
+        callback("ENTER", normalizeCoords(e));
+      })
+    ).subscribe();
+    leaveSubscribe = pointerLeave$.pipe(
+      map((e) => {
+        beIn = false;
+        callback("LEAVE", normalizeCoords(e));
+      })
+    ).subscribe();
+  }
   const clearEvent = () => {
     downSubscribe.unsubscribe();
     moveSubscribe.unsubscribe();
     upSubscribe.unsubscribe();
+    if (testIn) {
+      enterSubscribe.unsubscribe();
+      leaveSubscribe.unsubscribe();
+    }
   };
   return {
     clearEvent

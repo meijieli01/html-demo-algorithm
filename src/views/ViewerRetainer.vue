@@ -178,7 +178,6 @@ const ud = reactive({
     count: 0,
     countError: 0,
     uploading:false,
-    cacheList: {},
     errorList: [],
     pathList: [],
     timestampList: [],
@@ -255,9 +254,6 @@ function getState() {
     }
     return false;
 }
-function resetAxes() {
-    app3.setAxes(0.5, 2e-3, {textScaleFactor: 0.1});
-}
 function resetDir(hasNormal) {
     m2.hasCut = hasNormal;
     m2.x1 = 0, m2.y1 = 0, m2.z1 = 0;
@@ -307,7 +303,7 @@ function clickByCode(type) {
                 if (m1.type == 2) {
                     // 历史记录
                     // ud.pathList = ud.pathList.filter(e=>!e.indexOf('/input/')>-1);
-                    resetAxes();
+                    elViewer.value.resetAxes();
                 } else {
                     // 新的调用
                     ud.pathList = ud.pathList.filter(e=>e.indexOf('/output/')>-1);
@@ -344,7 +340,7 @@ function clickByCode(type) {
         [7,8].forEach(e=>{
             if (markers[e]) app3.add(markers[e]);
         })
-        resetAxes();
+        elViewer.value.resetAxes();
         resetDir(true);
     } else if (type == 5) {
         ud.timestampList = [];
@@ -651,138 +647,64 @@ function getPer() {
 }
 async function handleSelectFile(event) {
     const files = event.target.files;
-    if (ud.type == 1) {
-        // 本地加载stl文件
-        ud.fetching = true;
-        ud.uploading = true;
-        ud.infoList = [];
-        elLoading.show(document.body, {message: `加载中...`, zIndex:5000});
-        ud.fetchTotal = files.length;
-        ud.fetchCount = 0;
-        for (let i = 0; i < files.length; i++) {
-            const file = files[i];
-            const geo = await new FilePathLoader(file.name, {drcPath:`${import.meta.env.VITE_APP_PREFIX_DRACO}/draco/`}).load(file, (event)=>{
-                // console.log('progress', event.loaded/event.total)
-            }).catch(err=>{
-                if (err instanceof ProgressEvent) {
-                    if (err.total==0) {
-                        ud.countError++;
-                        ud.errorList.push({
-                            name: filename,
-                        })
-                    }   
-                }
-                msg.value = 'File Load failure';
-                elLoading.hide();
-                return null;
-            });
-            ud.fetchCount++;
-            if (!geo) return;
-            const filename = FilePathLoader.getName(file.name);
-            elLoading.hide();
-            addGeotoScene(geo, filename);
-        }
-    } else if ([2,6].includes(ud.type)) {
+    if ([2,6].includes(ud.type)) {
         // 上传文件
         ud.fetching = false;
         if (!ud.timestamp || ud.timestamp.length < 1) {
             msg.value = 'Please Select Timestamp to Continue';
             return;
         }
-        const auxiliary = ud.type == 6 ? 'upper' : 'lower';
         ud.uploading = true;
         const file = files[0];
         let filename = file.name;
         const fnameLower = filename.toLowerCase();
         const { tag } = props;
-        if (true) {
-            const formData = new FormData();
-            let geo = await new FilePathLoader(filename, {drcPath:`${import.meta.env.VITE_APP_PREFIX_DRACO}/draco/`}).load(file)
-                .catch(err=>{
-                    msg.value = 'File Load failure';
-                    console.error(err);
-                    return null;
-                })
-            if (!geo) return; 
-            // console.log('load', geo.clone()) 
-            geo = toIndexGeometry(geo);
-            // console.log('merge', geo.clone()) 
-            const mesh = await addColor2Mesh(geo);
-            if (fnameLower.endsWith('.drc') || fnameLower.endsWith('.mq')) {
-                filename = nameMeshs[ud.type == 6 ? 0 : 1];
-                formData.append("files", file, filename);
-            } else {
-                //  其他格式转换一下
-                try {
-                    const buffer = await mesh2drc(mesh.clone());
-                    // const noExtFilename = filename.substr(0, filename.lastIndexOf('.'));
-                    filename = nameMeshs[ud.type == 6 ? 0 : 1];
-                    formData.append("files", new Blob([buffer.buffer], { type: 'application/octet-stream',}), filename);
-                } catch(err){
-                    msg.value = 'File Load failure';
-                }
-            }
-            appendFileMesh(mesh, filename, ud.type == 6);
-            // ud.uploading = false;
-            // return;
-            formData.append("tempDir", `${ud.timestamp}_${ud.customId}`); 
-            formData.append("tag", tag); 
-            const res = await upload(formData)
-            if (res.code == 200) {  
-                // appendFileMesh(mesh, filename, ud.type == 6);
-                if (ud.type == 6) {
-                    m1.upper = filename;
-                    ud.lockBtn |= 2;
-                } else if (ud.type == 2) {
-                    m1.lower = filename;
-                    ud.lockBtn |= 4;
-                }
-                // 0x1 | 0x2 | 0x4 can call Ai
-                console.log('lock btn', ud.lockBtn)
-            } else {
-                console.error(res.message);
-                msg.value = res.message;
-            }
+        const formData = new FormData();
+        let geo = await new FilePathLoader(filename, {drcPath:`${import.meta.env.VITE_APP_PREFIX_DRACO}/draco/`}).load(file)
+            .catch(err=>{
+                msg.value = 'File Load failure';
+                console.error(err);
+                return null;
+            })
+        if (!geo) return; 
+        // console.log('load', geo.clone()) 
+        geo = toIndexGeometry(geo);
+        // console.log('merge', geo.clone()) 
+        const mesh = await addColor2Mesh(geo);
+        if (fnameLower.endsWith('.drc') || fnameLower.endsWith('.mq')) {
+            filename = nameMeshs[ud.type == 6 ? 0 : 1];
+            formData.append("files", file, filename);
         } else {
-            let res = null;
-            if (filename.endsWith('.drc') || filename.endsWith('.mq')) {
-                const path = `retainer/${ud.timestamp}_${ud.customId}/input/${auxiliary}/${filename}`;
-                res = await store.dispatch('auth/putFile', {
-                    file, path,
-                });
-            } else {
-                //  其他格式转换一下
-                try {
-                    const noExtFilename = filename.substr(0, filename.lastIndexOf('.'));
-                    const geo = await new FilePathLoader(filename, {drcPath:`${import.meta.env.VITE_APP_PREFIX_DRACO}/draco/`}).load(file)
-                    .catch(err=>{
-                        msg.value = 'File Load failure';
-                        return null;
-                    })
-                    if (!geo) return;            
-                    const path = `retainer/${ud.timestamp}_${ud.customId}/input/${auxiliary}/${noExtFilename}.mq`;
-                    const mesh = await addColor2Mesh(geo);
-                    const buffer = await mesh2drc(mesh);
-                    res = await store.dispatch('auth/putFile', {
-                        file: new Blob([buffer.buffer], { type: 'application/octet-stream',}),
-                        path: path,
-                    })
-                } catch(err){
-                    console.log(err);
-                    msg.value = 'File Load failure';
-                }
+            //  其他格式转换一下
+            try {
+                const buffer = await mesh2drc(mesh.clone());
+                // const noExtFilename = filename.substr(0, filename.lastIndexOf('.'));
+                filename = nameMeshs[ud.type == 6 ? 0 : 1];
+                formData.append("files", new Blob([buffer.buffer], { type: 'application/octet-stream',}), filename);
+            } catch(err){
+                msg.value = 'File Load failure';
             }
-            if (res && res.res.status == 200) {
-                if (ud.type == 6) {
-                    m1.upper = res.name;
-                    ud.lockBtn |= 2;
-                } else if (ud.type == 2) {
-                    m1.lower = res.name;
-                    ud.lockBtn |= 4;
-                }
-                // 0x1 | 0x2 | 0x4 can call Ai
-                console.log('lock btn', ud.lockBtn)
+        }
+        appendFileMesh(mesh, filename, ud.type == 6);
+        // ud.uploading = false;
+        // return;
+        formData.append("tempDir", `${ud.timestamp}_${ud.customId}`); 
+        formData.append("tag", tag); 
+        const res = await upload(formData)
+        if (res.code == 200) {  
+            // appendFileMesh(mesh, filename, ud.type == 6);
+            if (ud.type == 6) {
+                m1.upper = filename;
+                ud.lockBtn |= 2;
+            } else if (ud.type == 2) {
+                m1.lower = filename;
+                ud.lockBtn |= 4;
             }
+            // 0x1 | 0x2 | 0x4 can call Ai
+            console.log('lock btn', ud.lockBtn)
+        } else {
+            console.error(res.message);
+            msg.value = res.message;
         }
         ud.uploading = false;
     }

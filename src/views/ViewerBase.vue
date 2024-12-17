@@ -32,7 +32,8 @@ const viewState = [
         scene: gScene,
     },
 ];
-const app3 = new MqMultiViewEditor(props.entry==='retainer' ? eEntryCode.aiWebUiRetainer : eEntryCode.aiwebUi);
+const app3 = new MqMultiViewEditor(
+    ['retainer', 'implantCrown'].includes(props.entry) ? eEntryCode.aiWebUiNoFitViewport : eEntryCode.aiwebUi);
 onMounted(() => {
     let el = document.getElementById('id3DContainer');
     let rect = el.getBoundingClientRect();
@@ -56,6 +57,9 @@ onMounted(() => {
 onBeforeUnmount(() => {
     app3.dispose();
 });
+function resetAxes() {
+    app3.setAxes(0.5, 2e-3, {textScaleFactor: 0.1});
+}
 function donwloadByName(name, options = {}) {
     const prefix = options.prefix || '';
     let hasUnique = options.hasUnique ? true : false;
@@ -116,7 +120,13 @@ function parseTime(tag, timestamp) {
             // param += `${t2.move_distance}-`;
             param += `${t2.mode}-`;
             param += `${t2.openbite}-`;
-            param += `${t2.occ_thickness}-`;
+            param += `${t2.occ_thickness}`;
+        }
+    } else if (tag == 'IMPLANTCROWN') {
+        if (timestamp.param) {
+            const t2 = timestamp.param;
+            param += `${t2.tooth_id}-`;
+            param += `${t2.scanbody_id}`;
         }
     }
     return `${ymdhms}${id ? ' - ' + id : ''}${param?' - ' + param:''}`;
@@ -128,5 +138,6 @@ defineExpose({
     colorUpdate,
     opacityUpdate,
     parseTime,
+    resetAxes,
 });
 </script>

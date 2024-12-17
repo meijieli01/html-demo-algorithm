@@ -4,7 +4,6 @@
   "scripts": {
     "dev": "vite",
     "test-build": "npm run css && vite build --mode test && node postprocessbuild",
-    "beta-build": "npm run css && vite build --mode beta && node postprocessbuild",
     "serve": "vite preview",
     "css": "node css.mjs",
     "api": "node createapi.js"

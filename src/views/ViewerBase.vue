@@ -2,6 +2,10 @@
     <div class="viewer-ct-container">
         <div id="id3DContainer" class="content-view"></div>
         <div class="content-toolbar d-flex flex-column"><slot></slot></div>
+        <div class="implant-crown-tip-image" v-if="entry=='implantCrown'">
+            <img :src="scanbody1">
+            <img :src="scanbody2">
+        </div>
     </div>
 </template>
 <script setup>
@@ -13,6 +17,8 @@ import {
 import { saveBinaryFile } from '../third/snippet/toolkit';
 import { toYYMMDDHHmmss } from '../utils/util';
 import { useRoute } from 'vue-router'
+import scanbody1 from '../assets/scanbody_1.png?url';
+import scanbody2 from '../assets/scanbody_2.png?url';
 const props = defineProps({
     entry: {
         type:String,

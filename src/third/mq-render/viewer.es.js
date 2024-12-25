@@ -6230,6 +6230,11 @@ class BufferAttribute {
     return data;
   }
 }
+class Uint8BufferAttribute extends BufferAttribute {
+  constructor(array, itemSize, normalized) {
+    super(new Uint8Array(array), itemSize, normalized);
+  }
+}
 class Uint16BufferAttribute extends BufferAttribute {
   constructor(array, itemSize, normalized) {
     super(new Uint16Array(array), itemSize, normalized);
@@ -28848,6 +28853,21 @@ class CommonLoader {
             uv: "Float32Array",
             VFlag: "Uint16Array"
           };
+        } else if (this.options.code == 2) {
+          this.loader.defaultAttributeIDs = {
+            position: "POSITION",
+            normal: "NORMAL",
+            color: "COLOR",
+            uv: "TEX_COORD",
+            flag: "GENERIC"
+          };
+          this.loader.defaultAttributeTypes = {
+            position: "Float32Array",
+            normal: "Float32Array",
+            color: "Float32Array",
+            uv: "Float32Array",
+            flag: "Uint8Array"
+          };
         }
         break;
       }
@@ -29333,7 +29353,8 @@ class DRACOExporter {
       quantization: [16, 8, 8, 8, 8],
       exportUvs: true,
       exportNormals: true,
-      exportColor: false
+      exportColor: false,
+      exportFlag: false
     }, options);
     if (DracoEncoderModule === void 0) {
       throw new Error("THREE.DRACOExporter: required the draco_encoder to work.");
@@ -29375,6 +29396,12 @@ class DRACOExporter {
         if (colors !== void 0) {
           const array = createVertexColorSRGBArray(colors);
           builder.AddFloatAttributeToMesh(dracoObject, dracoEncoder.COLOR, colors.count, colors.itemSize, array);
+        }
+      }
+      if (options.exportFlag === true) {
+        const flags = geometry.getAttribute("flag");
+        if (flags !== void 0) {
+          builder.AddFloatAttributeToMesh(dracoObject, dracoEncoder.GENERIC, flags.count, flags.itemSize, flags.array);
         }
       }
     } else if (object.isPoints === true) {
@@ -29473,14 +29500,15 @@ const mesh2stl = (mesh, { isBinary }) => {
     resolve(exporter.parse(mesh, { binary: isBinary }));
   });
 };
-const mesh2drc = (mesh) => {
+const mesh2drc = (mesh, options = {}) => {
   return new Promise((resolve) => {
     const exporter = new DRACOExporter();
     resolve(exporter.parse(mesh, {
       exportColor: false,
       exportUvs: false,
       exportNormals: false,
-      quantization: [14, 8, 8, 8, 8]
+      quantization: [14, 8, 8, 8, 8],
+      ...options
     }));
   });
 };
@@ -36378,6 +36406,7 @@ const alias3 = {
   OrthographicCamera,
   BufferAttribute,
   BufferGeometry,
+  Uint8BufferAttribute,
   Float32BufferAttribute,
   BoxGeometry,
   TubeGeometry,
@@ -36397,6 +36426,7 @@ const alias3 = {
   CanvasTexture,
   Sprite,
   SpriteMaterial,
+  // constannts
   LinearSRGBColorSpace,
   SRGBColorSpace,
   // examples
@@ -37675,6 +37705,97 @@ function updateMaterialOpacity(material, opacity) {
   material.transparent = !(opacity == 1);
   material.needsUpdate = true;
 }
+const rShaderCrown = {
+  vertexShader: `
+    // 顶点着色器
+    attribute float mqDistance;
+    // attribute vec3 fixedMapcolor;
+
+    varying vec3 vNormal;
+    varying vec3 vViewPosition;
+    varying float vDistance;
+    varying vec3 vFixedMapcolor;
+
+    void main() {
+        vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+        vNormal = normalMatrix * normal;
+        vViewPosition = -mvPosition.xyz;
+        vDistance = mqDistance;
+        // vFixedMapcolor = vec3(fixedMapcolor);
+
+        gl_Position = projectionMatrix * mvPosition;
+    }
+`,
+  fragmentShader: `
+    uniform vec3 color;
+    uniform vec3 emissive;
+    uniform float roughness;
+    uniform float metalness;
+    uniform float opacity;
+    uniform bool useMapColor;
+    uniform vec3 ambientLightColor;
+    uniform sampler2D textureMap;
+    uniform sampler2D textureMapFixed;
+
+    varying vec3 vNormal;
+    varying vec3 vViewPosition;
+    varying float vDistance;
+    varying vec3 vFixedMapcolor;
+    const float mapFactor = 2.0 / 3.0;
+    void main() {
+        vec3 normal = normalize(vNormal);
+        vec3 viewDir = normalize(vViewPosition);
+
+        // 计算漫反射光照
+        vec3 lightDirection = normalize(vec3(0.0, 10.0, 10.9));
+        float diffuse = max(dot(normal, lightDirection), 0.0);
+
+        // 计算镜面反射光照
+        vec3 halfwayDir = normalize(lightDirection + viewDir);
+        float specular = pow(max(dot(normal, halfwayDir), 0.0), 64.0);
+
+        // 计算环境光照
+        vec3 ambient = ambientLightColor * color * 0.6;
+        vec4 targetColor;
+
+        if(useMapColor) {  
+            // [-1.5,0] to [0, 1] is y = 2/3x + 1
+            if (vDistance >= -1.5 && vDistance <= 0.0) {
+                float y = mapFactor * vDistance + 1.0;
+                // targetColor = texture2D(textureMap, vec2(y, 0));
+                // targetColor = vec4(y, 0, 0, 1.0);
+                targetColor = vec4(0.0, 0.0, 1.0, 1.0);
+            } else {
+                // targetColor = vec4(color.r, color.g, color.b, 1.0);
+                targetColor = vec4(1.0, 1.0, 0.0, 1.0);
+            }
+        } else {
+            targetColor = vec4(color.r, color.g, color.b, 1.0);
+        }
+
+        // if(vFixedMapcolor.x != 0.0 || vFixedMapcolor.y != 0.0 || vFixedMapcolor.z != 0.0) {
+        //     vec2 uv = vec2(0.5, 0.5);
+        //     // 从贴图中获取颜色
+        //     targetColor = texture2D(textureMapFixed, uv);
+        // }
+
+        // 结合以上光照成分得到最终颜色
+        // vec3 finalColor = vec3(targetColor) * diffuse + specular + emissive + ambient;
+        vec3 finalColor = vec3(targetColor) * diffuse + ambient + emissive;
+        gl_FragColor = vec4(finalColor, opacity);
+    }
+`
+};
+var eRModelType = /* @__PURE__ */ ((eRModelType2) => {
+  eRModelType2["Jaw"] = "Jaw";
+  eRModelType2["Crown"] = "Crown";
+  eRModelType2["Inlay"] = "Inlay";
+  eRModelType2["Onlay"] = "Onlays";
+  eRModelType2["Veneer"] = "Veneer";
+  eRModelType2["JawFullUpper"] = "uJawFull";
+  eRModelType2["JawFullLower"] = "lJawFull";
+  return eRModelType2;
+})(eRModelType || {});
 function rBufferToModel(info, options = {}) {
   let geo;
   if (info.buffer instanceof ArrayBuffer) {
@@ -37683,20 +37804,12 @@ function rBufferToModel(info, options = {}) {
   } else {
     geo = info.buffer;
   }
-  rAppendGeometryColor(geo, options.color);
-  const mat = new MeshPhongMaterial({
-    side: DoubleSide,
-    transparent: false,
-    depthTest: true,
-    depthWrite: true,
-    vertexColors: true,
-    //
-    // emissive: options.emissiveColor || 0x000000,
-    reflectivity: 1,
-    shininess: 30,
-    ...options
-  });
-  const mesh = new Mesh(geo, mat);
+  if (options.type == eRModelType.Crown) {
+    rAppendGeometryDistance(geo);
+  } else {
+    rAppendGeometryColor(geo, options.color);
+  }
+  const mesh = new Mesh(geo, getMaterialByOptions(options));
   mesh.name = info.ftype;
   mesh.userData = {
     ftype: info.ftype,
@@ -37705,17 +37818,62 @@ function rBufferToModel(info, options = {}) {
   };
   return mesh;
 }
-function rAppendGeometryColor(geo, color) {
-  let colors = [];
-  for (let i = 0; i < geo.attributes.position.count; i++) {
-    colors.push(color.r);
-    colors.push(color.g);
-    colors.push(color.b);
+function getMaterialByOptions(options = {}) {
+  let mat;
+  if (options.type == eRModelType.Crown) {
+    mat = new ShaderMaterial({
+      uniforms: {
+        color: { value: new Color(options.color) },
+        emissive: { value: new Color(0) },
+        ambientLightColor: { value: new Color(2434341) },
+        roughness: { value: 0.3 },
+        metalness: { value: 0.6 },
+        opacity: { value: 1 },
+        useMapColor: { value: false },
+        textureMap: { value: null }
+      },
+      vertexShader: rShaderCrown.vertexShader,
+      fragmentShader: rShaderCrown.fragmentShader,
+      side: DoubleSide
+      // vertexColors: true,
+      // transparent: false,            
+    });
+  } else {
+    mat = new MeshPhongMaterial({
+      side: DoubleSide,
+      transparent: false,
+      depthTest: true,
+      depthWrite: true,
+      vertexColors: true,
+      //
+      // emissive: options.emissiveColor || 0x000000,
+      reflectivity: 1,
+      shininess: 30,
+      ...options
+    });
   }
-  geo.setAttribute("color", new Float32BufferAttribute(colors, 3));
+  return mat;
+}
+function rAppendGeometryColor(geo, color) {
+  const position = geo.attributes.position;
+  const total = position.array.length;
+  const colors = new Float32Array(total);
+  for (let i = 0; i < total; i += 3) {
+    setXYZ(colors, i, color.r, color.g, color.b);
+  }
+  geo.setAttribute("color", new BufferAttribute(colors, 3));
   if (!geo.attributes.normal) geo.computeVertexNormals();
   geo.normalizeNormals();
   geo.attributes.color.needsUpdate = true;
+}
+function rAppendGeometryDistance(geo) {
+  const position = geo.attributes.position;
+  const total = position.count / position.itemSize;
+  const distances = new Float32Array(total).fill(1);
+  geo.setAttribute("mqDistance", new BufferAttribute(distances, 1));
+  if (!geo.attributes.normal) geo.computeVertexNormals();
+  geo.normalizeNormals();
+  geo.attributes.mqDistance.needsUpdate = true;
 }
 export {
   FilePathLoader,

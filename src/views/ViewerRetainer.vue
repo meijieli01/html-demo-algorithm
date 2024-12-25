@@ -5,7 +5,6 @@
             <input class="form-control" v-model="ud.customId" type="text" />
         </div>  
         <div class="d-flex flex-wrap">
-            <button class="btn btn-primary m-1 btn-sm" @click="clickByCode(1)" v-if="isDev" v-html="'Local Test to Show'"></button>
             <button class="btn btn-primary m-1 btn-sm" @click="clickByCode(4)" v-html="'New Timestamp'"></button>
             <button class="btn btn-primary m-1 btn-sm" @click="clickByCode(5)" v-html="'Load historical Data'"></button>
             <SubVersion :tag="tag" />
@@ -26,13 +25,13 @@
             </div>
             <div>
                 <div class="d-flex flex-column flex-wrap">
-                    <div class="d-flex justify-content-start">
+                    <div class="d-flex justify-content-evenly">
                         <label class="form-label my-auto mx-1">Thickness</label>
-                        <input class="form-control w-50" v-model="m1.thickness">
+                        <input class="form-control form-control-sm w-50" v-model="m1.levelSet">
                     </div>
-                    <div class="d-flex justify-content-start">
+                    <div class="d-flex justify-content-evenly">
                         <label class="form-label my-auto mx-1">Tightness/Offset</label>
-                        <input class="form-control w-50" v-model="m1.tightness">
+                        <input class="form-control form-control-sm w-50" v-model="m1.innerLevelSet">
                     </div>
                     <div class="d-flex justify-content-start my-2">
                         <input class="form-check-input mx-2" type="checkbox" :checked="m2.hasCut" @change="inputChangeUnderCut"/>
@@ -51,29 +50,51 @@
                     <div class="d-flex flex-column justify-content-start">
                         <label class="form-label my-auto mx-1">
                             <span :style="`color:rgb(${color4Mesh[0].map(e=>e*255).join(',')})`">upper Direction</span>
-                            <button class="btn btn-primary w-25 m-1 btn-sm" :disabled="m2.lockUpper" @click="clickByCode(7)">update</button>
+                            <button class="btn btn-primary w-25 m-1 btn-sm" :disabled="m2.uDirDef || m2.lockUpper" @click="clickByCode(7)">update</button>
+                            <label class="form-label my-auto mx-1">
+                                <span>use default</span>
+                                <input class="form-check-input m-1" type="checkbox" :disabled="m2.lockUpper" v-model="m2.uDirDef" value="">
+                            </label>
                         </label>
-                        <div class="d-flex flex-column">
-                            <label class="d-flex mx-3">X
-                                <input class="form-control form-control-sm ms-2 w-50" :disabled="m2.lockUpper" v-model="m2.x1" @change="positionInputChange($event, 1)"></label>
-                            <label class="d-flex mx-3">Y
-                                <input class="form-control form-control-sm ms-2 w-50" :disabled="m2.lockUpper" v-model="m2.y1" @change="positionInputChange($event, 1)"></label>
-                            <label class="d-flex mx-3">Z
-                                <input class="form-control form-control-sm ms-2 w-50" :disabled="m2.lockUpper" v-model="m2.z1" @change="positionInputChange($event, 1)"></label>                            
+                        <label class="form-label my-auto mx-1 d-flex justify-content-evenly">
+                            <span class="m-auto">scale</span>
+                            -2<input type="range" class="form-range w-75" min="-2" max="2" step="0.01" :disabled="m2.lockUpper"  v-model="m2.uLevelSet"/>2
+                        </label>
+                        <div class="d-flex justify-content-evenly">
+                            <label class="d-flex ms-1 w-30">
+                                <span class="m-auto">X</span>
+                                <input class="form-control form-control-sm" :disabled="m2.uDirDef || m2.lockUpper" v-model="m2.x1" @change="positionInputChange($event, 1)"></label>
+                            <label class="d-flex ms-1 w-30">
+                                <span class="m-auto">Y</span>
+                                <input class="form-control form-control-sm" :disabled="m2.uDirDef || m2.lockUpper" v-model="m2.y1" @change="positionInputChange($event, 1)"></label>
+                            <label class="d-flex ms-1 w-30">
+                                <span class="m-auto">Z</span>
+                                <input class="form-control form-control-sm" :disabled="m2.uDirDef || m2.lockUpper" v-model="m2.z1" @change="positionInputChange($event, 1)"></label>                            
                         </div>
                     </div>
                     <div class="d-flex flex-column justify-content-start">
                         <label class="form-label my-auto mx-1">
                             <span :style="`color:rgb(${color4Mesh[1].map(e=>e*255).join(',')})`">lower Direction</span>
-                            <button class="btn btn-primary w-25 m-1 btn-sm" :disabled="m2.lockLower" @click="clickByCode(8)">update</button>
+                            <button class="btn btn-primary w-25 m-1 btn-sm" :disabled="m2.lDirDef || m2.lockLower" @click="clickByCode(8)">update</button>
+                            <label class="form-label my-auto mx-1">
+                                <span>use default</span>
+                                <input class="form-check-input m-1" type="checkbox" :disabled="m2.lockLower" v-model="m2.lDirDef" value="">
+                            </label>
                         </label>
-                        <div class="d-flex flex-column">
-                            <label class="d-flex mx-3">X
-                                <input class="form-control form-control-sm ms-2 w-50" :disabled="m2.lockLower" v-model="m2.x2" @change="positionInputChange($event, 2)"></label>
-                            <label class="d-flex mx-3">Y
-                                <input class="form-control form-control-sm ms-2 w-50" :disabled="m2.lockLower" v-model="m2.y2" @change="positionInputChange($event, 2)"></label>
-                            <label class="d-flex mx-3">Z
-                                <input class="form-control form-control-sm ms-2 w-50" :disabled="m2.lockLower" v-model="m2.z2" @change="positionInputChange($event, 2)"></label>                            
+                        <label class="form-label my-auto mx-1 d-flex justify-content-evenly">
+                            <span class="m-auto">scale</span>
+                            -2<input type="range" class="form-range w-75" min="-2" max="2" step="0.01" :disabled="m2.lockLower"  v-model="m2.lLevelSet"/>2
+                        </label>
+                        <div class="d-flex justify-content-evenly">
+                            <label class="d-flex ms-1 w-30">
+                                <span class="m-auto">X</span>
+                                <input class="form-control form-control-sm" :disabled="m2.lDirDef || m2.lockLower" v-model="m2.x2" @change="positionInputChange($event, 2)"></label>
+                            <label class="d-flex ms-1 w-30">
+                                <span class="m-auto">Y</span>
+                                <input class="form-control form-control-sm" :disabled="m2.lDirDef || m2.lockLower" v-model="m2.y2" @change="positionInputChange($event, 2)"></label>
+                            <label class="d-flex ms-1 w-30">
+                                <span class="m-auto">Z</span>
+                                <input class="form-control form-control-sm" :disabled="m2.lDirDef || m2.lockLower" v-model="m2.z2" @change="positionInputChange($event, 2)"></label>                            
                         </div>
                     </div>
                 </div>
@@ -205,8 +226,8 @@ const m1 = reactive({
     tempDir: '',
     tag: props.tag,
     isShell: configRetainer.isShell,
-    thickness: '0.6',
-    tightness: '0',
+    levelSet: '0.6',
+    innerLevelSet: '0',
     isPrint: true,    
 });
 const m2 = reactive({
@@ -220,6 +241,10 @@ const m2 = reactive({
     x2: '0',
     y2: '0',
     z2: '1',
+    uLevelSet: 0,
+    lLevelSet: 0,
+    uDirDef: true,
+    lDirDef: true,
 })
 let app3 = null;
 let gScene = null;
@@ -265,7 +290,7 @@ function clickByCode(type) {
     msg.errorList = [];
     msg.countError = 0;
     ud.type = type;
-    if ([1,2,6].includes(type)) {
+    if ([2,6].includes(type)) {
         refFile.value.dispatchEvent(new MouseEvent('click'))
     } else if (type == 3) {
         if (!m1.upper || !m1.lower) {
@@ -274,11 +299,20 @@ function clickByCode(type) {
         }
         ud.calling = true;
         if (m2.hasCut) {
-            m1.upperDir = { x: Number(m2.x1), y: Number(m2.y1), z: Number(m2.z1) };
-            m1.lowerDir = { x: Number(m2.x2), y: Number(m2.y2), z: Number(m2.z2) };
+            m1.underCut = {
+                upper: {
+                    useDefaultDir: m2.uDirDef,
+                    underCutLevelSet: m2.uLevelSet,
+                    underCutDir: { x: Number(m2.x1), y: Number(m2.y1), z: Number(m2.z1) },
+                },
+                lower: {
+                    useDefaultDir: m2.uDirDef,
+                    underCutLevelSet: m2.uLevelSet,
+                    underCutDir: { x: Number(m2.x2), y: Number(m2.y2), z: Number(m2.z2) },
+                }
+            }
         } else {
-            m1.upperDir = undefined;
-            m1.lowerDir = undefined;
+            m1.underCut = undefined;
         }
         if (mat.upper || mat.lower) {
             app3.remove('upper.stl');
@@ -299,7 +333,8 @@ function clickByCode(type) {
                 if (m1.type == 1) {           
                     updateTimestampData(m1.tempDir, 'history', m1, false);
                 }
-                ud.pathList = data.files.filter(e=>filterFile(e));
+                // ud.pathList = data.files.filter(e=>filterFile(e));
+                ud.pathList = data.files;
                 if (m1.type == 2) {
                     // 历史记录
                     // ud.pathList = ud.pathList.filter(e=>!e.indexOf('/input/')>-1);
@@ -359,17 +394,14 @@ function clickByCode(type) {
                                 parameters.isShell = strValue == 'true';
                             }        
                         }
-                        if (str.startsWith('thickness')) {
-                            parameters.thickness = parseFloat(strValue);
+                        if (str.startsWith('levelSet')) {
+                            parameters.levelSet = parseFloat(strValue);
                         }
-                        if (str.startsWith('tightness')) {
-                            parameters.tightness = parseFloat(strValue);
+                        if (str.startsWith('innerLevelSet')) {
+                            parameters.innerLevelSet = parseFloat(strValue);
                         }
-                        if (str.startsWith('upperDir')) {
-                            parameters.upperDir = JSON.parse(strValue);                            
-                        }
-                        if (str.startsWith('lowerDir')) {
-                            parameters.lowerDir = JSON.parse(strValue);
+                        if (str.startsWith('underCut')) {
+                            parameters.underCut = JSON.parse(strValue);                            
                         }
                     })
                     updateTimestampData(parseInt(ids[0]), ids[1] || 'history', parameters, true);
@@ -395,10 +427,20 @@ function updateTimestampData(tmpDir, customId, parameters, isNew) {
     if (tmp) {
         tmp.customId = customId;
         tmp.isShell = parameters.isShell;
-        tmp.thickness = parameters.thickness;
-        tmp.tightness = parameters.tightness;
-        if (parameters.upperDir) tmp.upperDir = parameters.upperDir;
-        if (parameters.lowerDir) tmp.lowerDir = parameters.lowerDir;
+        tmp.levelSet = parameters.levelSet;
+        tmp.innerLevelSet = parameters.innerLevelSet;        
+        if (parameters.underCut) {
+            const tmp = parameters.underCut;
+            m2.hasCut = true;
+            m2.uDirDef = tmp.upper.useDefaultDir;
+            m2.lDirDef = tmp.lower.useDefaultDir;
+            m2.uLevelSet = tmp.upper.underCutLevelSet;
+            m2.lLevelSet = tmp.lower.underCutLevelSet;
+            m2.x1 = tmp.upper.underCutDir.x; m2.y1 = tmp.upper.underCutDir.y; m2.z1 = tmp.upper.underCutDir.z;            
+            m2.x2 = tmp.lower.underCutDir.x; m2.y2 = tmp.lower.underCutDir.y; m2.z2 = tmp.lower.underCutDir.z;            
+        } else {
+            m2.hasCut = false;
+        }
     } else {
         if (isNew) {
             ud.timestampList.push({
@@ -413,21 +455,21 @@ function updateTimestampData(tmpDir, customId, parameters, isNew) {
 }
 function selectTimestamp() {
     const { 
-        tmpDir, customId, isShell, thickness, tightness, upperDir, lowerDir 
+        tmpDir, customId, isShell, levelSet, innerLevelSet, underCut
     } = ud.selTimestamp || {};
     ud.customId = '';
     ud.lockBtn = 0;
     m1.isShell = isShell;
-    m1.thickness = thickness;
-    m1.tightness = tightness;
-    if (upperDir || lowerDir) {
+    m1.levelSet = levelSet;
+    m1.innerLevelSet = innerLevelSet;
+    if (underCut) {
         m2.hasCut = true;
-        m2.x1 = upperDir.x;
-        m2.y1 = upperDir.y;
-        m2.z1 = upperDir.z;
-        m2.x2 = lowerDir.x;
-        m2.y2 = lowerDir.y;
-        m2.z2 = lowerDir.z;
+        m2.uDirDef = underCut.upper.useDefaultDir;
+        m2.lDirDef = underCut.lower.useDefaultDir;
+        m2.uLevelSet = underCut.upper.underCutLevelSet;
+        m2.lLevelSet = underCut.lower.underCutLevelSet;
+        m2.x1 = underCut.upper.underCutDir.x; m2.y1 = underCut.upper.underCutDir.y; m2.z1 = underCut.upper.underCutDir.z;            
+        m2.x2 = underCut.lower.underCutDir.x; m2.y2 = underCut.lower.underCutDir.y; m2.z2 = underCut.lower.underCutDir.z;            
     } else {
         m2.hasCut = false;
     }
@@ -500,19 +542,27 @@ function updateByPath() {
             cut.setData(isUpper, geo.attributes.position.array, geo.index.array);            
         }
     }
-    ud.pathList.forEach(path=>{        
-        // if (path && path.indexOf('/input/') > 0) {
-        //     const str = path.toLowerCase();
-        //     if (str.indexOf('/input/cleaned_lower.mq') > 0 && mat.lower) {
-        //         gCache[nameMeshs[1]].applyMatrix4(mat.lower);
-        //         gCache[nameMeshs[1]].matrixWorldNeedsUpdate = true;
-        //     } else if (str.indexOf('/input/cleaned_upper.mq') > 0 && mat.upper) {
-        //         gCache[nameMeshs[0]].applyMatrix4(mat.upper);
-        //         gCache[nameMeshs[0]].matrixWorldNeedsUpdate = true;
-        //     }
-        // } else {
-            fetchSinglePath(path);
-        // }
+    ud.pathList.forEach(path=>{                    
+        if (path.endsWith('.json')) {
+            fetch(`${import.meta.env.VITE_APP_FILE_PREFIX}/${path}`)
+            .then(res=>res.json()).then(res=>{
+                console.log(res);
+                if (res.lowercutDir) {
+                    m2.x2 = res.lowercutDir.x;
+                    m2.y2 = res.lowercutDir.y;
+                    m2.z2 = res.lowercutDir.z;
+                    updateMarkers(res.lowercutDir, false);
+                }
+                if (res.uppercutDir) {
+                    m2.x1 = res.uppercutDir.x;
+                    m2.y1 = res.uppercutDir.y;
+                    m2.z1 = res.uppercutDir.z;
+                    updateMarkers(res.uppercutDir, true);
+                }
+            })
+        } else {
+            fetchSinglePath(path);     
+        }
     });
     app3.updateFrame();
     elLoading.hide();
@@ -537,17 +587,27 @@ async function showUnderCut() {
     elLoading.hide(0);
     app3.updateFrame();
 }
+function updateMarkers(position, isUpper) {
+    const idx = isUpper ? 7 : 8;
+    let mark = markers[idx];
+    if (mark) {
+        mark.update([position.x, position.y, position.z].map(e=>parseFloat(e)));
+    } else {
+        const pos = new alias3.Vector3(position.x, position.y, position.z);
+        mark = new MarkerLines([pos], 40, {
+            showX: true,
+            color1: color4Mesh[isUpper ? 0 : 1],    
+        })
+        mark.name = `marker${idx}`;
+        markers[idx] = mark;
+        app3.add(mark);
+    }
+    showUnderCut();
+}
 function appendFileMesh(mesh, filename, isUpper) {
     mesh.name = filename;
     const geo = mesh.geometry;
-    const idx = isUpper ? 7 : 8;
-    const pos = new alias3.Vector3(0, 0, 1);
-    markers[idx] = new MarkerLines([pos], 40, {
-        showX: true,
-        color1: color4Mesh[isUpper ? 0 : 1],
-    });     
-    markers[idx].name = `marker${idx}`;
-    app3.add(markers[idx]);
+    updateMarkers({x:0,y:0,z:1},isUpper);
     cut.setData(isUpper, geo.attributes.position.array, geo.index.array);
     const info = getMeshMaterialOption(filename, {tag:props.tag});
     if (!ud.infoList) ud.infoList = [];

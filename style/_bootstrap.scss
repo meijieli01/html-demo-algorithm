@@ -6,3 +6,14 @@ label.form-label {
         color: red;
     }
 }
+
+/*
+ * 对宽度进行扩展，支持更多的宽度
+ */
+ $widthKey: 5, 10, 15, 20, 30, 35, 40, 45, 55, 60, 65, 70, 80, 85, 90, 95; 
+ @each $i in $widthKey {
+     .w-#{$i}{
+         width: $i * 1% !important;
+     }
+ }
+ 

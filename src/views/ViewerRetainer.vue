@@ -56,9 +56,13 @@
                                 <input class="form-check-input m-1" type="checkbox" :disabled="m2.lockUpper" v-model="m2.uDirDef" value="">
                             </label>
                         </label>
-                        <label class="form-label my-auto mx-1 d-flex justify-content-evenly">
-                            <span class="m-auto">scale</span>
+                        <!-- <label class="form-label my-auto mx-1 d-flex justify-content-evenly">
+                            <span class="m-auto">scale</span>                            
                             -2<input type="range" class="form-range w-75" min="-2" max="2" step="0.01" :disabled="m2.lockUpper"  v-model="m2.uLevelSet"/>2
+                        </label> -->
+                        <label class="d-flex ms-2 w-30">
+                            <span class="m-auto">scale</span>
+                            <input class="form-control form-control-sm" :disabled="m2.lockUpper" v-model="m2.uLevelSet">
                         </label>
                         <div class="d-flex justify-content-evenly">
                             <label class="d-flex ms-1 w-30">
@@ -81,9 +85,13 @@
                                 <input class="form-check-input m-1" type="checkbox" :disabled="m2.lockLower" v-model="m2.lDirDef" value="">
                             </label>
                         </label>
-                        <label class="form-label my-auto mx-1 d-flex justify-content-evenly">
+                        <!-- <label class="form-label my-auto mx-1 d-flex justify-content-evenly">
                             <span class="m-auto">scale</span>
                             -2<input type="range" class="form-range w-75" min="-2" max="2" step="0.01" :disabled="m2.lockLower"  v-model="m2.lLevelSet"/>2
+                        </label> -->
+                        <label class="d-flex ms-2 w-30">
+                            <span class="m-auto">scale</span>
+                            <input class="form-control form-control-sm" :disabled="m2.lockLower" v-model="m2.lLevelSet">
                         </label>
                         <div class="d-flex justify-content-evenly">
                             <label class="d-flex ms-1 w-30">
@@ -164,7 +172,7 @@ import {
 } from '../third/mq-render/viewer.es';
 import { upload, getHistory, callAiRetainerNew } from '../api/all';
 import { configRetainer } from '../../config';
-import { filterFile, toYYMMDDHHmmss } from '../utils/util';
+import { toYYMMDDHHmmss } from '../utils/util';
 import { UnderCut } from '../utils/undercut';
 
 const props = defineProps({
@@ -193,11 +201,11 @@ const isDev = ref(import.meta.env.DEV);
 const msg = ref('');
 const msg1 = ref('');
 const cut = new UnderCut();
+const cFixNum = 4;
 const ud = reactive({
     type: 0,
     total: 0,
     count: 0,
-    countError: 0,
     uploading:false,
     errorList: [],
     pathList: [],
@@ -217,7 +225,6 @@ const ud = reactive({
     selTimestamp: {},
     script: null,
 });
-let gCache = {};
 const mat = reactive({
     upper: null,
     lower: null,
@@ -267,8 +274,6 @@ onMounted(async() => {
 })
 function getState() {
     const {tmpDir, customId} = ud.selTimestamp || {};
-    if (ud.lockUpload==1) return true;
-    if (ud.lockBtn==0) return true;
     if (!tmpDir && !customId) {
         // 未选中时，禁用
         return true;
@@ -283,31 +288,30 @@ function resetDir(hasNormal) {
     m2.hasCut = hasNormal;
     m2.x1 = 0, m2.y1 = 0, m2.z1 = 0;
     m2.x2 = 0, m2.y2 = 0, m2.z2 = 0;
+    m2.uDirDef = true;
+    m2.lDirDef = true;
+    m2.uLevelSet = 0;
+    m2.lLevelSet = 0;
 }
 function clickByCode(type) {
     ud.fetching = false;
     msg.value = '';
-    msg.errorList = [];
-    msg.countError = 0;
+    ud.errorList = [];
     ud.type = type;
     if ([2,6].includes(type)) {
         refFile.value.dispatchEvent(new MouseEvent('click'))
     } else if (type == 3) {
-        if (!m1.upper || !m1.lower) {
-            msg.value = 'Please wait patiently for the upload to complete';
-            return;
-        }
         ud.calling = true;
         if (m2.hasCut) {
             m1.underCut = {
                 upper: {
                     useDefaultDir: m2.uDirDef,
-                    underCutLevelSet: m2.uLevelSet,
+                    underCutLevelSet: Number(m2.uLevelSet),
                     underCutDir: { x: Number(m2.x1), y: Number(m2.y1), z: Number(m2.z1) },
                 },
                 lower: {
-                    useDefaultDir: m2.uDirDef,
-                    underCutLevelSet: m2.uLevelSet,
+                    useDefaultDir: m2.lDirDef,
+                    underCutLevelSet: Number(m2.lLevelSet),
                     underCutDir: { x: Number(m2.x2), y: Number(m2.y2), z: Number(m2.z2) },
                 }
             }
@@ -323,6 +327,8 @@ function clickByCode(type) {
             ud.calling = false;
             const {code, message, data} = res;            
             if (code == 200) {
+                gScene.clear();
+                ud.infoList = [];
                 const keyList = Object.keys(data);
                 if (keyList.length < 1) {
                     msg.value = 'empty data';
@@ -331,18 +337,10 @@ function clickByCode(type) {
                 ud.lockUpload = 0;
                 // 新的调用需要缓存记录
                 if (m1.type == 1) {           
-                    updateTimestampData(m1.tempDir, 'history', m1, false);
+                    updateCacheHistoryData(m1.tempDir, 'history', m1, false);
                 }
-                // ud.pathList = data.files.filter(e=>filterFile(e));
                 ud.pathList = data.files;
-                if (m1.type == 2) {
-                    // 历史记录
-                    // ud.pathList = ud.pathList.filter(e=>!e.indexOf('/input/')>-1);
-                    elViewer.value.resetAxes();
-                } else {
-                    // 新的调用
-                    ud.pathList = ud.pathList.filter(e=>e.indexOf('/output/')>-1);
-                }
+                elViewer.value.resetAxes();
                 if (data.lowerMat) mat.lower = arrayVectorToMatrix(data.lowerMat);
                 if (data.upperMat) mat.upper = arrayVectorToMatrix(data.upperMat);
                 updateByPath();
@@ -371,7 +369,6 @@ function clickByCode(type) {
         app3.updateFrame();
         m2.hasCut = true;
         ud.infoList = [];
-        gCache = {};
         [7,8].forEach(e=>{
             if (markers[e]) app3.add(markers[e]);
         })
@@ -404,24 +401,24 @@ function clickByCode(type) {
                             parameters.underCut = JSON.parse(strValue);                            
                         }
                     })
-                    updateTimestampData(parseInt(ids[0]), ids[1] || 'history', parameters, true);
+                    updateCacheHistoryData(parseInt(ids[0]), ids[1] || 'history', parameters, true);
                 })
             }
         })
     } else if ([7,8].includes(type)) {
         elLoading.show(document.body, {message: `Wait for computing...`, zIndex:5000});
         const pos = app3.getCameraPosition().normalize().negate();
-        if (type==7) m2.x1 = pos.x, m2.y1 = pos.y, m2.z1 = pos.z;
-        else m2.x2 = pos.x, m2.y2 = pos.y, m2.z2 = pos.z;
+        if (type==7) m2.x1 = fixNum(pos.x), m2.y1 = fixNum(pos.y), m2.z1 = fixNum(pos.z);
+        else m2.x2 = fixNum(pos.x), m2.y2 = fixNum(pos.y), m2.z2 = fixNum(pos.z);
         if (!markers[type]) {            
             elLoading.update(`no ${info1[type == 7 ? 0 : 1].label} mesh`)
         } else {
             markers[type].update(pos)
-            showUnderCut();
+            showUnderCut(type);
         }
     }
 }
-function updateTimestampData(tmpDir, customId, parameters, isNew) {
+function updateCacheHistoryData(tmpDir, customId, parameters, isNew) {
     // 更新进去
     const tmp = ud.timestampList.filter(e=>e.tmpDir==tmpDir)[0];
     if (tmp) {
@@ -430,16 +427,7 @@ function updateTimestampData(tmpDir, customId, parameters, isNew) {
         tmp.levelSet = parameters.levelSet;
         tmp.innerLevelSet = parameters.innerLevelSet;        
         if (parameters.underCut) {
-            const tmp = parameters.underCut;
-            m2.hasCut = true;
-            m2.uDirDef = tmp.upper.useDefaultDir;
-            m2.lDirDef = tmp.lower.useDefaultDir;
-            m2.uLevelSet = tmp.upper.underCutLevelSet;
-            m2.lLevelSet = tmp.lower.underCutLevelSet;
-            m2.x1 = tmp.upper.underCutDir.x; m2.y1 = tmp.upper.underCutDir.y; m2.z1 = tmp.upper.underCutDir.z;            
-            m2.x2 = tmp.lower.underCutDir.x; m2.y2 = tmp.lower.underCutDir.y; m2.z2 = tmp.lower.underCutDir.z;            
-        } else {
-            m2.hasCut = false;
+            tmp.underCut = parameters.underCut;
         }
     } else {
         if (isNew) {
@@ -452,6 +440,9 @@ function updateTimestampData(tmpDir, customId, parameters, isNew) {
     }
     writeToStorage(keyOfLocalStorage, JSON.stringify(ud.timestampList));
     ud.timestampList = JSON.parse(readFromStorage(keyOfLocalStorage, '[]'));
+}
+function fixNum(x) {
+    return Number(x).toFixed(cFixNum);
 }
 function selectTimestamp() {
     const { 
@@ -468,8 +459,12 @@ function selectTimestamp() {
         m2.lDirDef = underCut.lower.useDefaultDir;
         m2.uLevelSet = underCut.upper.underCutLevelSet;
         m2.lLevelSet = underCut.lower.underCutLevelSet;
-        m2.x1 = underCut.upper.underCutDir.x; m2.y1 = underCut.upper.underCutDir.y; m2.z1 = underCut.upper.underCutDir.z;            
-        m2.x2 = underCut.lower.underCutDir.x; m2.y2 = underCut.lower.underCutDir.y; m2.z2 = underCut.lower.underCutDir.z;            
+        m2.x1 = fixNum(underCut.upper.underCutDir.x); 
+        m2.y1 = fixNum(underCut.upper.underCutDir.y); 
+        m2.z1 = fixNum(underCut.upper.underCutDir.z);            
+        m2.x2 = fixNum(underCut.lower.underCutDir.x); 
+        m2.y2 = fixNum(underCut.lower.underCutDir.y); 
+        m2.z2 = fixNum(underCut.lower.underCutDir.z);            
     } else {
         m2.hasCut = false;
     }
@@ -498,24 +493,15 @@ function updateByPath() {
     ud.fetching = true;
     ud.fetchTotal = ud.pathList.length || 0;
     ud.fetchCount = 0;
-    if (ud.fetchTotal == ud.fetchCount) {
-        ud.uploading = false;
-        ud.fetching = false;
-        app3.updateFrame();
-        elLoading.hide();
-        return;
-    }
     const fetchSinglePath = async (path) => {
-        // const filename = PathLoader.getName(path);        
-        // const url = await store.dispatch('auth/getUrl', path);
         const filename = PathLoader.getName(path);
         const validPath = `${import.meta.env.VITE_APP_FILE_PREFIX}/${path}`;
-        const geo = await new PathLoader(path, {drcPath:`${import.meta.env.VITE_APP_PREFIX_DRACO}/draco/`}).load(validPath, (e)=>{
+        const geo = await new PathLoader(path, {drcPath:`${import.meta.env.VITE_APP_PREFIX_DRACO}/draco/`})
+        .load(validPath, (e)=>{
             // console.log('progress', e.loaded/e.total)
         }).catch(err=>{
             if (err instanceof ProgressEvent) {
                 if (err.total==0) {
-                    ud.countError++;
                     ud.errorList.push({
                         name: filename,
                     })
@@ -525,65 +511,58 @@ function updateByPath() {
             elLoading.hide();
             return null;
         })
-        ud.fetchCount++;
         if (!geo) return;
         elLoading.hide();
-        addGeotoScene(geo, filename, path);
         if (path.indexOf('/input/') > 0) {
             const isUpper = path.indexOf('cleaned_upper.mq') > 0;
-            const idx = isUpper ? 7 : 8;
-            const pos = new alias3.Vector3(0, 0, 1);
-            markers[idx] = new MarkerLines([pos], 40, {
-                showX: true,
-                color1: color4Mesh[isUpper ? 0 : 1],
-            });     
-            markers[idx].name = `marker${idx}`;
-            app3.add(markers[idx]);
-            cut.setData(isUpper, geo.attributes.position.array, geo.index.array);            
+            cut.setData(isUpper, geo.attributes.position.array, geo.index.array);                   
         }
+        addGeotoScene(geo, filename, path);
     }
-    ud.pathList.forEach(path=>{                    
+    ud.pathList.forEach(async(path)=>{                    
         if (path.endsWith('.json')) {
             fetch(`${import.meta.env.VITE_APP_FILE_PREFIX}/${path}`)
             .then(res=>res.json()).then(res=>{
                 console.log(res);
                 if (res.lowercutDir) {
-                    m2.x2 = res.lowercutDir.x;
-                    m2.y2 = res.lowercutDir.y;
-                    m2.z2 = res.lowercutDir.z;
+                    m2.x2 = fixNum(res.lowercutDir.x);
+                    m2.y2 = fixNum(res.lowercutDir.y);
+                    m2.z2 = fixNum(res.lowercutDir.z);
                     updateMarkers(res.lowercutDir, false);
                 }
                 if (res.uppercutDir) {
-                    m2.x1 = res.uppercutDir.x;
-                    m2.y1 = res.uppercutDir.y;
-                    m2.z1 = res.uppercutDir.z;
+                    m2.x1 = fixNum(res.uppercutDir.x);
+                    m2.y1 = fixNum(res.uppercutDir.y);
+                    m2.z1 = fixNum(res.uppercutDir.z);
                     updateMarkers(res.uppercutDir, true);
                 }
+                ud.fetchCount++;
             })
         } else {
-            fetchSinglePath(path);     
+            await fetchSinglePath(path);     
         }
     });
     app3.updateFrame();
     elLoading.hide();
 }
-async function showUnderCut() {
+async function showUnderCut(indexMark) {
     const dir = [];
-    let mesh;
-    if (idxMarker==7) {
+    const meshName = nameMeshs[indexMark==7?0:1];
+    const mesh = app3.findByName(meshName)[0];
+    console.log('show undercut ', indexMark, mesh)
+    if (!mesh) return;
+    if (indexMark==7) {
         dir.push(m2.x1, m2.y1, m2.z1);
-        mesh = gCache[nameMeshs[0]];
     } else {
         dir.push(m2.x2, m2.y2, m2.z2);
-        mesh = gCache[nameMeshs[1]];
     }
-    const index = cut.fetchIndex(idxMarker==7, dir.map(e=>parseFloat(e)));
+    const index = cut.fetchIndex(indexMark==7, dir.map(e=>parseFloat(e)));
     if (!mesh.userData.oldColor) {
         mesh.userData.oldColor = mesh.geometry.attributes.color.clone();
     } else {
         mesh.geometry.attributes.color.copy(mesh.userData.oldColor);
     }
-    colorUpdateByIndex(mesh.geometry, index, color4Mesh[idxMarker==7?0:1]);
+    colorUpdateByIndex(mesh.geometry, index, color4Mesh[indexMark==7?0:1]);
     elLoading.hide(0);
     app3.updateFrame();
 }
@@ -591,7 +570,7 @@ function updateMarkers(position, isUpper) {
     const idx = isUpper ? 7 : 8;
     let mark = markers[idx];
     if (mark) {
-        mark.update([position.x, position.y, position.z].map(e=>parseFloat(e)));
+        mark.update([position.x, position.y, position.z].map(e=>parseFloat(e)));        
     } else {
         const pos = new alias3.Vector3(position.x, position.y, position.z);
         mark = new MarkerLines([pos], 40, {
@@ -600,14 +579,12 @@ function updateMarkers(position, isUpper) {
         })
         mark.name = `marker${idx}`;
         markers[idx] = mark;
-        app3.add(mark);
     }
-    showUnderCut();
+    app3.add(mark);
 }
 function appendFileMesh(mesh, filename, isUpper) {
     mesh.name = filename;
     const geo = mesh.geometry;
-    updateMarkers({x:0,y:0,z:1},isUpper);
     cut.setData(isUpper, geo.attributes.position.array, geo.index.array);
     const info = getMeshMaterialOption(filename, {tag:props.tag});
     if (!ud.infoList) ud.infoList = [];
@@ -619,8 +596,8 @@ function appendFileMesh(mesh, filename, isUpper) {
     });
     app3.add(mesh);
     app3.updateFrame();
-    gCache[filename] = mesh;
     ud.lockUpload = markers[7] && markers[8] ? 1 : 0;
+    updateMarkers({x:0,y:0,z:1},isUpper);    
 }
 function addGeotoScene(geo, filename, path) {
     if (geo.type == 'BufferGeometry' && geo.attributes.position.count < 1) {
@@ -643,38 +620,38 @@ function addGeotoScene(geo, filename, path) {
         }
     }
     ud.infoList.sort(compare('filename'));
-    addColor2Mesh(geo, {name:filename, color:info.color, opacity: info.opacity}).then(mesh=>{
-        if (path && path.indexOf('/input/') > 0) {
+    addColor2Mesh(geo, {name:filename, color:info.color, opacity: info.opacity}).then((mesh)=>{
+        ud.fetchCount++;
+        if (path && path.indexOf('/input/') > 0) {                        
             const str = path.toLowerCase();
             // if (str.indexOf('/input/cleaned_lower.mq') > 0 && mat.lower) {
             //     mesh.applyMatrix4(mat.lower);
             // } else if (str.indexOf('/input/cleaned_upper.mq') > 0 && mat.upper) {
             //     mesh.applyMatrix4(mat.upper);
             // }
-            gCache[filename] = mesh;
             mesh.matrixWorldNeedsUpdate = true;
         }
         app3.add(mesh);
         app3.updateFrame();
-    })
-    if (ud.fetchTotal == ud.fetchCount) {
-        ud.uploading = false;
-        ud.fetching = false;
-    } else {
-        app3.updateFrame();
-    }
+        if (ud.fetchCount == ud.fetchTotal) {
+            showUnderCut(7).then(()=>{
+                showUnderCut(8).then(()=>{
+
+                })
+            })
+        }
+    })    
+    app3.updateFrame();
 }
 function jawInputChange() {
     if (m2.jaw=='1') {
         m2.lockUpper = false;
         m2.lockLower = true;
         idxMarker = 7;
-        // showUnderCut();    
     } else if (m2.jaw=='2') {
         m2.lockUpper = true;
         m2.lockLower = false;
         idxMarker = 8;
-        // showUnderCut();
     } else {
         m2.lockUpper = true;
         m2.lockLower = true;
@@ -686,7 +663,7 @@ function positionInputChange(event, code) {
     } else if (code == 2) {
         markers[idxMarker].update([m2.x2, m2.y2, m2.z2].map(e=>parseFloat(e)));
     }
-    showUnderCut();
+    showUnderCut(idxMarker);
 }
 function inputChangeUnderCut() {
     m2.hasCut = !m2.hasCut;

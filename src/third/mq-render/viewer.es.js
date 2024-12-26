@@ -35509,6 +35509,12 @@ function toMeshWithMaterialReplace(geometry, eType, userData = {}) {
   if (material) return new Mesh(geometry, material);
 }
 new Color().setRGB(0.5, 0.5, 0.5);
+const ColorMapKeywords = {
+  "rainbow": [[0, 255], [0.2, 65535], [0.5, 65280], [0.8, 16776960], [1, 16711680]],
+  "cooltowarm": [[0, 3952322], [0.2, 10206463], [0.5, 14474460], [0.8, 16163717], [1, 11797542]],
+  "blackbody": [[0, 0], [0.2, 7864320], [0.5, 15086080], [0.8, 16776960], [1, 16777215]],
+  "grayscale": [[0, 0], [0.2, 4210752], [0.5, 8355712], [0.8, 12566463], [1, 16777215]]
+};
 class Lut {
   constructor(colormap, count = 32) {
     this.isLut = true;
@@ -35571,6 +35577,11 @@ class Lut {
     const colorPosition = Math.round(alpha * this.n);
     return this.lut[colorPosition];
   }
+  getValue(alpha) {
+    alpha = MathUtils.clamp(alpha, this.minV, this.maxV);
+    const index = (alpha - this.minV) / (this.maxV - this.minV);
+    return index;
+  }
   addColorMap(name, arrayOfColors) {
     ColorMapKeywords[name] = arrayOfColors;
     return this;
@@ -35611,12 +35622,6 @@ class Lut {
     return canvas;
   }
 }
-const ColorMapKeywords = {
-  "rainbow": [[0, 255], [0.2, 65535], [0.5, 65280], [0.8, 16776960], [1, 16711680]],
-  "cooltowarm": [[0, 3952322], [0.2, 10206463], [0.5, 14474460], [0.8, 16163717], [1, 11797542]],
-  "blackbody": [[0, 0], [0.2, 7864320], [0.5, 15086080], [0.8, 16776960], [1, 16777215]],
-  "grayscale": [[0, 0], [0.2, 4210752], [0.5, 8355712], [0.8, 12566463], [1, 16777215]]
-};
 function computeMikkTSpaceTangents(geometry, MikkTSpace, negateSign = true) {
   if (!MikkTSpace || !MikkTSpace.isReady) {
     throw new Error("BufferGeometryUtils: Initialized MikkTSpace library required.");
@@ -37760,15 +37765,16 @@ const rShaderCrown = {
 
         if(useMapColor) {  
             // [-1.5,0] to [0, 1] is y = 2/3x + 1
-            if (vDistance >= -1.5 && vDistance <= 0.0) {
-                float y = mapFactor * vDistance + 1.0;
-                // targetColor = texture2D(textureMap, vec2(y, 0));
-                // targetColor = vec4(y, 0, 0, 1.0);
-                targetColor = vec4(0.0, 0.0, 1.0, 1.0);
-            } else {
-                // targetColor = vec4(color.r, color.g, color.b, 1.0);
-                targetColor = vec4(1.0, 1.0, 0.0, 1.0);
-            }
+            // if (vDistance >= -1.5 && vDistance <= 0.0) {
+            //     float y = mapFactor * vDistance + 1.0;
+            //     // targetColor = texture2D(textureMap, vec2(y, 0));
+            //     // targetColor = vec4(y, 0, 0, 1.0);
+            //     targetColor = vec4(0.0, 0.0, 1.0, 1.0);
+            // } else {
+            //     // targetColor = vec4(color.r, color.g, color.b, 1.0);
+            //     targetColor = vec4(1.0, 1.0, 0.0, 1.0);
+            // }
+            targetColor = texture2D(textureMap, vec2(0.5, 0.5));
         } else {
             targetColor = vec4(color.r, color.g, color.b, 1.0);
         }
@@ -37834,9 +37840,10 @@ function getMaterialByOptions(options = {}) {
       },
       vertexShader: rShaderCrown.vertexShader,
       fragmentShader: rShaderCrown.fragmentShader,
-      side: DoubleSide
-      // vertexColors: true,
-      // transparent: false,            
+      side: DoubleSide,
+      vertexColors: true,
+      transparent: false,
+      shadowSide: DoubleSide
     });
   } else {
     mat = new MeshPhongMaterial({

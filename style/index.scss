@@ -72,4 +72,16 @@ $widthToolbar: 30%;
     height: 100%;
     overflow-y: auto;
   }
+  .implant-crown-tip-image {
+    position: absolute;
+    top: calc(#{$heightTopBar} + 0px);
+    left: 0;
+    pointer-events: none;
+    img {
+      position: relative;
+      width: 8%;
+    }
+  }
 }
+
+@import './page_smile'

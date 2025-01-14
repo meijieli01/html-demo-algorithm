@@ -45,8 +45,13 @@ export const vInfo = {
         ],
     },
     'AI_NightGuard': {
-        version: '2.0.0',
+        version: '2.2.0',
         changelog: [
+            '2024-10-14',
+            '1. Change edge curving algorithm to improve NG performance.',
+            '2. Improve edge detection to meet the NG side requirement.',
+            '3. Update the segment part algorithm to improve NG shape.',
+            '4. Fix some bug to improve the program robustness.',
             '2023-11-28',
             '1. Adjust edge smooth part to improve NG performance.',
             '2. Add NG self-thickness check and self-thickness movement to meet the minimum self-thickness  requirement.',
@@ -104,6 +109,20 @@ export const vInfo = {
     'AI_Retainer': {
         version: '',
         changelog: [
+        ],
+    },
+    // 2024-12-12
+    'IMPLANTCROWN': {
+        version: '0.1.0',
+        changelog: [
+            '2025-1-13',
+            '1. We have added a new set of realistic scanbody templates.',
+            '1. When manually selecting registration points, please refer to the schematic in the top left corner',
+            '2024-12-5',
+            '1. The original upper and lower scan meshes are used for crown shape constraints and result visualization.',
+            '2. Currently, the generation of implant crown only supports individual teeth numbered \'4-7\'.',
+            '3. Currently, we have two sets of scanbody templates.',
+            '4. If direction point coordinates are input, the system will enter semi-automatic registration mode.'
         ],
     },
 }

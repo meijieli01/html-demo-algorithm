@@ -14,6 +14,8 @@ export function upload(data) {
 }
 
 /**
+ * 通用的
+ * 算法的参数放置在param对象中，是一个字符串，很早之前的是放置param同一级的
  * @description 调用AI
  */
 export function callAi(data) {
@@ -28,6 +30,7 @@ export function callAi(data) {
 
 
 /**
+ * @deprecated 弃用
  * @description 调用AI
  */
 export function callAiRetainer(data) {
@@ -47,10 +50,11 @@ export function callAiRetainer(data) {
 export function callAiRetainerNew(data) {
   return request({
     url: '/admin/retainerRequestNew',
-    headers: { 'content-type': 'application/x-www-form-urlencoded' },
+    // headers: { 'content-type': 'application/x-www-form-urlencoded' },
     method: 'POST',
-    timecount: 1000*60*10, // 十分钟
-    data: qs.stringify(data),
+    // timecount: 1000*60*10, // 十分钟
+    // data: qs.stringify(data),
+    data,
   })
 }
 

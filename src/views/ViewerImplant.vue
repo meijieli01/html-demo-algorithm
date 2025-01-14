@@ -11,7 +11,7 @@
                 <div class="d-flex flex-wrap">                
                     <div class="alert alert-warning m-1 p-0" role="alert" v-html="'Use the timestamp to differentiate processed and un-processed data'"></div>
                     <select class="form-select" v-model="ud.selTimestamp" @change="selectTimestamp">
-                        <option v-for="(item,i) in ud.timestampList" :key="i" :value="item" v-html="parseTime(item)"></option>
+                        <option v-for="(item,i) in ud.timestampList" :key="i" :value="item" v-html="elViewer.parseTime(tag, item)"></option>
                     </select>
                 </div>
                 <div class="d-flex flex-wrap">
@@ -48,8 +48,8 @@
         <SubChangeLog :tag="tag" />
         <div class="">
             <div class="d-flex" v-for="(item,i) in ud.infoList" :key="i">
-                <input type="color" class="form-control" :value="item.color" @change="inputChangeColorUpdate($event,item)" style="width:60px;" />
-                <input type="range" class="form-range" min="0" max="1" step="0.01" :value="item.opacity" @change="inputChangeOpacityUpdate($event,item)" style="width:160px;" />
+                <input type="color" class="form-control" :value="item.color" @change="elViewer.colorUpdate($event,item)" style="width:60px;" />
+                <input type="range" class="form-range" min="0" max="1" step="0.01" :value="item.opacity" @change="elViewer.opacityUpdate($event,item)" style="width:160px;" />
                 <div class="form-check form-switch mx-3">
                     <input class="form-check-input" type="checkbox" :checked="item.check" @change="inputChangeUpdate(item)" />
                     <label class="form-check-label" for="flexSwitchCheckDefault" v-html="item.filename"></label>
@@ -69,11 +69,10 @@ import SubChangeLog from './sub/SubChangeLog.vue';
 import SubVersion from './sub/SubVersion.vue';
 import SubSelection from './sub/SubSelection.vue';
 import SubProgress from './sub/SubProgress.vue';
-import { getMeshMaterialOption } from '../third/threejs/mjColor';
+import { getMeshMaterialOption, addColor2Mesh } from '../third/auxThree';
 import { readFromStorage, writeToStorage } from '../third/snippet/storage';
-import { FilePathLoader, addColor2Mesh, PathLoader, updateMeshColor, updateMeshOpacity, emptyTrackFile } from '../third/threejs/mjLoader';
+import { FilePathLoader, PathLoader } from '../third/mq-render/viewer.es';
 import { upload, callAi, getHistory } from '../api/ct';
-import { getBaseRoot, vInfo } from '../../config';
 import { calcPer, filterFile } from '../utils/util';
 const props = defineProps({
     tag: {
@@ -120,11 +119,6 @@ onMounted(() => {
     ud.timestampList = JSON.parse(readFromStorage(keyOfLocalStorage, '[]'));
     app3 = elViewer.value.app3;
 })
-function parseTime(timestamp) {
-    const date = new Date(parseInt(timestamp.tmpDir));
-    const strTid = timestamp.tid ? `${timestamp.tid} ---  ` : '';
-    return `${strTid}${date.getFullYear()}-${date.getMonth()+1}-${date.getDate()} ${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`;
-}
 function getState() {
     const {tmpDir, tid} = ud.selTimestamp || {};
     if (!tmpDir && !tid) {
@@ -146,7 +140,6 @@ function clickLoadShowData(type) {
     ud.type = type;
     app3.empty();
     if ([1,2].includes(type)) {
-        emptyTrackFile();
         refFile.value.dispatchEvent(new MouseEvent('click'))
     } else if (type == 3) {
         const { tmpDir, tid } = ud.selTimestamp || {};
@@ -250,7 +243,7 @@ function updateByPath() {
     const fetchSinglePath = async (path) => {
         const filename = PathLoader.getName(path);
         const validPath = `${import.meta.env.VITE_APP_FILE_PREFIX}/${path}`;
-        const geo = await new PathLoader(path, `${import.meta.env.VITE_APP_PREFIX_PUBLIC}/draco/`).load(validPath, (e)=>{
+        const geo = await new PathLoader(path, `${import.meta.env.VITE_APP_PREFIX_DRACO}/draco/`).load(validPath, (e)=>{
             // console.log('progress', e.loaded/e.total)
         }).catch(err=>{
             if (err instanceof ProgressEvent) {
@@ -314,22 +307,6 @@ function inputChangeUpdate(item) {
         app3.updateFrame();
     }
 }
-function inputChangeColorUpdate(event, item) {
-    item.color = event.target.value;
-    const mesh = app3.group.children.filter(e=>e.name==item.filename)[0];
-    if (mesh) {
-        updateMeshColor(mesh, item.color);
-        app3.updateFrame();
-    }
-}
-function inputChangeOpacityUpdate(event, item) {
-    item.opacity = parseFloat(event.target.value);
-    const mesh = app3.group.children.filter(e=>e.name==item.filename)[0];
-    if (mesh) {
-        updateMeshOpacity(mesh, item.opacity);
-        app3.updateFrame();
-    }
-}
 function getPer() {
     if (ud.fetching) return calcPer(ud.fetchCount, ud.fetchTotal);
     return calcPer(ud.count, ud.total);
@@ -346,7 +323,7 @@ async function handleSelectFile(event) {
         ud.fetchCount = 0;
         for (let i = 0; i < files.length; i++) {
             const file = files[i];
-            const geo = await new FilePathLoader(file.name, `${import.meta.env.VITE_APP_PREFIX_PUBLIC}/draco/`).load(file, (event)=>{
+            const geo = await new FilePathLoader(file.name, `${import.meta.env.VITE_APP_PREFIX_DRACO}/draco/`).load(file, (event)=>{
                 // console.log('progress', event.loaded/event.total)
             }).catch(err=>{
                 if (err instanceof ProgressEvent) {
@@ -367,7 +344,6 @@ async function handleSelectFile(event) {
             app3.loading(false);
             addGeotoScene(geo, filename);
         }
-        emptyTrackFile();
     } else if (ud.type == 2) {
         // 上传文件
         if (!ud.timestamp || ud.timestamp.length < 1) {

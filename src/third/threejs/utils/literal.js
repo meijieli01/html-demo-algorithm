@@ -1,1 +1,0 @@
-export const jawName = ['上颌', '下颌', '咬合'];

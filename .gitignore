@@ -7,3 +7,4 @@ package-lock.json
 dist_test
 dist_beta
 public/css/
+.tool-versions

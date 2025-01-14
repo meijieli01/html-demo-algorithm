@@ -22,6 +22,13 @@ export const mapComponent2LocalFile = {
   //   functionCode: 'ViewerCrown',
   //   functionId: '102',
   // },
+  // 2024-12-12
+  'IMPLANTCROWN': {
+    component: () => import('../views/ViewerImplantCrown.vue'),
+    functionName: 'ImplantCrown',
+    functionCode: 'ViewerImplantCrown',
+    functionId: '109',
+  },
   'NIGHT': {
     component: () => import('../views/one/NightGuard.vue'),
     functionName: 'NightGuard',
@@ -47,17 +54,23 @@ export const mapComponent2LocalFile = {
     functionCode: 'OcclusionRecovery',
     functionId: '108',
   },
-  // 'BRACKER': {
-  //   component: () => import('../views/one/BrackerRemove.vue'),
-  //   functionName: 'BracketRemoval',
-  //   functionCode: 'ViewerBracket',
-  //   functionId: '104',
-  // },
+  'BRACKER': {
+    component: () => import('../views/one/BrackerRemove.vue'),
+    functionName: 'BracketRemoval',
+    functionCode: 'ViewerBracket',
+    functionId: '104',
+  },
   'RETAINER': {
     component: () => import('../views/ViewerRetainer.vue'),
     functionName: 'Retainer',
     functionCode: 'ViewerRetainer',
     functionId: '105',
+  },
+  'SMILE': {
+    component: () => import('../views/Smile.vue'),
+    functionName: 'Smile',
+    functionCode: 'Smile',
+    functionId: '201',
   },
 }
 
@@ -67,7 +80,7 @@ const router = createRouter({
 })
 
 if (import.meta.env.DEV) {
-  window.mjrouter = router
+  window.router = router
 }
 
 export default router

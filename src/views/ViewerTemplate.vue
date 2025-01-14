@@ -11,7 +11,7 @@
                 <div class="d-flex flex-wrap">                
                     <div class="alert alert-warning m-1 p-0" role="alert" v-html="'Use the timestamp to differentiate processed and un-processed data'"></div>
                     <select class="form-select" v-model="ud.selTimestamp" @change="selectTimestamp">
-                        <option v-for="(item,i) in ud.timestampList" :key="i" :value="item" v-html="parseTime(item)"></option>
+                        <option v-for="(item,i) in ud.timestampList" :key="i" :value="item" v-html="elViewer.parseTime(tag, item)"></option>
                     </select>
                 </div>
                 <div class="d-flex flex-wrap">
@@ -79,14 +79,14 @@
             </div>
         </div>
         <div class="">
-            <div class="d-flex my-1" v-for="(item,i) in ud.infoList" :key="i">
-                <input type="color" class="form-control" :value="item.color" @change="inputChangeColorUpdate($event,item)" style="width:60px;" />
-                <input type="range" class="form-range" min="0" max="1" step="0.01" :value="item.opacity" @change="inputChangeOpacityUpdate($event,item)" style="width:160px;" />
+            <div class="d-flex flex-wrap my-1" v-for="(item,i) in ud.infoList" :key="i">
+                <input type="color" class="form-control" :value="item.color" @change="elViewer.colorUpdate($event,item)" style="width:60px;" />
+                <input type="range" class="form-range" min="0" max="1" step="0.01" :value="item.opacity" @change="elViewer.opacityUpdate($event,item)" style="width:160px;" />
                 <div class="form-check form-switch mx-3">
                     <input class="form-check-input" type="checkbox" :checked="item.check" @change="inputChangeUpdate(item)" />
                     <label class="form-check-label" for="flexSwitchCheckDefault" v-html="item.filename"></label>
                 </div>
-                <button class="btn btn-primary btn-sm" v-if="showDownload(null, item)" @click="showDownload($event, item, 'download')">Download</button>
+                <button class="btn btn-primary btn-sm" v-if="elViewer.eventByType(tag, null, item)" @click="elViewer.eventByType(tag, $event, item, 'download')">Download</button>
             </div>
         </div>
         <SubChangeLog :tag="tag" />
@@ -102,11 +102,11 @@ import ViewerBase from './ViewerBase.vue';
 import SubChangeLog from './sub/SubChangeLog.vue';
 import SubVersion from './sub/SubVersion.vue';
 import SubProgress from './sub/SubProgress.vue';
-import { getMeshMaterialOption } from '../third/threejs/mjColor';
+import { getMeshMaterialOption, addColor2Mesh } from '../third/auxThree';
 import { readFromStorage, writeToStorage } from '../third/snippet/storage';
-import { addColor2Mesh, PathLoader, updateMeshColor, updateMeshOpacity, FilePathLoader, emptyTrackFile } from '../third/threejs/mjLoader';
+import elLoading from '../third/snippet/loading';
+import { FilePathLoader, PathLoader } from '../third/mq-render/viewer.es';
 import { upload, getHistory, callAi } from '../api/all';
-import { getBaseRoot, vInfo } from '../../config';
 import { ext, filterFile } from '../utils/util';
 const props = defineProps({
     tag: {
@@ -209,27 +209,14 @@ const m1c = reactive({
     efficient_mode: info['efficientModeList'][1].value,
 });
 let app3 = null;
+let gScene = null;
 const keyOfLocalStorage = `keyOfLocalStorage${props.tag}`;
 onMounted(() => {
     // 缓存上传文件的时间点
     ud.timestampList = JSON.parse(readFromStorage(keyOfLocalStorage, '[]'));
     app3 = elViewer.value.app3;
+    gScene = elViewer.value.gScene;
 })
-function parseTime(timestamp) {
-    const date = new Date(parseInt(timestamp.tmpDir));
-    let strTid = timestamp.tid ? `${ timestamp.tid}--` : '';
-    if (props.tag == 'AI_NightGuard') {
-        if (timestamp.param) {
-            strTid = '';
-            const t2 = timestamp.param;
-            // strTid += `${t2.move_distance}--`;
-            strTid += `${t2.mode}--`;
-            strTid += `${t2.openbite}--`;
-            strTid += `${t2.occ_thickness}--`;
-        }
-    }
-    return `${strTid}${date.getFullYear()}-${date.getMonth()+1}-${date.getDate()} ${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`;
-}
 function getState() {
     const {tmpDir, tid} = ud.selTimestamp || {};
     if (!tmpDir && !tid) {
@@ -250,9 +237,8 @@ function clickLoadShowData(type) {
     msg.errorList = [];
     msg.countError = 0;
     ud.type = type;
-    app3.empty();
+    gScene.clear();
     if ([1,2,6].includes(type)) {
-        emptyTrackFile();
         refFile.value.dispatchEvent(new MouseEvent('click'))
     } else if (type == 3) {
         ud.calling = true;
@@ -357,7 +343,7 @@ function selectTimestamp() {
     }
 }
 function updateByPath() {
-    app3.loading(true);
+    elLoading.show(document.body, {message: `加载中...`, zIndex:5000});
     ud.uploading = true;
     ud.fetching = true;
     ud.fetchTotal = ud.pathList.length;
@@ -365,8 +351,8 @@ function updateByPath() {
     const fetchSinglePath = async (path) => {
         const filename = PathLoader.getName(path);
         const validPath = `${import.meta.env.VITE_APP_FILE_PREFIX}/${path}`;
-        const geo = await new PathLoader(path, `${import.meta.env.VITE_APP_PREFIX_PUBLIC}/draco/`).load(validPath, (e)=>{
-            console.log('progress', e.loaded/e.total)
+        const geo = await new PathLoader(path, {drcPath:`${import.meta.env.VITE_APP_PREFIX_DRACO}/draco/`}).load(validPath, (e)=>{
+            // console.log('progress', e.loaded/e.total)
         }).catch(err=>{
             if (err instanceof ProgressEvent) {
                 if (err.total==0) {
@@ -377,12 +363,12 @@ function updateByPath() {
                 }   
             }
             msg.value = 'File Load failure';
-            app3.loading(false);
+            elLoading.hide();
             return null;
         })
         ud.fetchCount++;
         if (!geo) return;
-        app3.loading(false);
+        elLoading.hide();
         addGeotoScene(geo, filename);
     }
     ud.pathList.forEach(path=>{
@@ -429,25 +415,9 @@ function addGeotoScene(geo, filename) {
 }
 function inputChangeUpdate(item) {
     item.check = !item.check;
-    const mesh = app3.group.children.filter(e=>e.name==item.filename)[0];
+    const mesh = gScene.children.filter(e=>e.name==item.filename)[0];
     if (mesh) {
         mesh.visible = item.check;
-        app3.updateFrame();
-    }
-}
-function inputChangeColorUpdate(event, item) {
-    item.color = event.target.value;
-    const mesh = app3.group.children.filter(e=>e.name==item.filename)[0];
-    if (mesh) {
-        updateMeshColor(mesh, item.color);
-        app3.updateFrame();
-    }
-}
-function inputChangeOpacityUpdate(event, item) {
-    item.opacity = parseFloat(event.target.value);
-    const mesh = app3.group.children.filter(e=>e.name==item.filename)[0];
-    if (mesh) {
-        updateMeshOpacity(mesh, item.opacity);
         app3.updateFrame();
     }
 }
@@ -464,12 +434,12 @@ async function handleSelectFile(event) {
         ud.fetching = true;
         ud.uploading = true;
         ud.infoList = [];
-        app3.loading(true);
+        elLoading.show(document.body, {message: `加载中...`, zIndex:5000});
         ud.fetchTotal = files.length;
         ud.fetchCount = 0;
         for (let i = 0; i < files.length; i++) {
             const file = files[i];
-            const geo = await new FilePathLoader(file.name, `${import.meta.env.VITE_APP_PREFIX_PUBLIC}/draco/`).load(file, (event)=>{
+            const geo = await new FilePathLoader(file.name, {drcPath:`${import.meta.env.VITE_APP_PREFIX_DRACO}/draco/`}).load(file, (event)=>{
                 // console.log('progress', event.loaded/event.total)
             }).catch(err=>{
                 if (err instanceof ProgressEvent) {
@@ -481,16 +451,15 @@ async function handleSelectFile(event) {
                     }   
                 }
                 msg.value = 'File Load failure';
-                app3.loading(false);
+                elLoading.hide();
                 return null;
             });
             ud.fetchCount++;
             if (!geo) return;
             const filename = FilePathLoader.getName(file.name);
-            app3.loading(false);
+            elLoading.hide();
             addGeotoScene(geo, filename);
         }
-        emptyTrackFile();
     } else if ([2,6].includes(ud.type)) {
         // 上传文件
         if (!ud.timestamp || ud.timestamp.length < 1) {
@@ -522,20 +491,5 @@ async function handleSelectFile(event) {
             msg.value += `File ${file.name} upload failed`;
         }
     }
-}
-function showDownload(event, item, type) {
-    if (event) {
-        event.preventDefault();
-        event.stopPropagation();
-    } 
-    if (['AI_NightGuard', 'AI_Retainer'].includes(props.tag)) {        
-        if (type == 'download') {
-            return elViewer.value.donwloadByName(item.filename, {
-                prefix:`NightGuard`
-            });
-        }
-        return true;
-    }
-    return false;
 }
 </script>

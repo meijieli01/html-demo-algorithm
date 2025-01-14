@@ -7,9 +7,8 @@ import {getBaseRoot} from './config';
 
 // https://vitejs.dev/config/
 export default defineConfig(({mode}) => {
-  const buildPath = `./dist_${mode}`
+  const buildPath = `./dist`
   const env = loadEnv(mode, process.cwd(), '');
-  console.log('-build info-', mode, env)
   return {
     plugins: [
       vue(),

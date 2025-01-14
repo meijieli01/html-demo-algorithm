@@ -1,0 +1,330 @@
+$bg1: #2F3338 !default;
+$bg2: #23262B !default;
+$bg3: #DDDDDD !default;
+$smileTheme1: white !default;
+.smile-index-page {
+    --zIndexOfSub: 2000;
+    --smile-max-height: 60%;
+    --hTitle1: 32px;
+    --hTitle2: 26px;
+    width: 100vw;
+    height: 100vh;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    user-select: none;
+    background-color: $bg1;
+    color: white;
+    .smile-title {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        width: 100%;
+        height: var(--hTitle1);
+        font-size: larger;
+        @extend .my-1;
+    }
+    .smile-menu-tool {
+        display: flex;
+        justify-content: space-evenly;
+        width: 100%;
+        height: var(--hTitle2);
+        @extend .my-1;
+    }
+    .smile-main-content {
+        --wOfSubMenu: 300px;
+        position: relative;
+        height: calc(100% - var(--hTitle1) - var(--hTitle2));
+        width: 100%;
+        display: flex;
+        flex-direction: row;
+        .content-sub-menu {
+            width: 0;
+            height: 100%;
+            display: none;
+            background-color: $bg2;
+            &.show-menu {
+                width: var(--wOfSubMenu);
+                display: flex;
+                flex-direction: column;
+            }
+            .sub-menu-row {
+                display: flex;
+                justify-content: space-between;  
+                @extend .py-1;
+            }
+        }
+        .content-main {
+            position: relative;
+            max-width: 100%;
+            max-height: 100%;
+            overflow: hidden;
+            width: 100%;
+            height: 100%;
+            &.show-menu {
+                width: calc(100% - var(--wOfSubMenu));
+                display: flex;
+                justify-content: center;
+                canvas {
+                    position: relative;
+                }
+            }
+            &.no-fit-viewport {
+                max-width: unset;
+                max-height: unset;
+                overflow: auto;
+                width: auto;
+                height: auto;
+            }
+            // 特殊情况，直接覆盖在上面，减少前后，虽然耗内存
+            .content-sub-code-0 {
+                position: absolute;
+                top: 0;
+                left: 0;
+                background-color: $bg1;
+                z-index: var(--zIndexOfSub);
+                width: 100%;
+                height: 100%;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+            }
+            .content-sub-code-2 {
+                position: absolute;
+                top: 0;
+                left: 0;
+                background-color: $bg3D;
+                z-index: var(--zIndexOfSub);
+                width: 100%;
+                height: 100%;
+                display: flex;
+                flex-wrap: wrap;
+                .image-wrap {
+                    width: 100%;
+                    height: 100%;
+                    display: flex;
+                    // flex-wrap: wrap;
+                    justify-content: center;
+                    .image-wrap-single {
+                        position: relative;
+                        height: var(--smile-max-height);
+                        display: flex;
+                        margin: auto;
+                        &.place-end {
+                            justify-content: end;
+                        }
+                        &.place-start {
+                            justify-content: start;
+                        }
+                        .image-content {
+                            position: relative;  
+                            overflow: hidden;                          
+                            &.active,
+                            &:hover {
+                                box-shadow: 0 0 8px $smileTheme1;
+                                border-color: $smileTheme1;
+                            }
+                            img {
+                                max-width: 100%;
+                                max-height: 100%;
+                                overflow: hidden;
+                            }
+                            button {
+                                position: absolute;
+                                left: 48%;
+                                bottom: 0;
+                                @extend .btn-secondary;
+                                &.active {
+                                    background: $smileTheme1;
+                                    color: initial !important;
+                                }
+                            }
+                            label {
+                                position: absolute;
+                                left: 5%;
+                                top: 0;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    button {
+        &.theme1 {
+            @extend .btn-secondary;            
+            border-color: $smileTheme1!important;
+            color: $smileTheme1;
+            &:active,
+            &.first-child:active:active,
+            &.btn.active,
+            &:hover {
+                background-color: $smileTheme1!important;
+                color: initial!important;
+            }
+        }
+    }
+    input[type="range"] {
+        &.theme1 {
+            accent-color: $smileTheme1;
+            width: 140px;
+        }
+    }
+    .rotate-theme1 {
+        svg {
+            transform: scale(1.5);
+        }
+    }
+    .form-check-input {
+        background-color: gray;
+        border-color: gray;
+        &:checked {
+            background-color: $smileTheme1;
+            border-color: $smileTheme1;    
+        }
+    }
+    .range-per {
+        width: 40px;
+    }
+}
+.teeth-pan {
+    --sizePanBtn: 32px;
+    --sizePanBtnS: 26px;
+    height: 96px;
+    position: relative;
+    & > div {
+        position: relative;
+        width: 100%;
+        button {
+            position: absolute;
+            @extend .btn;
+            @extend .btn-primary;
+            @extend .btn-sm;
+            &.pan-up {
+                left: calc(50% - var(--sizePanBtnS) * 0.5);
+                top: 0px;
+            }
+            &.pan-right {
+                left: calc( 50% + var(--sizePanBtn) * 0.5);
+                top: var(--sizePanBtn);
+            }
+            &.pan-down {
+                left: calc(50% - var(--sizePanBtnS) * 0.5);
+                top: calc(var(--sizePanBtn) * 2);
+            }
+            &.pan-left {
+                left: calc(50% - var(--sizePanBtn) * 1.5);
+                top: var(--sizePanBtn);
+            }
+        }
+    }
+}
+.menu-tool-item {
+    --size1: 4%;
+    width: 20%;
+    height: 100%;
+    background-color: $bg2;
+    clip-path: polygon(calc(100% - var(--size1)) 0%, 100% 50%, calc(100% - var(--size1)) 100%, 0% 100%, var(--size1) 50%, 0% 0%);
+    display: flex;
+    justify-content: center;
+    label {
+        position: relative;
+        margin: auto;
+    }
+    color: unset;
+    &.active {
+        background-color: white;
+        color: initial;
+    }
+    &.begin {
+        clip-path: polygon(calc(100% - var(--size1)) 0%, 100% 50%, calc(100% - var(--size1)) 100%, 0% 100%, 0% 50%, 0% 0%);
+    }
+    &.end {
+        clip-path: polygon(100% 0%, 100% 50%, 100% 100%, 0% 100%, var(--size1) 50%, 0% 0%);
+    }
+}
+.content-tool-navigate {
+    --svgSize: 28px;
+    position: absolute;
+    .pan-list {
+        position: relative;
+        .pan-bottom {
+            position: absolute;
+            top: calc(var(--svgSize) + var(--svgSize));
+        }
+        .pan-right {
+            position: absolute;
+            left: var(--svgSize);
+        }
+        .pan-left {
+            position: absolute;
+            left: calc(-1 * var(--svgSize));
+        }
+    }
+}
+.content-pan-navigate {
+    position: fixed;
+    z-index: 5000;
+    button {
+        position: absolute;
+        @extend .btn;
+        @extend .btn-primary;
+        @extend .btn-sm;
+    }
+}
+.smile-compare-image-result {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    margin: auto;
+    .smile-compare-image-item {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        img {
+            overflow: hidden;
+            width: 100%;
+        }
+    }
+    &.size21to9 {
+        .smile-compare-image-item {
+            img {
+                height: 100%;
+                width: auto;
+            }
+        }
+    }
+}
+@import '../src/third/snippet/image/compare';
+@import '../src/third/snippet/image/view.long';
+svg {
+    &.wh-16 {
+        width: 16px;
+        height: 16px;
+    }
+    &.wh-18 {
+        width: 18px;
+        height: 18px;
+    }
+    &.wh-24 {
+        width: 24px;
+        height: 24px;
+    }
+    &.wh-28 {
+        width: 28px;
+        height: 28px;
+    }
+}
+
+// 测试结果
+body {
+    &>canvas {
+        position: absolute;
+        z-index: 50000;
+        background-color: white;
+        top: 150px;
+    }
+}

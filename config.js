@@ -115,6 +115,9 @@ export const vInfo = {
     'IMPLANTCROWN': {
         version: '0.1.0',
         changelog: [
+            '2025-1-13',
+            '1. We have added a new set of realistic scanbody templates.',
+            '1. When manually selecting registration points, please refer to the schematic in the top left corner',
             '2024-12-5',
             '1. The original upper and lower scan meshes are used for crown shape constraints and result visualization.',
             '2. Currently, the generation of implant crown only supports individual teeth numbered \'4-7\'.',

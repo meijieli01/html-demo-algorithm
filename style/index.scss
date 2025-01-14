@@ -76,6 +76,7 @@ $widthToolbar: 30%;
     position: absolute;
     top: calc(#{$heightTopBar} + 0px);
     left: 0;
+    pointer-events: none;
     img {
       position: relative;
       width: 8%;

@@ -5,6 +5,7 @@
         <div class="implant-crown-tip-image" v-if="entry=='implantCrown'">
             <img :src="scanbody1">
             <img :src="scanbody2">
+            <img :src="scanbody3">
         </div>
     </div>
 </template>
@@ -19,6 +20,7 @@ import { toYYMMDDHHmmss } from '../utils/util';
 import { useRoute } from 'vue-router'
 import scanbody1 from '../assets/scanbody_1.png?url';
 import scanbody2 from '../assets/scanbody_2.png?url';
+import scanbody3 from '../assets/scanbody_3.png?url';
 const props = defineProps({
     entry: {
         type:String,

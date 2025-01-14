@@ -32,6 +32,7 @@
                 <select v-model="m3.scanbody_id" class="form-select" :disabled="ud.state=='history'">
                     <option value="1">1</option>
                     <option value="2">2</option>
+                    <option value="3">3</option>
                 </select>
             </div>            
             <div class="d-flex flex-column justify-content-start">

@@ -6230,11 +6230,6 @@ class BufferAttribute {
     return data;
   }
 }
-class Uint8BufferAttribute extends BufferAttribute {
-  constructor(array, itemSize, normalized) {
-    super(new Uint8Array(array), itemSize, normalized);
-  }
-}
 class Uint16BufferAttribute extends BufferAttribute {
   constructor(array, itemSize, normalized) {
     super(new Uint16Array(array), itemSize, normalized);
@@ -29594,6 +29589,17 @@ function viewDir(index) {
   else if (index == 5) return cameraViews["anteriorUpper"];
   return cameraViews["anterior"];
 }
+function editorViewDir(viewDir2) {
+  let name = "";
+  if ([1, 2, 3, 4, 5].includes(viewDir2)) {
+    if (viewDir2 === 1) name = "editorJawUpper";
+    else if (viewDir2 === 2) name = "editorJawLower";
+    else if (viewDir2 === 3) name = "editorJawRight";
+    else if (viewDir2 === 4) name = "editorJawLeft";
+    else if (viewDir2 === 5) name = "editorJawFront";
+  }
+  if (name) return cameraViews[name];
+}
 function setXYZ(arr, i, x, y, z) {
   arr[i + 0] = x;
   arr[i + 1] = y;
@@ -30665,7 +30671,7 @@ class MqRender {
         root.geometry.computeBoundingBox();
         bbx2.union(root.geometry.boundingBox);
       } else {
-        root.children.forEach((e) => getBoundingBox(e, bbx2));
+        if (root.children) root.children.forEach((e) => getBoundingBox(e, bbx2));
       }
     }
     const box3 = new Box3();
@@ -30816,6 +30822,39 @@ class MqRender {
   }
   addAfterHandler(e) {
     this.handler4After.push(e);
+  }
+  alignment2Camera(viewDir2) {
+    const info = editorViewDir(viewDir2);
+    if (info) this.setCameraType(info);
+  }
+  setCameraType(data) {
+    const boxList = [];
+    const { camera, control, options } = this;
+    options.viewStateList.forEach((vs) => {
+      boxList.push(this.getBox(vs));
+    });
+    const curCamera = camera.getCamera();
+    const side1 = Math.max(boxList[0].size.x, boxList[0].size.y, boxList[0].size.z);
+    const side2 = Math.max(boxList[1].size.x, boxList[1].size.y, boxList[1].size.z);
+    const maxSize = side1 > side2 ? boxList[0].size : boxList[1].size;
+    boxList.map((e) => ({ side: Math.max(e.size.x, e.size.y, e.size.z), size: e.size.clone() }));
+    if (control) control.reset();
+    const sideSize = curCamera instanceof OrthographicCamera ? Math.abs(Math.max(curCamera.position.x, curCamera.position.y, curCamera.position.z)) : options.cameraPositionZ;
+    curCamera.lookAt(0, 0, 0);
+    curCamera.up.set(0, 1, 0);
+    curCamera.position.set(0, 0, sideSize);
+    curCamera.quaternion.identity();
+    curCamera.scale.set(1, 1, 1);
+    curCamera.up.set(data.up[0], data.up[1], data.up[2]);
+    const positions = data.position.map((e) => e !== 0 ? e < 0 ? -sideSize : sideSize : e);
+    curCamera.position.set(positions[0], positions[1], positions[2]);
+    curCamera.rotation.set(data.rotation[0], data.rotation[1], data.rotation[2]);
+    if (curCamera instanceof OrthographicCamera) {
+      curCamera.zoom = Math.log2(curCamera.position.distanceTo(maxSize));
+    }
+    curCamera.updateProjectionMatrix();
+    if (control) control.update();
+    this.updateFrame();
   }
 }
 function localUpdateCamera(camera, scene, oCamera, options) {
@@ -31090,7 +31129,6 @@ class StrCell {
     ctx.font = options.fontInfo || "100 72px sans-serif";
     const textMetrics = ctx.measureText(text);
     if (options.noFix) {
-      console.log(textMetrics.width, CellSize, x, y);
       ctx.fillText(str, x + (CellSize - textMetrics.width) / 2, y + CellSize / 2);
     } else {
       ctx.fillText(str, x + CellSize / 2, y + CellSize / 2);
@@ -31256,7 +31294,7 @@ class MqMultiViewEditor extends MqRender {
     const sizeScale = 80;
     (_a = options.viewStateList) == null ? void 0 : _a.forEach((view, index) => {
       if (view.label) {
-        view.strSprite = new StrSprite(view.label);
+        view.strSprite = new StrSprite(view.label, options);
         view.strSprite.target.center.set(0.5, 0.5);
         view.strSprite.target.scale.set(sizeScale, sizeScale, 1);
         view.strSprite.target.position.set(0, -options.height * 0.45, 0);
@@ -33854,6 +33892,65 @@ function setTriangle(tri, i, index, pos) {
   tc.y = pos.getY(i2);
   tc.z = pos.getZ(i2);
 }
+const tempV1 = /* @__PURE__ */ new Vector3();
+const tempV2 = /* @__PURE__ */ new Vector3();
+const tempV3 = /* @__PURE__ */ new Vector3();
+const tempUV1 = /* @__PURE__ */ new Vector2();
+const tempUV2 = /* @__PURE__ */ new Vector2();
+const tempUV3 = /* @__PURE__ */ new Vector2();
+function getTriangleHitPointInfo(point, geometry, triangleIndex, target) {
+  const indices = geometry.getIndex().array;
+  const positions = geometry.getAttribute("position");
+  const uvs = geometry.getAttribute("uv");
+  const a = indices[triangleIndex * 3];
+  const b = indices[triangleIndex * 3 + 1];
+  const c = indices[triangleIndex * 3 + 2];
+  tempV1.fromBufferAttribute(positions, a);
+  tempV2.fromBufferAttribute(positions, b);
+  tempV3.fromBufferAttribute(positions, c);
+  let materialIndex = 0;
+  const groups = geometry.groups;
+  const firstVertexIndex = triangleIndex * 3;
+  for (let i = 0, l2 = groups.length; i < l2; i++) {
+    const group = groups[i];
+    const { start, count } = group;
+    if (firstVertexIndex >= start && firstVertexIndex < start + count) {
+      materialIndex = group.materialIndex;
+      break;
+    }
+  }
+  let uv = null;
+  if (uvs) {
+    tempUV1.fromBufferAttribute(uvs, a);
+    tempUV2.fromBufferAttribute(uvs, b);
+    tempUV3.fromBufferAttribute(uvs, c);
+    if (target && target.uv) uv = target.uv;
+    else uv = new Vector2();
+    Triangle.getInterpolation(point, tempV1, tempV2, tempV3, tempUV1, tempUV2, tempUV3, uv);
+  }
+  if (target) {
+    if (!target.face) target.face = {};
+    target.face.a = a;
+    target.face.b = b;
+    target.face.c = c;
+    target.face.materialIndex = materialIndex;
+    if (!target.face.normal) target.face.normal = new Vector3();
+    Triangle.getNormal(tempV1, tempV2, tempV3, target.face.normal);
+    if (uv) target.uv = uv;
+    return target;
+  } else {
+    return {
+      face: {
+        a,
+        b,
+        c,
+        materialIndex,
+        normal: Triangle.getNormal(tempV1, tempV2, tempV3, new Vector3())
+      },
+      uv
+    };
+  }
+}
 function intersectTris(bvh, side, ray2, offset, count, intersections, near, far) {
   const { geometry, _indirectBuffer } = bvh;
   for (let i = offset, end = offset + count; i < end; i++) {
@@ -35586,16 +35683,16 @@ class Lut {
     ColorMapKeywords[name] = arrayOfColors;
     return this;
   }
-  createCanvas() {
+  createCanvas(width = 1) {
     const canvas = document.createElement("canvas");
-    canvas.width = 1;
+    canvas.width = width;
     canvas.height = this.n;
     this.updateCanvas(canvas);
     return canvas;
   }
   updateCanvas(canvas) {
     const ctx = canvas.getContext("2d", { alpha: false });
-    const imageData = ctx.getImageData(0, 0, 1, this.n);
+    const imageData = ctx.getImageData(0, 0, canvas.width, this.n);
     const data = imageData.data;
     let k = 0;
     const step = 1 / this.n;
@@ -35614,7 +35711,20 @@ class Lut {
           data[k * 4 + 1] = Math.round(finalColor.g * 255);
           data[k * 4 + 2] = Math.round(finalColor.b * 255);
           data[k * 4 + 3] = 255;
-          k += 1;
+          k += canvas.width;
+        }
+      }
+    }
+    if (canvas.width > 1) {
+      const LayerOffset = canvas.width * 4;
+      for (let h = 1; h < canvas.width; h++) {
+        for (let v = 0; v < this.n; v++) {
+          let begin = v * LayerOffset;
+          let index = begin + h * 4;
+          data[index + 0] = data[begin + 0];
+          data[index + 1] = data[begin + 1];
+          data[index + 2] = data[begin + 2];
+          data[index + 3] = data[begin + 3];
         }
       }
     }
@@ -36411,7 +36521,6 @@ const alias3 = {
   OrthographicCamera,
   BufferAttribute,
   BufferGeometry,
-  Uint8BufferAttribute,
   Float32BufferAttribute,
   BoxGeometry,
   TubeGeometry,
@@ -36442,7 +36551,9 @@ const alias3 = {
 };
 const aliasBvh = {
   computeBoundsTree,
-  MeshBVH
+  MeshBVH,
+  ExtendedTriangle,
+  getTriangleHitPointInfo
 };
 var extendStatics = function(d, b) {
   extendStatics = Object.setPrototypeOf || { __proto__: [] } instanceof Array && function(d2, b2) {
@@ -37746,7 +37857,6 @@ const rShaderCrown = {
     varying vec3 vViewPosition;
     varying float vDistance;
     varying vec3 vFixedMapcolor;
-    const float mapFactor = 2.0 / 3.0;
     void main() {
         vec3 normal = normalize(vNormal);
         vec3 viewDir = normalize(vViewPosition);
@@ -37764,17 +37874,13 @@ const rShaderCrown = {
         vec4 targetColor;
 
         if(useMapColor) {  
-            // [-1.5,0] to [0, 1] is y = 2/3x + 1
-            // if (vDistance >= -1.5 && vDistance <= 0.0) {
-            //     float y = mapFactor * vDistance + 1.0;
-            //     // targetColor = texture2D(textureMap, vec2(y, 0));
-            //     // targetColor = vec4(y, 0, 0, 1.0);
-            //     targetColor = vec4(0.0, 0.0, 1.0, 1.0);
-            // } else {
-            //     // targetColor = vec4(color.r, color.g, color.b, 1.0);
-            //     targetColor = vec4(1.0, 1.0, 0.0, 1.0);
-            // }
-            targetColor = texture2D(textureMap, vec2(0.5, 0.5));
+            if (vDistance < 1.0 && vDistance > 0.0) {
+                targetColor = texture2D(textureMap, vec2(0, vDistance));
+                // targetColor = vec4(0.0, 0.0, 1.0, 1.0);
+            } else {
+                targetColor = vec4(color.r, color.g, color.b, 1.0);
+                // targetColor = vec4(1.0, 1.0, 0.0, 1.0);
+            }
         } else {
             targetColor = vec4(color.r, color.g, color.b, 1.0);
         }
@@ -37841,7 +37947,7 @@ function getMaterialByOptions(options = {}) {
       vertexShader: rShaderCrown.vertexShader,
       fragmentShader: rShaderCrown.fragmentShader,
       side: DoubleSide,
-      vertexColors: true,
+      // vertexColors: true,
       transparent: false,
       shadowSide: DoubleSide
     });
@@ -37875,8 +37981,8 @@ function rAppendGeometryColor(geo, color) {
 }
 function rAppendGeometryDistance(geo) {
   const position = geo.attributes.position;
-  const total = position.count / position.itemSize;
-  const distances = new Float32Array(total).fill(1);
+  const total = position.count / 1;
+  const distances = new Float32Array(total).fill(2);
   geo.setAttribute("mqDistance", new BufferAttribute(distances, 1));
   if (!geo.attributes.normal) geo.computeVertexNormals();
   geo.normalizeNormals();

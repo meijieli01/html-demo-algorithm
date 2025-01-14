@@ -3,6 +3,7 @@ import App from './App.vue'
 import router from './router'
 import store from './store';
 import { i18n } from './lang/index';
+import './utils/b5.theme';
 
 const newPageList = ['/editor', '/assigned'] // 跳转新页面
 router.beforeEach(async (to, from, next) => {

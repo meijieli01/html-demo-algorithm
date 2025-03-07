@@ -105,7 +105,7 @@ import SubProgress from './sub/SubProgress.vue';
 import { getMeshMaterialOption, addColor2Mesh } from '../third/auxThree';
 import { readFromStorage, writeToStorage } from '../third/snippet/storage';
 import elLoading from '../third/snippet/loading';
-import { FilePathLoader, PathLoader } from '../third/mq-render/viewer.es';
+import { FilePathLoader, PathLoader } from '../third/mq-webui/viewer.es';
 import { upload, getHistory, callAi } from '../api/all';
 import { ext, filterFile } from '../utils/util';
 const props = defineProps({

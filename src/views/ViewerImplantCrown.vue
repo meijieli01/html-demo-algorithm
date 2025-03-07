@@ -95,7 +95,7 @@ import SubVersion from './sub/SubVersion.vue';
 import SubProgress from './sub/SubProgress.vue';
 import { getMeshMaterialOption, addColor2Mesh } from '../third/auxThree';
 import { readFromStorage, writeToStorage } from '../third/snippet/storage';
-import { FilePathLoader, PathLoader, alias3, listenDomEvent, PEType } from '../third/mq-render/viewer.es';
+import { FilePathLoader, PathLoader, alias3, listenDomEvent, PEType } from '../third/mq-webui/viewer.es';
 import { MqRaycast, createMarkSphere } from '../third/mq-webui/mq.webui.es';
 import { upload, callAi, getHistory } from '../api/all';
 import { calcPer, filterFile } from '../utils/util';

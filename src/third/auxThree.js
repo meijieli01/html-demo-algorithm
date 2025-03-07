@@ -1,4 +1,4 @@
-import { alias3, updateMaterialOpacity } from './mq-render/viewer.es';
+import { alias3, updateMaterialOpacity } from './mq-webui/viewer.es';
 // 默认模型颜色
 const colorModelDefault = '#B38E6B'; // 'rgb(179,142,107)'
 const colorModelSelectDefault = '#d9342a'; // 'rgb(217,52,42)'

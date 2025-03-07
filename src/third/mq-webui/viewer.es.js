@@ -5,6 +5,7 @@
  */
 const REVISION = "170";
 const MOUSE = { LEFT: 0, MIDDLE: 1, RIGHT: 2, ROTATE: 0, DOLLY: 1, PAN: 2 };
+const TOUCH = { ROTATE: 0, PAN: 1, DOLLY_PAN: 2, DOLLY_ROTATE: 3 };
 const CullFaceNone = 0;
 const CullFaceBack = 1;
 const CullFaceFront = 2;
@@ -152,6 +153,10 @@ const LinearSRGBColorSpace = "srgb-linear";
 const LinearTransfer = "linear";
 const SRGBTransfer = "srgb";
 const KeepStencilOp = 7680;
+const ReplaceStencilOp = 7681;
+const IncrementWrapStencilOp = 34055;
+const DecrementWrapStencilOp = 34056;
+const NotEqualStencilFunc = 517;
 const AlwaysStencilFunc = 519;
 const NeverCompare = 512;
 const LessCompare = 513;
@@ -20309,7 +20314,7 @@ class PointsMaterial extends Material {
   }
 }
 const _inverseMatrix = /* @__PURE__ */ new Matrix4();
-const _ray = /* @__PURE__ */ new Ray$1();
+const _ray$4 = /* @__PURE__ */ new Ray$1();
 const _sphere = /* @__PURE__ */ new Sphere();
 const _position$2 = /* @__PURE__ */ new Vector3();
 class Points extends Object3D {
@@ -20338,7 +20343,7 @@ class Points extends Object3D {
     _sphere.radius += threshold;
     if (raycaster.ray.intersectsSphere(_sphere) === false) return;
     _inverseMatrix.copy(matrixWorld).invert();
-    _ray.copy(raycaster.ray).applyMatrix4(_inverseMatrix);
+    _ray$4.copy(raycaster.ray).applyMatrix4(_inverseMatrix);
     const localThreshold = threshold / ((this.scale.x + this.scale.y + this.scale.z) / 3);
     const localThresholdSq = localThreshold * localThreshold;
     const index = geometry.index;
@@ -20380,10 +20385,10 @@ class Points extends Object3D {
   }
 }
 function testPoint(point, index, localThresholdSq, matrixWorld, raycaster, intersects2, object) {
-  const rayPointDistanceSq = _ray.distanceSqToPoint(point);
+  const rayPointDistanceSq = _ray$4.distanceSqToPoint(point);
   if (rayPointDistanceSq < localThresholdSq) {
     const intersectPoint = new Vector3();
-    _ray.closestPointToPoint(point, intersectPoint);
+    _ray$4.closestPointToPoint(point, intersectPoint);
     intersectPoint.applyMatrix4(matrixWorld);
     const distance = raycaster.ray.origin.distanceTo(intersectPoint);
     if (distance < raycaster.near || distance > raycaster.far) return;
@@ -27095,6 +27100,49 @@ function intersect(object, raycaster, intersects2, recursive) {
     }
   }
 }
+class Spherical {
+  constructor(radius = 1, phi = 0, theta = 0) {
+    this.radius = radius;
+    this.phi = phi;
+    this.theta = theta;
+    return this;
+  }
+  set(radius, phi, theta) {
+    this.radius = radius;
+    this.phi = phi;
+    this.theta = theta;
+    return this;
+  }
+  copy(other) {
+    this.radius = other.radius;
+    this.phi = other.phi;
+    this.theta = other.theta;
+    return this;
+  }
+  // restrict phi to be between EPS and PI-EPS
+  makeSafe() {
+    const EPS = 1e-6;
+    this.phi = Math.max(EPS, Math.min(Math.PI - EPS, this.phi));
+    return this;
+  }
+  setFromVector3(v) {
+    return this.setFromCartesianCoords(v.x, v.y, v.z);
+  }
+  setFromCartesianCoords(x, y, z) {
+    this.radius = Math.sqrt(x * x + y * y + z * z);
+    if (this.radius === 0) {
+      this.theta = 0;
+      this.phi = 0;
+    } else {
+      this.theta = Math.atan2(x, z);
+      this.phi = Math.acos(clamp(y / this.radius, -1, 1));
+    }
+    return this;
+  }
+  clone() {
+    return new this.constructor().copy(this);
+  }
+}
 const _startP = /* @__PURE__ */ new Vector3();
 const _startEnd = /* @__PURE__ */ new Vector3();
 class Line3 {
@@ -29528,7 +29576,8 @@ function toLocalFile(arrBuffer, filename) {
 const ud = {
   boxOfScene: 90,
   // 场景大小
-  boxOfEditorTarget: 120
+  maxSideEditor: 120,
+  maxSideEditorNew: void 0
 };
 const cameraViews = {
   anterior: {
@@ -29558,30 +29607,47 @@ const cameraViews = {
   },
   editorJawFront: {
     up: [0, 1, 0],
-    position: [0, 0, ud.boxOfEditorTarget],
+    position: [0, 0, ud.maxSideEditor],
+    rotation: [0, 0, 0]
+  },
+  editorJawBack: {
+    up: [0, -1, 0],
+    position: [0, 0, -ud.maxSideEditor],
     rotation: [0, 0, 0]
   },
   editorJawUpper: {
     up: [0, 0, 1],
-    position: [0, -ud.boxOfEditorTarget, 0],
+    position: [0, -ud.maxSideEditor, 0],
     rotation: [MathUtils.degToRad(90), 0, 0]
   },
   editorJawLower: {
     up: [0, 0, -1],
-    position: [0, ud.boxOfEditorTarget, 0],
+    position: [0, ud.maxSideEditor, 0],
     rotation: [MathUtils.degToRad(-90), 0, 0]
   },
   editorJawRight: {
     up: [0, 1, 0],
-    position: [ud.boxOfEditorTarget, 0, 0],
+    position: [ud.maxSideEditor, 0, 0],
     rotation: [0, MathUtils.degToRad(-65), 0]
   },
   editorJawLeft: {
     up: [0, 1, 0],
-    position: [-ud.boxOfEditorTarget, 0, 0],
+    position: [-ud.maxSideEditor, 0, 0],
     rotation: [0, MathUtils.degToRad(65), 0]
   }
 };
+function getCameraGesture(name) {
+  const info = cameraViews[name];
+  if (ud.maxSideEditorNew) {
+    for (let i = 0; i < info.position.length; i++) {
+      let tmp2 = info.position[i];
+      if (Math.abs(tmp2) == ud.maxSideEditor) {
+        info.position[i] = tmp2 > 0 ? ud.maxSideEditorNew : -ud.maxSideEditorNew;
+      }
+    }
+  }
+  return info;
+}
 function viewDir(index) {
   if (index == 1) return cameraViews["anteriorLeft"];
   else if (index == 3) return cameraViews["anteriorRight"];
@@ -29589,16 +29655,19 @@ function viewDir(index) {
   else if (index == 5) return cameraViews["anteriorUpper"];
   return cameraViews["anterior"];
 }
-function editorViewDir(viewDir2) {
+function editorViewDir(vDir, maxSide) {
+  if (maxSide) ud.maxSideEditorNew = maxSide;
   let name = "";
-  if ([1, 2, 3, 4, 5].includes(viewDir2)) {
-    if (viewDir2 === 1) name = "editorJawUpper";
-    else if (viewDir2 === 2) name = "editorJawLower";
-    else if (viewDir2 === 3) name = "editorJawRight";
-    else if (viewDir2 === 4) name = "editorJawLeft";
-    else if (viewDir2 === 5) name = "editorJawFront";
+  if ([1, 2, 3, 4, 5, 6].includes(vDir)) {
+    if (vDir === 1) name = "editorJawUpper";
+    else if (vDir === 2) name = "editorJawLower";
+    else if (vDir === 3) name = "editorJawRight";
+    else if (vDir === 4) name = "editorJawLeft";
+    else if (vDir === 5) name = "editorJawFront";
+    else if (vDir === 6) name = "editorJawBack";
   }
-  if (name) return cameraViews[name];
+  if (name) return getCameraGesture(name);
+  throw new Error(`un-support view dir ${vDir}`);
 }
 function setXYZ(arr, i, x, y, z) {
   arr[i + 0] = x;
@@ -29728,6 +29797,10 @@ class SwitchCamera extends Camera {
     const vpWidth = this.getOrthoViewWidth(projectionMatrix) / zoom;
     return vpWidth;
   }
+  /**
+   * @deprecated 
+   * @param code 
+   */
   updateViewDir(code) {
     const { camera } = this;
     const data = viewDir(code);
@@ -30064,11 +30137,11 @@ class AxesArrow extends Object3D {
     return arrow;
   }
 }
-const _changeEvent = { type: "change" };
-const _startEvent = { type: "start" };
-const _endEvent = { type: "end" };
-const _EPS = 1e-6;
-const _STATE = { NONE: -1, ROTATE: 0, ZOOM: 1, PAN: 2, TOUCH_ROTATE: 3, TOUCH_ZOOM_PAN: 4 };
+const _changeEvent$1 = { type: "change" };
+const _startEvent$1 = { type: "start" };
+const _endEvent$1 = { type: "end" };
+const _EPS$1 = 1e-6;
+const _STATE$1 = { NONE: -1, ROTATE: 0, ZOOM: 1, PAN: 2, TOUCH_ROTATE: 3, TOUCH_ZOOM_PAN: 4 };
 const _v2 = new Vector2();
 const _mouseChange = new Vector2();
 const _objectUp = new Vector3();
@@ -30103,8 +30176,8 @@ class TrackballControls extends Controls {
       /*D*/
     ];
     this.mouseButtons = { LEFT: MOUSE.ROTATE, MIDDLE: MOUSE.DOLLY, RIGHT: MOUSE.PAN };
-    this.state = _STATE.NONE;
-    this.keyState = _STATE.NONE;
+    this.state = _STATE$1.NONE;
+    this.keyState = _STATE$1.NONE;
     this.target = new Vector3();
     this._lastPosition = new Vector3();
     this._lastZoom = 1;
@@ -30121,19 +30194,19 @@ class TrackballControls extends Controls {
     this._panEnd = new Vector2();
     this._pointers = [];
     this._pointerPositions = {};
-    this._onPointerMove = onPointerMove.bind(this);
-    this._onPointerDown = onPointerDown.bind(this);
-    this._onPointerUp = onPointerUp.bind(this);
+    this._onPointerMove = onPointerMove$1.bind(this);
+    this._onPointerDown = onPointerDown$1.bind(this);
+    this._onPointerUp = onPointerUp$1.bind(this);
     this._onPointerCancel = onPointerCancel.bind(this);
-    this._onContextMenu = onContextMenu.bind(this);
-    this._onMouseWheel = onMouseWheel.bind(this);
-    this._onKeyDown = onKeyDown.bind(this);
+    this._onContextMenu = onContextMenu$1.bind(this);
+    this._onMouseWheel = onMouseWheel$1.bind(this);
+    this._onKeyDown = onKeyDown$1.bind(this);
     this._onKeyUp = onKeyUp.bind(this);
-    this._onTouchStart = onTouchStart.bind(this);
-    this._onTouchMove = onTouchMove.bind(this);
+    this._onTouchStart = onTouchStart$1.bind(this);
+    this._onTouchMove = onTouchMove$1.bind(this);
     this._onTouchEnd = onTouchEnd.bind(this);
-    this._onMouseDown = onMouseDown.bind(this);
-    this._onMouseMove = onMouseMove.bind(this);
+    this._onMouseDown = onMouseDown$1.bind(this);
+    this._onMouseMove = onMouseMove$1.bind(this);
     this._onMouseUp = onMouseUp.bind(this);
     this._target0 = this.target.clone();
     this._position0 = this.object.position.clone();
@@ -30191,14 +30264,14 @@ class TrackballControls extends Controls {
     if (this.object.isPerspectiveCamera) {
       this._checkDistances();
       this.object.lookAt(this.target);
-      if (this._lastPosition.distanceToSquared(this.object.position) > _EPS) {
-        this.dispatchEvent(_changeEvent);
+      if (this._lastPosition.distanceToSquared(this.object.position) > _EPS$1) {
+        this.dispatchEvent(_changeEvent$1);
         this._lastPosition.copy(this.object.position);
       }
     } else if (this.object.isOrthographicCamera) {
       this.object.lookAt(this.target);
-      if (this._lastPosition.distanceToSquared(this.object.position) > _EPS || this._lastZoom !== this.object.zoom) {
-        this.dispatchEvent(_changeEvent);
+      if (this._lastPosition.distanceToSquared(this.object.position) > _EPS$1 || this._lastZoom !== this.object.zoom) {
+        this.dispatchEvent(_changeEvent$1);
         this._lastPosition.copy(this.object.position);
         this._lastZoom = this.object.zoom;
       }
@@ -30207,8 +30280,8 @@ class TrackballControls extends Controls {
     }
   }
   reset() {
-    this.state = _STATE.NONE;
-    this.keyState = _STATE.NONE;
+    this.state = _STATE$1.NONE;
+    this.keyState = _STATE$1.NONE;
     this.target.copy(this._target0);
     this.object.position.copy(this._position0);
     this.object.up.copy(this._up0);
@@ -30216,7 +30289,7 @@ class TrackballControls extends Controls {
     this.object.updateProjectionMatrix();
     this._eye.subVectors(this.object.position, this.target);
     this.object.lookAt(this.target);
-    this.dispatchEvent(_changeEvent);
+    this.dispatchEvent(_changeEvent$1);
     this._lastPosition.copy(this.object.position);
     this._lastZoom = this.object.zoom;
   }
@@ -30270,7 +30343,7 @@ class TrackballControls extends Controls {
   }
   _zoomCamera() {
     let factor;
-    if (this.state === _STATE.TOUCH_ZOOM_PAN) {
+    if (this.state === _STATE$1.TOUCH_ZOOM_PAN) {
       factor = this._touchZoomDistanceStart / this._touchZoomDistanceEnd;
       this._touchZoomDistanceStart = this._touchZoomDistanceEnd;
       if (this.object.isPerspectiveCamera) {
@@ -30356,7 +30429,7 @@ class TrackballControls extends Controls {
     }
   }
 }
-function onPointerDown(event) {
+function onPointerDown$1(event) {
   if (this.enabled === false) return;
   if (this._pointers.length === 0) {
     this.domElement.setPointerCapture(event.pointerId);
@@ -30370,7 +30443,7 @@ function onPointerDown(event) {
     this._onMouseDown(event);
   }
 }
-function onPointerMove(event) {
+function onPointerMove$1(event) {
   if (this.enabled === false) return;
   if (event.pointerType === "touch") {
     this._onTouchMove(event);
@@ -30378,7 +30451,7 @@ function onPointerMove(event) {
     this._onMouseMove(event);
   }
 }
-function onPointerUp(event) {
+function onPointerUp$1(event) {
   if (this.enabled === false) return;
   if (event.pointerType === "touch") {
     this._onTouchEnd(event);
@@ -30397,23 +30470,23 @@ function onPointerCancel(event) {
 }
 function onKeyUp() {
   if (this.enabled === false) return;
-  this.keyState = _STATE.NONE;
+  this.keyState = _STATE$1.NONE;
   window.addEventListener("keydown", this._onKeyDown);
 }
-function onKeyDown(event) {
+function onKeyDown$1(event) {
   if (this.enabled === false) return;
   window.removeEventListener("keydown", this._onKeyDown);
-  if (this.keyState !== _STATE.NONE) {
+  if (this.keyState !== _STATE$1.NONE) {
     return;
-  } else if (event.code === this.keys[_STATE.ROTATE] && !this.noRotate) {
-    this.keyState = _STATE.ROTATE;
-  } else if (event.code === this.keys[_STATE.ZOOM] && !this.noZoom) {
-    this.keyState = _STATE.ZOOM;
-  } else if (event.code === this.keys[_STATE.PAN] && !this.noPan) {
-    this.keyState = _STATE.PAN;
+  } else if (event.code === this.keys[_STATE$1.ROTATE] && !this.noRotate) {
+    this.keyState = _STATE$1.ROTATE;
+  } else if (event.code === this.keys[_STATE$1.ZOOM] && !this.noZoom) {
+    this.keyState = _STATE$1.ZOOM;
+  } else if (event.code === this.keys[_STATE$1.PAN] && !this.noPan) {
+    this.keyState = _STATE$1.PAN;
   }
 }
-function onMouseDown(event) {
+function onMouseDown$1(event) {
   let mouseAction;
   switch (event.button) {
     case 0:
@@ -30430,46 +30503,46 @@ function onMouseDown(event) {
   }
   switch (mouseAction) {
     case MOUSE.DOLLY:
-      this.state = _STATE.ZOOM;
+      this.state = _STATE$1.ZOOM;
       break;
     case MOUSE.ROTATE:
-      this.state = _STATE.ROTATE;
+      this.state = _STATE$1.ROTATE;
       break;
     case MOUSE.PAN:
-      this.state = _STATE.PAN;
+      this.state = _STATE$1.PAN;
       break;
     default:
-      this.state = _STATE.NONE;
+      this.state = _STATE$1.NONE;
   }
-  const state = this.keyState !== _STATE.NONE ? this.keyState : this.state;
-  if (state === _STATE.ROTATE && !this.noRotate) {
+  const state = this.keyState !== _STATE$1.NONE ? this.keyState : this.state;
+  if (state === _STATE$1.ROTATE && !this.noRotate) {
     this._moveCurr.copy(this._getMouseOnCircle(event.pageX, event.pageY));
     this._movePrev.copy(this._moveCurr);
-  } else if (state === _STATE.ZOOM && !this.noZoom) {
+  } else if (state === _STATE$1.ZOOM && !this.noZoom) {
     this._zoomStart.copy(this._getMouseOnScreen(event.pageX, event.pageY));
     this._zoomEnd.copy(this._zoomStart);
-  } else if (state === _STATE.PAN && !this.noPan) {
+  } else if (state === _STATE$1.PAN && !this.noPan) {
     this._panStart.copy(this._getMouseOnScreen(event.pageX, event.pageY));
     this._panEnd.copy(this._panStart);
   }
-  this.dispatchEvent(_startEvent);
+  this.dispatchEvent(_startEvent$1);
 }
-function onMouseMove(event) {
-  const state = this.keyState !== _STATE.NONE ? this.keyState : this.state;
-  if (state === _STATE.ROTATE && !this.noRotate) {
+function onMouseMove$1(event) {
+  const state = this.keyState !== _STATE$1.NONE ? this.keyState : this.state;
+  if (state === _STATE$1.ROTATE && !this.noRotate) {
     this._movePrev.copy(this._moveCurr);
     this._moveCurr.copy(this._getMouseOnCircle(event.pageX, event.pageY));
-  } else if (state === _STATE.ZOOM && !this.noZoom) {
+  } else if (state === _STATE$1.ZOOM && !this.noZoom) {
     this._zoomEnd.copy(this._getMouseOnScreen(event.pageX, event.pageY));
-  } else if (state === _STATE.PAN && !this.noPan) {
+  } else if (state === _STATE$1.PAN && !this.noPan) {
     this._panEnd.copy(this._getMouseOnScreen(event.pageX, event.pageY));
   }
 }
 function onMouseUp() {
-  this.state = _STATE.NONE;
-  this.dispatchEvent(_endEvent);
+  this.state = _STATE$1.NONE;
+  this.dispatchEvent(_endEvent$1);
 }
-function onMouseWheel(event) {
+function onMouseWheel$1(event) {
   if (this.enabled === false) return;
   if (this.noZoom === true) return;
   event.preventDefault();
@@ -30484,23 +30557,23 @@ function onMouseWheel(event) {
       this._zoomStart.y -= event.deltaY * 25e-5;
       break;
   }
-  this.dispatchEvent(_startEvent);
-  this.dispatchEvent(_endEvent);
+  this.dispatchEvent(_startEvent$1);
+  this.dispatchEvent(_endEvent$1);
 }
-function onContextMenu(event) {
+function onContextMenu$1(event) {
   if (this.enabled === false) return;
   event.preventDefault();
 }
-function onTouchStart(event) {
+function onTouchStart$1(event) {
   this._trackPointer(event);
   switch (this._pointers.length) {
     case 1:
-      this.state = _STATE.TOUCH_ROTATE;
+      this.state = _STATE$1.TOUCH_ROTATE;
       this._moveCurr.copy(this._getMouseOnCircle(this._pointers[0].pageX, this._pointers[0].pageY));
       this._movePrev.copy(this._moveCurr);
       break;
     default:
-      this.state = _STATE.TOUCH_ZOOM_PAN;
+      this.state = _STATE$1.TOUCH_ZOOM_PAN;
       const dx = this._pointers[0].pageX - this._pointers[1].pageX;
       const dy = this._pointers[0].pageY - this._pointers[1].pageY;
       this._touchZoomDistanceEnd = this._touchZoomDistanceStart = Math.sqrt(dx * dx + dy * dy);
@@ -30510,9 +30583,9 @@ function onTouchStart(event) {
       this._panEnd.copy(this._panStart);
       break;
   }
-  this.dispatchEvent(_startEvent);
+  this.dispatchEvent(_startEvent$1);
 }
-function onTouchMove(event) {
+function onTouchMove$1(event) {
   this._trackPointer(event);
   switch (this._pointers.length) {
     case 1:
@@ -30533,15 +30606,15 @@ function onTouchMove(event) {
 function onTouchEnd(event) {
   switch (this._pointers.length) {
     case 0:
-      this.state = _STATE.NONE;
+      this.state = _STATE$1.NONE;
       break;
     case 1:
-      this.state = _STATE.TOUCH_ROTATE;
+      this.state = _STATE$1.TOUCH_ROTATE;
       this._moveCurr.copy(this._getMouseOnCircle(event.pageX, event.pageY));
       this._movePrev.copy(this._moveCurr);
       break;
     case 2:
-      this.state = _STATE.TOUCH_ZOOM_PAN;
+      this.state = _STATE$1.TOUCH_ZOOM_PAN;
       for (let i = 0; i < this._pointers.length; i++) {
         if (this._pointers[i].pointerId !== event.pointerId) {
           const position = this._pointerPositions[this._pointers[i].pointerId];
@@ -30552,13 +30625,812 @@ function onTouchEnd(event) {
       }
       break;
   }
+  this.dispatchEvent(_endEvent$1);
+}
+const _changeEvent = { type: "change" };
+const _startEvent = { type: "start" };
+const _endEvent = { type: "end" };
+const _ray = new Ray$1();
+const _plane = new Plane$1();
+const _TILT_LIMIT = Math.cos(70 * MathUtils.DEG2RAD);
+const _v = new Vector3();
+const _twoPI = 2 * Math.PI;
+const _STATE = {
+  NONE: -1,
+  ROTATE: 0,
+  DOLLY: 1,
+  PAN: 2,
+  TOUCH_ROTATE: 3,
+  TOUCH_PAN: 4,
+  TOUCH_DOLLY_PAN: 5,
+  TOUCH_DOLLY_ROTATE: 6
+};
+const _EPS = 1e-6;
+class OrbitControls extends Controls {
+  constructor(object, domElement = null) {
+    super(object, domElement);
+    this.state = _STATE.NONE;
+    this.enabled = true;
+    this.target = new Vector3();
+    this.cursor = new Vector3();
+    this.minDistance = 0;
+    this.maxDistance = Infinity;
+    this.minZoom = 0;
+    this.maxZoom = Infinity;
+    this.minTargetRadius = 0;
+    this.maxTargetRadius = Infinity;
+    this.minPolarAngle = 0;
+    this.maxPolarAngle = Math.PI;
+    this.minAzimuthAngle = -Infinity;
+    this.maxAzimuthAngle = Infinity;
+    this.enableDamping = false;
+    this.dampingFactor = 0.05;
+    this.enableZoom = true;
+    this.zoomSpeed = 1;
+    this.enableRotate = true;
+    this.rotateSpeed = 1;
+    this.enablePan = true;
+    this.panSpeed = 1;
+    this.screenSpacePanning = true;
+    this.keyPanSpeed = 7;
+    this.zoomToCursor = false;
+    this.autoRotate = false;
+    this.autoRotateSpeed = 2;
+    this.keys = { LEFT: "ArrowLeft", UP: "ArrowUp", RIGHT: "ArrowRight", BOTTOM: "ArrowDown" };
+    this.mouseButtons = { LEFT: MOUSE.ROTATE, MIDDLE: MOUSE.DOLLY, RIGHT: MOUSE.PAN };
+    this.touches = { ONE: TOUCH.ROTATE, TWO: TOUCH.DOLLY_PAN };
+    this.target0 = this.target.clone();
+    this.position0 = this.object.position.clone();
+    this.zoom0 = this.object.zoom;
+    this._domElementKeyEvents = null;
+    this._lastPosition = new Vector3();
+    this._lastQuaternion = new Quaternion();
+    this._lastTargetPosition = new Vector3();
+    this._quat = new Quaternion().setFromUnitVectors(object.up, new Vector3(0, 1, 0));
+    this._quatInverse = this._quat.clone().invert();
+    this._spherical = new Spherical();
+    this._sphericalDelta = new Spherical();
+    this._scale = 1;
+    this._panOffset = new Vector3();
+    this._rotateStart = new Vector2();
+    this._rotateEnd = new Vector2();
+    this._rotateDelta = new Vector2();
+    this._panStart = new Vector2();
+    this._panEnd = new Vector2();
+    this._panDelta = new Vector2();
+    this._dollyStart = new Vector2();
+    this._dollyEnd = new Vector2();
+    this._dollyDelta = new Vector2();
+    this._dollyDirection = new Vector3();
+    this._mouse = new Vector2();
+    this._performCursorZoom = false;
+    this._pointers = [];
+    this._pointerPositions = {};
+    this._controlActive = false;
+    this._onPointerMove = onPointerMove.bind(this);
+    this._onPointerDown = onPointerDown.bind(this);
+    this._onPointerUp = onPointerUp.bind(this);
+    this._onContextMenu = onContextMenu.bind(this);
+    this._onMouseWheel = onMouseWheel.bind(this);
+    this._onKeyDown = onKeyDown.bind(this);
+    this._onTouchStart = onTouchStart.bind(this);
+    this._onTouchMove = onTouchMove.bind(this);
+    this._onMouseDown = onMouseDown.bind(this);
+    this._onMouseMove = onMouseMove.bind(this);
+    this._interceptControlDown = interceptControlDown.bind(this);
+    this._interceptControlUp = interceptControlUp.bind(this);
+    if (this.domElement !== null) {
+      this.connect();
+    }
+    this.update();
+  }
+  connect() {
+    this.domElement.addEventListener("pointerdown", this._onPointerDown);
+    this.domElement.addEventListener("pointercancel", this._onPointerUp);
+    this.domElement.addEventListener("contextmenu", this._onContextMenu);
+    this.domElement.addEventListener("wheel", this._onMouseWheel, { passive: false });
+    const document2 = this.domElement.getRootNode();
+    document2.addEventListener("keydown", this._interceptControlDown, { passive: true, capture: true });
+    this.domElement.style.touchAction = "none";
+  }
+  disconnect() {
+    this.domElement.removeEventListener("pointerdown", this._onPointerDown);
+    this.domElement.removeEventListener("pointermove", this._onPointerMove);
+    this.domElement.removeEventListener("pointerup", this._onPointerUp);
+    this.domElement.removeEventListener("pointercancel", this._onPointerUp);
+    this.domElement.removeEventListener("wheel", this._onMouseWheel);
+    this.domElement.removeEventListener("contextmenu", this._onContextMenu);
+    this.stopListenToKeyEvents();
+    const document2 = this.domElement.getRootNode();
+    document2.removeEventListener("keydown", this._interceptControlDown, { capture: true });
+    this.domElement.style.touchAction = "auto";
+  }
+  dispose() {
+    this.disconnect();
+  }
+  getPolarAngle() {
+    return this._spherical.phi;
+  }
+  getAzimuthalAngle() {
+    return this._spherical.theta;
+  }
+  getDistance() {
+    return this.object.position.distanceTo(this.target);
+  }
+  listenToKeyEvents(domElement) {
+    domElement.addEventListener("keydown", this._onKeyDown);
+    this._domElementKeyEvents = domElement;
+  }
+  stopListenToKeyEvents() {
+    if (this._domElementKeyEvents !== null) {
+      this._domElementKeyEvents.removeEventListener("keydown", this._onKeyDown);
+      this._domElementKeyEvents = null;
+    }
+  }
+  saveState() {
+    this.target0.copy(this.target);
+    this.position0.copy(this.object.position);
+    this.zoom0 = this.object.zoom;
+  }
+  reset() {
+    this.target.copy(this.target0);
+    this.object.position.copy(this.position0);
+    this.object.zoom = this.zoom0;
+    this.object.updateProjectionMatrix();
+    this.dispatchEvent(_changeEvent);
+    this.update();
+    this.state = _STATE.NONE;
+  }
+  update(deltaTime = null) {
+    const position = this.object.position;
+    _v.copy(position).sub(this.target);
+    _v.applyQuaternion(this._quat);
+    this._spherical.setFromVector3(_v);
+    if (this.autoRotate && this.state === _STATE.NONE) {
+      this._rotateLeft(this._getAutoRotationAngle(deltaTime));
+    }
+    if (this.enableDamping) {
+      this._spherical.theta += this._sphericalDelta.theta * this.dampingFactor;
+      this._spherical.phi += this._sphericalDelta.phi * this.dampingFactor;
+    } else {
+      this._spherical.theta += this._sphericalDelta.theta;
+      this._spherical.phi += this._sphericalDelta.phi;
+    }
+    let min = this.minAzimuthAngle;
+    let max = this.maxAzimuthAngle;
+    if (isFinite(min) && isFinite(max)) {
+      if (min < -Math.PI) min += _twoPI;
+      else if (min > Math.PI) min -= _twoPI;
+      if (max < -Math.PI) max += _twoPI;
+      else if (max > Math.PI) max -= _twoPI;
+      if (min <= max) {
+        this._spherical.theta = Math.max(min, Math.min(max, this._spherical.theta));
+      } else {
+        this._spherical.theta = this._spherical.theta > (min + max) / 2 ? Math.max(min, this._spherical.theta) : Math.min(max, this._spherical.theta);
+      }
+    }
+    this._spherical.phi = Math.max(this.minPolarAngle, Math.min(this.maxPolarAngle, this._spherical.phi));
+    this._spherical.makeSafe();
+    if (this.enableDamping === true) {
+      this.target.addScaledVector(this._panOffset, this.dampingFactor);
+    } else {
+      this.target.add(this._panOffset);
+    }
+    this.target.sub(this.cursor);
+    this.target.clampLength(this.minTargetRadius, this.maxTargetRadius);
+    this.target.add(this.cursor);
+    let zoomChanged = false;
+    if (this.zoomToCursor && this._performCursorZoom || this.object.isOrthographicCamera) {
+      this._spherical.radius = this._clampDistance(this._spherical.radius);
+    } else {
+      const prevRadius = this._spherical.radius;
+      this._spherical.radius = this._clampDistance(this._spherical.radius * this._scale);
+      zoomChanged = prevRadius != this._spherical.radius;
+    }
+    _v.setFromSpherical(this._spherical);
+    _v.applyQuaternion(this._quatInverse);
+    position.copy(this.target).add(_v);
+    this.object.lookAt(this.target);
+    if (this.enableDamping === true) {
+      this._sphericalDelta.theta *= 1 - this.dampingFactor;
+      this._sphericalDelta.phi *= 1 - this.dampingFactor;
+      this._panOffset.multiplyScalar(1 - this.dampingFactor);
+    } else {
+      this._sphericalDelta.set(0, 0, 0);
+      this._panOffset.set(0, 0, 0);
+    }
+    if (this.zoomToCursor && this._performCursorZoom) {
+      let newRadius = null;
+      if (this.object.isPerspectiveCamera) {
+        const prevRadius = _v.length();
+        newRadius = this._clampDistance(prevRadius * this._scale);
+        const radiusDelta = prevRadius - newRadius;
+        this.object.position.addScaledVector(this._dollyDirection, radiusDelta);
+        this.object.updateMatrixWorld();
+        zoomChanged = !!radiusDelta;
+      } else if (this.object.isOrthographicCamera) {
+        const mouseBefore = new Vector3(this._mouse.x, this._mouse.y, 0);
+        mouseBefore.unproject(this.object);
+        const prevZoom = this.object.zoom;
+        this.object.zoom = Math.max(this.minZoom, Math.min(this.maxZoom, this.object.zoom / this._scale));
+        this.object.updateProjectionMatrix();
+        zoomChanged = prevZoom !== this.object.zoom;
+        const mouseAfter = new Vector3(this._mouse.x, this._mouse.y, 0);
+        mouseAfter.unproject(this.object);
+        this.object.position.sub(mouseAfter).add(mouseBefore);
+        this.object.updateMatrixWorld();
+        newRadius = _v.length();
+      } else {
+        console.warn("WARNING: OrbitControls.js encountered an unknown camera type - zoom to cursor disabled.");
+        this.zoomToCursor = false;
+      }
+      if (newRadius !== null) {
+        if (this.screenSpacePanning) {
+          this.target.set(0, 0, -1).transformDirection(this.object.matrix).multiplyScalar(newRadius).add(this.object.position);
+        } else {
+          _ray.origin.copy(this.object.position);
+          _ray.direction.set(0, 0, -1).transformDirection(this.object.matrix);
+          if (Math.abs(this.object.up.dot(_ray.direction)) < _TILT_LIMIT) {
+            this.object.lookAt(this.target);
+          } else {
+            _plane.setFromNormalAndCoplanarPoint(this.object.up, this.target);
+            _ray.intersectPlane(_plane, this.target);
+          }
+        }
+      }
+    } else if (this.object.isOrthographicCamera) {
+      const prevZoom = this.object.zoom;
+      this.object.zoom = Math.max(this.minZoom, Math.min(this.maxZoom, this.object.zoom / this._scale));
+      if (prevZoom !== this.object.zoom) {
+        this.object.updateProjectionMatrix();
+        zoomChanged = true;
+      }
+    }
+    this._scale = 1;
+    this._performCursorZoom = false;
+    if (zoomChanged || this._lastPosition.distanceToSquared(this.object.position) > _EPS || 8 * (1 - this._lastQuaternion.dot(this.object.quaternion)) > _EPS || this._lastTargetPosition.distanceToSquared(this.target) > _EPS) {
+      this.dispatchEvent(_changeEvent);
+      this._lastPosition.copy(this.object.position);
+      this._lastQuaternion.copy(this.object.quaternion);
+      this._lastTargetPosition.copy(this.target);
+      return true;
+    }
+    return false;
+  }
+  _getAutoRotationAngle(deltaTime) {
+    if (deltaTime !== null) {
+      return _twoPI / 60 * this.autoRotateSpeed * deltaTime;
+    } else {
+      return _twoPI / 60 / 60 * this.autoRotateSpeed;
+    }
+  }
+  _getZoomScale(delta) {
+    const normalizedDelta = Math.abs(delta * 0.01);
+    return Math.pow(0.95, this.zoomSpeed * normalizedDelta);
+  }
+  _rotateLeft(angle) {
+    this._sphericalDelta.theta -= angle;
+  }
+  _rotateUp(angle) {
+    this._sphericalDelta.phi -= angle;
+  }
+  _panLeft(distance, objectMatrix) {
+    _v.setFromMatrixColumn(objectMatrix, 0);
+    _v.multiplyScalar(-distance);
+    this._panOffset.add(_v);
+  }
+  _panUp(distance, objectMatrix) {
+    if (this.screenSpacePanning === true) {
+      _v.setFromMatrixColumn(objectMatrix, 1);
+    } else {
+      _v.setFromMatrixColumn(objectMatrix, 0);
+      _v.crossVectors(this.object.up, _v);
+    }
+    _v.multiplyScalar(distance);
+    this._panOffset.add(_v);
+  }
+  // deltaX and deltaY are in pixels; right and down are positive
+  _pan(deltaX, deltaY) {
+    const element = this.domElement;
+    if (this.object.isPerspectiveCamera) {
+      const position = this.object.position;
+      _v.copy(position).sub(this.target);
+      let targetDistance = _v.length();
+      targetDistance *= Math.tan(this.object.fov / 2 * Math.PI / 180);
+      this._panLeft(2 * deltaX * targetDistance / element.clientHeight, this.object.matrix);
+      this._panUp(2 * deltaY * targetDistance / element.clientHeight, this.object.matrix);
+    } else if (this.object.isOrthographicCamera) {
+      this._panLeft(deltaX * (this.object.right - this.object.left) / this.object.zoom / element.clientWidth, this.object.matrix);
+      this._panUp(deltaY * (this.object.top - this.object.bottom) / this.object.zoom / element.clientHeight, this.object.matrix);
+    } else {
+      console.warn("WARNING: OrbitControls.js encountered an unknown camera type - pan disabled.");
+      this.enablePan = false;
+    }
+  }
+  _dollyOut(dollyScale) {
+    if (this.object.isPerspectiveCamera || this.object.isOrthographicCamera) {
+      this._scale /= dollyScale;
+    } else {
+      console.warn("WARNING: OrbitControls.js encountered an unknown camera type - dolly/zoom disabled.");
+      this.enableZoom = false;
+    }
+  }
+  _dollyIn(dollyScale) {
+    if (this.object.isPerspectiveCamera || this.object.isOrthographicCamera) {
+      this._scale *= dollyScale;
+    } else {
+      console.warn("WARNING: OrbitControls.js encountered an unknown camera type - dolly/zoom disabled.");
+      this.enableZoom = false;
+    }
+  }
+  _updateZoomParameters(x, y) {
+    if (!this.zoomToCursor) {
+      return;
+    }
+    this._performCursorZoom = true;
+    const rect = this.domElement.getBoundingClientRect();
+    const dx = x - rect.left;
+    const dy = y - rect.top;
+    const w = rect.width;
+    const h = rect.height;
+    this._mouse.x = dx / w * 2 - 1;
+    this._mouse.y = -(dy / h) * 2 + 1;
+    this._dollyDirection.set(this._mouse.x, this._mouse.y, 1).unproject(this.object).sub(this.object.position).normalize();
+  }
+  _clampDistance(dist) {
+    return Math.max(this.minDistance, Math.min(this.maxDistance, dist));
+  }
+  //
+  // event callbacks - update the object state
+  //
+  _handleMouseDownRotate(event) {
+    this._rotateStart.set(event.clientX, event.clientY);
+  }
+  _handleMouseDownDolly(event) {
+    this._updateZoomParameters(event.clientX, event.clientX);
+    this._dollyStart.set(event.clientX, event.clientY);
+  }
+  _handleMouseDownPan(event) {
+    this._panStart.set(event.clientX, event.clientY);
+  }
+  _handleMouseMoveRotate(event) {
+    this._rotateEnd.set(event.clientX, event.clientY);
+    this._rotateDelta.subVectors(this._rotateEnd, this._rotateStart).multiplyScalar(this.rotateSpeed);
+    const element = this.domElement;
+    this._rotateLeft(_twoPI * this._rotateDelta.x / element.clientHeight);
+    this._rotateUp(_twoPI * this._rotateDelta.y / element.clientHeight);
+    this._rotateStart.copy(this._rotateEnd);
+    this.update();
+  }
+  _handleMouseMoveDolly(event) {
+    this._dollyEnd.set(event.clientX, event.clientY);
+    this._dollyDelta.subVectors(this._dollyEnd, this._dollyStart);
+    if (this._dollyDelta.y > 0) {
+      this._dollyOut(this._getZoomScale(this._dollyDelta.y));
+    } else if (this._dollyDelta.y < 0) {
+      this._dollyIn(this._getZoomScale(this._dollyDelta.y));
+    }
+    this._dollyStart.copy(this._dollyEnd);
+    this.update();
+  }
+  _handleMouseMovePan(event) {
+    this._panEnd.set(event.clientX, event.clientY);
+    this._panDelta.subVectors(this._panEnd, this._panStart).multiplyScalar(this.panSpeed);
+    this._pan(this._panDelta.x, this._panDelta.y);
+    this._panStart.copy(this._panEnd);
+    this.update();
+  }
+  _handleMouseWheel(event) {
+    this._updateZoomParameters(event.clientX, event.clientY);
+    if (event.deltaY < 0) {
+      this._dollyIn(this._getZoomScale(event.deltaY));
+    } else if (event.deltaY > 0) {
+      this._dollyOut(this._getZoomScale(event.deltaY));
+    }
+    this.update();
+  }
+  _handleKeyDown(event) {
+    let needsUpdate = false;
+    switch (event.code) {
+      case this.keys.UP:
+        if (event.ctrlKey || event.metaKey || event.shiftKey) {
+          this._rotateUp(_twoPI * this.rotateSpeed / this.domElement.clientHeight);
+        } else {
+          this._pan(0, this.keyPanSpeed);
+        }
+        needsUpdate = true;
+        break;
+      case this.keys.BOTTOM:
+        if (event.ctrlKey || event.metaKey || event.shiftKey) {
+          this._rotateUp(-_twoPI * this.rotateSpeed / this.domElement.clientHeight);
+        } else {
+          this._pan(0, -this.keyPanSpeed);
+        }
+        needsUpdate = true;
+        break;
+      case this.keys.LEFT:
+        if (event.ctrlKey || event.metaKey || event.shiftKey) {
+          this._rotateLeft(_twoPI * this.rotateSpeed / this.domElement.clientHeight);
+        } else {
+          this._pan(this.keyPanSpeed, 0);
+        }
+        needsUpdate = true;
+        break;
+      case this.keys.RIGHT:
+        if (event.ctrlKey || event.metaKey || event.shiftKey) {
+          this._rotateLeft(-_twoPI * this.rotateSpeed / this.domElement.clientHeight);
+        } else {
+          this._pan(-this.keyPanSpeed, 0);
+        }
+        needsUpdate = true;
+        break;
+    }
+    if (needsUpdate) {
+      event.preventDefault();
+      this.update();
+    }
+  }
+  _handleTouchStartRotate(event) {
+    if (this._pointers.length === 1) {
+      this._rotateStart.set(event.pageX, event.pageY);
+    } else {
+      const position = this._getSecondPointerPosition(event);
+      const x = 0.5 * (event.pageX + position.x);
+      const y = 0.5 * (event.pageY + position.y);
+      this._rotateStart.set(x, y);
+    }
+  }
+  _handleTouchStartPan(event) {
+    if (this._pointers.length === 1) {
+      this._panStart.set(event.pageX, event.pageY);
+    } else {
+      const position = this._getSecondPointerPosition(event);
+      const x = 0.5 * (event.pageX + position.x);
+      const y = 0.5 * (event.pageY + position.y);
+      this._panStart.set(x, y);
+    }
+  }
+  _handleTouchStartDolly(event) {
+    const position = this._getSecondPointerPosition(event);
+    const dx = event.pageX - position.x;
+    const dy = event.pageY - position.y;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+    this._dollyStart.set(0, distance);
+  }
+  _handleTouchStartDollyPan(event) {
+    if (this.enableZoom) this._handleTouchStartDolly(event);
+    if (this.enablePan) this._handleTouchStartPan(event);
+  }
+  _handleTouchStartDollyRotate(event) {
+    if (this.enableZoom) this._handleTouchStartDolly(event);
+    if (this.enableRotate) this._handleTouchStartRotate(event);
+  }
+  _handleTouchMoveRotate(event) {
+    if (this._pointers.length == 1) {
+      this._rotateEnd.set(event.pageX, event.pageY);
+    } else {
+      const position = this._getSecondPointerPosition(event);
+      const x = 0.5 * (event.pageX + position.x);
+      const y = 0.5 * (event.pageY + position.y);
+      this._rotateEnd.set(x, y);
+    }
+    this._rotateDelta.subVectors(this._rotateEnd, this._rotateStart).multiplyScalar(this.rotateSpeed);
+    const element = this.domElement;
+    this._rotateLeft(_twoPI * this._rotateDelta.x / element.clientHeight);
+    this._rotateUp(_twoPI * this._rotateDelta.y / element.clientHeight);
+    this._rotateStart.copy(this._rotateEnd);
+  }
+  _handleTouchMovePan(event) {
+    if (this._pointers.length === 1) {
+      this._panEnd.set(event.pageX, event.pageY);
+    } else {
+      const position = this._getSecondPointerPosition(event);
+      const x = 0.5 * (event.pageX + position.x);
+      const y = 0.5 * (event.pageY + position.y);
+      this._panEnd.set(x, y);
+    }
+    this._panDelta.subVectors(this._panEnd, this._panStart).multiplyScalar(this.panSpeed);
+    this._pan(this._panDelta.x, this._panDelta.y);
+    this._panStart.copy(this._panEnd);
+  }
+  _handleTouchMoveDolly(event) {
+    const position = this._getSecondPointerPosition(event);
+    const dx = event.pageX - position.x;
+    const dy = event.pageY - position.y;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+    this._dollyEnd.set(0, distance);
+    this._dollyDelta.set(0, Math.pow(this._dollyEnd.y / this._dollyStart.y, this.zoomSpeed));
+    this._dollyOut(this._dollyDelta.y);
+    this._dollyStart.copy(this._dollyEnd);
+    const centerX = (event.pageX + position.x) * 0.5;
+    const centerY = (event.pageY + position.y) * 0.5;
+    this._updateZoomParameters(centerX, centerY);
+  }
+  _handleTouchMoveDollyPan(event) {
+    if (this.enableZoom) this._handleTouchMoveDolly(event);
+    if (this.enablePan) this._handleTouchMovePan(event);
+  }
+  _handleTouchMoveDollyRotate(event) {
+    if (this.enableZoom) this._handleTouchMoveDolly(event);
+    if (this.enableRotate) this._handleTouchMoveRotate(event);
+  }
+  // pointers
+  _addPointer(event) {
+    this._pointers.push(event.pointerId);
+  }
+  _removePointer(event) {
+    delete this._pointerPositions[event.pointerId];
+    for (let i = 0; i < this._pointers.length; i++) {
+      if (this._pointers[i] == event.pointerId) {
+        this._pointers.splice(i, 1);
+        return;
+      }
+    }
+  }
+  _isTrackingPointer(event) {
+    for (let i = 0; i < this._pointers.length; i++) {
+      if (this._pointers[i] == event.pointerId) return true;
+    }
+    return false;
+  }
+  _trackPointer(event) {
+    let position = this._pointerPositions[event.pointerId];
+    if (position === void 0) {
+      position = new Vector2();
+      this._pointerPositions[event.pointerId] = position;
+    }
+    position.set(event.pageX, event.pageY);
+  }
+  _getSecondPointerPosition(event) {
+    const pointerId = event.pointerId === this._pointers[0] ? this._pointers[1] : this._pointers[0];
+    return this._pointerPositions[pointerId];
+  }
+  //
+  _customWheelEvent(event) {
+    const mode = event.deltaMode;
+    const newEvent = {
+      clientX: event.clientX,
+      clientY: event.clientY,
+      deltaY: event.deltaY
+    };
+    switch (mode) {
+      case 1:
+        newEvent.deltaY *= 16;
+        break;
+      case 2:
+        newEvent.deltaY *= 100;
+        break;
+    }
+    if (event.ctrlKey && !this._controlActive) {
+      newEvent.deltaY *= 10;
+    }
+    return newEvent;
+  }
+}
+function onPointerDown(event) {
+  if (this.enabled === false) return;
+  if (this._pointers.length === 0) {
+    this.domElement.setPointerCapture(event.pointerId);
+    this.domElement.addEventListener("pointermove", this._onPointerMove);
+    this.domElement.addEventListener("pointerup", this._onPointerUp);
+  }
+  if (this._isTrackingPointer(event)) return;
+  this._addPointer(event);
+  if (event.pointerType === "touch") {
+    this._onTouchStart(event);
+  } else {
+    this._onMouseDown(event);
+  }
+}
+function onPointerMove(event) {
+  if (this.enabled === false) return;
+  if (event.pointerType === "touch") {
+    this._onTouchMove(event);
+  } else {
+    this._onMouseMove(event);
+  }
+}
+function onPointerUp(event) {
+  this._removePointer(event);
+  switch (this._pointers.length) {
+    case 0:
+      this.domElement.releasePointerCapture(event.pointerId);
+      this.domElement.removeEventListener("pointermove", this._onPointerMove);
+      this.domElement.removeEventListener("pointerup", this._onPointerUp);
+      this.dispatchEvent(_endEvent);
+      this.state = _STATE.NONE;
+      break;
+    case 1:
+      const pointerId = this._pointers[0];
+      const position = this._pointerPositions[pointerId];
+      this._onTouchStart({ pointerId, pageX: position.x, pageY: position.y });
+      break;
+  }
+}
+function onMouseDown(event) {
+  let mouseAction;
+  switch (event.button) {
+    case 0:
+      mouseAction = this.mouseButtons.LEFT;
+      break;
+    case 1:
+      mouseAction = this.mouseButtons.MIDDLE;
+      break;
+    case 2:
+      mouseAction = this.mouseButtons.RIGHT;
+      break;
+    default:
+      mouseAction = -1;
+  }
+  switch (mouseAction) {
+    case MOUSE.DOLLY:
+      if (this.enableZoom === false) return;
+      this._handleMouseDownDolly(event);
+      this.state = _STATE.DOLLY;
+      break;
+    case MOUSE.ROTATE:
+      if (event.ctrlKey || event.metaKey || event.shiftKey) {
+        if (this.enablePan === false) return;
+        this._handleMouseDownPan(event);
+        this.state = _STATE.PAN;
+      } else {
+        if (this.enableRotate === false) return;
+        this._handleMouseDownRotate(event);
+        this.state = _STATE.ROTATE;
+      }
+      break;
+    case MOUSE.PAN:
+      if (event.ctrlKey || event.metaKey || event.shiftKey) {
+        if (this.enableRotate === false) return;
+        this._handleMouseDownRotate(event);
+        this.state = _STATE.ROTATE;
+      } else {
+        if (this.enablePan === false) return;
+        this._handleMouseDownPan(event);
+        this.state = _STATE.PAN;
+      }
+      break;
+    default:
+      this.state = _STATE.NONE;
+  }
+  if (this.state !== _STATE.NONE) {
+    this.dispatchEvent(_startEvent);
+  }
+}
+function onMouseMove(event) {
+  switch (this.state) {
+    case _STATE.ROTATE:
+      if (this.enableRotate === false) return;
+      this._handleMouseMoveRotate(event);
+      break;
+    case _STATE.DOLLY:
+      if (this.enableZoom === false) return;
+      this._handleMouseMoveDolly(event);
+      break;
+    case _STATE.PAN:
+      if (this.enablePan === false) return;
+      this._handleMouseMovePan(event);
+      break;
+  }
+}
+function onMouseWheel(event) {
+  if (this.enabled === false || this.enableZoom === false || this.state !== _STATE.NONE) return;
+  event.preventDefault();
+  this.dispatchEvent(_startEvent);
+  this._handleMouseWheel(this._customWheelEvent(event));
   this.dispatchEvent(_endEvent);
+}
+function onKeyDown(event) {
+  if (this.enabled === false || this.enablePan === false) return;
+  this._handleKeyDown(event);
+}
+function onTouchStart(event) {
+  this._trackPointer(event);
+  switch (this._pointers.length) {
+    case 1:
+      switch (this.touches.ONE) {
+        case TOUCH.ROTATE:
+          if (this.enableRotate === false) return;
+          this._handleTouchStartRotate(event);
+          this.state = _STATE.TOUCH_ROTATE;
+          break;
+        case TOUCH.PAN:
+          if (this.enablePan === false) return;
+          this._handleTouchStartPan(event);
+          this.state = _STATE.TOUCH_PAN;
+          break;
+        default:
+          this.state = _STATE.NONE;
+      }
+      break;
+    case 2:
+      switch (this.touches.TWO) {
+        case TOUCH.DOLLY_PAN:
+          if (this.enableZoom === false && this.enablePan === false) return;
+          this._handleTouchStartDollyPan(event);
+          this.state = _STATE.TOUCH_DOLLY_PAN;
+          break;
+        case TOUCH.DOLLY_ROTATE:
+          if (this.enableZoom === false && this.enableRotate === false) return;
+          this._handleTouchStartDollyRotate(event);
+          this.state = _STATE.TOUCH_DOLLY_ROTATE;
+          break;
+        default:
+          this.state = _STATE.NONE;
+      }
+      break;
+    default:
+      this.state = _STATE.NONE;
+  }
+  if (this.state !== _STATE.NONE) {
+    this.dispatchEvent(_startEvent);
+  }
+}
+function onTouchMove(event) {
+  this._trackPointer(event);
+  switch (this.state) {
+    case _STATE.TOUCH_ROTATE:
+      if (this.enableRotate === false) return;
+      this._handleTouchMoveRotate(event);
+      this.update();
+      break;
+    case _STATE.TOUCH_PAN:
+      if (this.enablePan === false) return;
+      this._handleTouchMovePan(event);
+      this.update();
+      break;
+    case _STATE.TOUCH_DOLLY_PAN:
+      if (this.enableZoom === false && this.enablePan === false) return;
+      this._handleTouchMoveDollyPan(event);
+      this.update();
+      break;
+    case _STATE.TOUCH_DOLLY_ROTATE:
+      if (this.enableZoom === false && this.enableRotate === false) return;
+      this._handleTouchMoveDollyRotate(event);
+      this.update();
+      break;
+    default:
+      this.state = _STATE.NONE;
+  }
+}
+function onContextMenu(event) {
+  if (this.enabled === false) return;
+  event.preventDefault();
+}
+function interceptControlDown(event) {
+  if (event.key === "Control") {
+    this._controlActive = true;
+    const document2 = this.domElement.getRootNode();
+    document2.addEventListener("keyup", this._interceptControlUp, { passive: true, capture: true });
+  }
+}
+function interceptControlUp(event) {
+  if (event.key === "Control") {
+    this._controlActive = false;
+    const document2 = this.domElement.getRootNode();
+    document2.removeEventListener("keyup", this._interceptControlUp, { passive: true, capture: true });
+  }
 }
 var eColorState = /* @__PURE__ */ ((eColorState2) => {
   eColorState2[eColorState2["backwards"] = 0] = "backwards";
   eColorState2[eColorState2["currently"] = 1] = "currently";
   return eColorState2;
 })(eColorState || {});
+var eControlType = /* @__PURE__ */ ((eControlType2) => {
+  eControlType2[eControlType2["Trackball"] = 0] = "Trackball";
+  eControlType2[eControlType2["Orbit"] = 1] = "Orbit";
+  return eControlType2;
+})(eControlType || {});
+var eViewCameraPlace = /* @__PURE__ */ ((eViewCameraPlace2) => {
+  eViewCameraPlace2[eViewCameraPlace2["None"] = 0] = "None";
+  eViewCameraPlace2[eViewCameraPlace2["Left"] = 1] = "Left";
+  eViewCameraPlace2[eViewCameraPlace2["Right"] = 2] = "Right";
+  eViewCameraPlace2[eViewCameraPlace2["Front"] = 3] = "Front";
+  eViewCameraPlace2[eViewCameraPlace2["Back"] = 4] = "Back";
+  eViewCameraPlace2[eViewCameraPlace2["Down"] = 5] = "Down";
+  eViewCameraPlace2[eViewCameraPlace2["Up"] = 6] = "Up";
+  return eViewCameraPlace2;
+})(eViewCameraPlace || {});
 class MqRender {
   constructor(name, cState) {
     this.renderName = name;
@@ -30595,6 +31467,13 @@ class MqRender {
     this.camera = new SwitchCamera(this.cameraAngle);
     this.handler4Before = [];
     this.handler4After = [];
+    this.viewCameraMaxSize = 0;
+  }
+  cfgCamera(options) {
+    this.cameraNear = options.near || 0.1;
+    this.cameraFar = options.far || 1e3;
+    this.cameraAngle = options.fov || 45;
+    this.viewCameraMaxSize = options.maxSize || 80;
   }
   init(options) {
     const { rc } = this;
@@ -30631,7 +31510,7 @@ class MqRender {
       throw new Error("container is not a HTMLElement or Canvas");
     }
   }
-  initControl(camera) {
+  initControl(camera, type = 0) {
     const { renderer, options } = this;
     const optControl = options.optionControl || {};
     let enableZoom = true, enablePan = true, enableRotate = true;
@@ -30643,7 +31522,9 @@ class MqRender {
     if (optControl.speedPan) speedPan = optControl.speedPan;
     if (optControl.speedRotate) speedRotate = optControl.speedRotate;
     const { domElement } = renderer;
-    const control = new TrackballControls(camera, domElement);
+    let control;
+    if (type == 0) control = new TrackballControls(camera, domElement);
+    else if (type == 1) control = new OrbitControls(camera, domElement);
     control.zoomSpeed = speedZoom;
     control.panSpeed = speedPan;
     control.rotateSpeed = speedRotate;
@@ -30653,14 +31534,34 @@ class MqRender {
     control.staticMoving = true;
     control.keys = ["65", "83", "68"];
     control.target.set(0, 0, 0);
-    control.minZoom = 0.01;
-    control.maxZoom = 90;
     this.control = control;
-    if (this.control.screen.width < 1 || this.control.screen.height < 1) {
-      this.control.handleResize();
+    if (type == 0) {
+      control.minZoom = 0.01;
+      control.maxZoom = 90;
+      if (this.control.screen.width < 1 || this.control.screen.height < 1) {
+        this.control.handleResize();
+      }
+    }
+  }
+  clearScene(isReset = false) {
+    const { options, track } = this;
+    if (isReset) {
+      options.viewStateList.forEach((vs) => {
+        vs.scene.clear();
+      });
+    } else {
+      track.resourceSet.forEach((one) => {
+        options.viewStateList.forEach((vs) => {
+          vs.scene.remove(one);
+        });
+      });
     }
   }
   dispose() {
+    const { control, sceneOrtho } = this;
+    sceneOrtho.clear();
+    if (control) control.dispose();
+    this.clearScene(true);
     cancelAnimationFrame(this.callbackId);
   }
   updateFrame() {
@@ -30823,23 +31724,15 @@ class MqRender {
   addAfterHandler(e) {
     this.handler4After.push(e);
   }
-  alignment2Camera(viewDir2) {
-    const info = editorViewDir(viewDir2);
+  alignment2Camera(vDir, maxSide) {
+    const info = editorViewDir(vDir, maxSide || this.options.cameraPositionZ);
     if (info) this.setCameraType(info);
   }
   setCameraType(data) {
-    const boxList = [];
     const { camera, control, options } = this;
-    options.viewStateList.forEach((vs) => {
-      boxList.push(this.getBox(vs));
-    });
     const curCamera = camera.getCamera();
-    const side1 = Math.max(boxList[0].size.x, boxList[0].size.y, boxList[0].size.z);
-    const side2 = Math.max(boxList[1].size.x, boxList[1].size.y, boxList[1].size.z);
-    const maxSize = side1 > side2 ? boxList[0].size : boxList[1].size;
-    boxList.map((e) => ({ side: Math.max(e.size.x, e.size.y, e.size.z), size: e.size.clone() }));
     if (control) control.reset();
-    const sideSize = curCamera instanceof OrthographicCamera ? Math.abs(Math.max(curCamera.position.x, curCamera.position.y, curCamera.position.z)) : options.cameraPositionZ;
+    const sideSize = options.cameraPositionZ;
     curCamera.lookAt(0, 0, 0);
     curCamera.up.set(0, 1, 0);
     curCamera.position.set(0, 0, sideSize);
@@ -30849,11 +31742,65 @@ class MqRender {
     const positions = data.position.map((e) => e !== 0 ? e < 0 ? -sideSize : sideSize : e);
     curCamera.position.set(positions[0], positions[1], positions[2]);
     curCamera.rotation.set(data.rotation[0], data.rotation[1], data.rotation[2]);
-    if (curCamera instanceof OrthographicCamera) {
-      curCamera.zoom = Math.log2(curCamera.position.distanceTo(maxSize));
-    }
     curCamera.updateProjectionMatrix();
     if (control) control.update();
+    this.updateFrame();
+  }
+  updateViewCamera(eView, box) {
+    const { camera, control, viewCameraMaxSize } = this;
+    if (!box) return;
+    const curCamera = camera.getCamera();
+    const center = new Vector3();
+    new Vector3();
+    const size = new Vector3();
+    box.getSize(size);
+    box.getCenter(center);
+    const maxSize = Math.max(size.x, size.y, size.z);
+    if (control) control.target.copy(center);
+    switch (eView) {
+      case 1:
+        curCamera.up.set(0, 0, 1);
+        curCamera.position.copy(center).sub(new Vector3(maxSize * 2, 0, 0));
+        break;
+      case 2:
+        curCamera.up.set(0, 0, 1);
+        curCamera.position.copy(center).add(new Vector3(maxSize * 2, 0, 0));
+        break;
+      case 3:
+        curCamera.up.set(0, 0, 1);
+        if (center.x < 0 || center.y < 0) {
+          curCamera.position.copy(center).sub(new Vector3(0, maxSize * 2, 0));
+        } else {
+          curCamera.position.copy(center).sub(new Vector3(0, -maxSize * 2, 0));
+        }
+        break;
+      case 4:
+        curCamera.up.set(0, 0, 1);
+        if (center.x < 0 || center.y < 0) {
+          curCamera.position.copy(center).sub(new Vector3(0, -maxSize * 2, 0));
+        } else {
+          curCamera.position.copy(center).sub(new Vector3(0, maxSize * 2, 0));
+        }
+        break;
+      case 5:
+        curCamera.up.set(0, -1, 0);
+        curCamera.position.copy(center).sub(new Vector3(0, 0, maxSize * 2));
+        break;
+      case 6:
+        curCamera.up.set(0, -1, 0);
+        curCamera.position.copy(center).add(new Vector3(0, 0, maxSize * 2));
+        break;
+      default:
+        return;
+    }
+    if (control) control.update();
+    this.updateFrame();
+  }
+  updateZoom(delta) {
+    const { camera } = this;
+    const curCamera = camera.getCamera();
+    curCamera.zoom += delta;
+    curCamera.updateProjectionMatrix();
     this.updateFrame();
   }
 }
@@ -31153,7 +32100,8 @@ class StrSprite {
     const material = new SpriteMaterial({
       map: this.texture,
       depthTest: false,
-      depthFunc: AlwaysDepth
+      transparent: true
+      // depthFunc: AlwaysDepth,
     });
     this.target = new Sprite(material);
     this.target.name = `${options.name ? options.name : ""}${text}`;
@@ -31195,7 +32143,8 @@ class StrMesh {
     this.textMap.set(text, cell);
     const material = new ShaderMaterial({
       transparent: true,
-      // depthTest: false,
+      depthTest: false,
+      side: FrontSide,
       vertexShader: strTexture.vs,
       fragmentShader: strTexture.fs,
       uniforms: {
@@ -31270,7 +32219,7 @@ class MqMultiViewEditor extends MqRender {
     };
     window.addEventListener("resize", winResize);
     this.resize(options.width, options.height);
-    this.initControl(this.camera.getCamera());
+    this.initControl(this.camera.getCamera(), options.ctrlType);
     if (this.control) this.control.enabled = options.useControl;
     this.applyAppearance(theme);
     if (options.useGrid) {
@@ -31392,7 +32341,7 @@ class MqMultiViewEditor extends MqRender {
     rc.height = height;
     this.resize(width, height);
   }
-  computeSceneBox() {
+  computeSceneBox(inOption = {}) {
     var _a;
     const { options, cameraAngle, camera } = this;
     const sides = [];
@@ -31408,6 +32357,9 @@ class MqMultiViewEditor extends MqRender {
         maxSide = sides[i].side;
       }
     }
+    if (inOption.useZ) {
+      maxSide = Math.max(options.cameraPositionZ, maxSide);
+    }
     camera.persp.position.z = maxSide * 3;
     camera.ortho.position.z = maxSide * 3;
   }
@@ -31418,10 +32370,13 @@ class MqMultiViewEditor extends MqRender {
   }
   add(mesh, name) {
     var _a;
-    const { options: inOptions, entryCode } = this;
+    const { options: inOptions, entryCode, track } = this;
     (_a = inOptions.viewStateList) == null ? void 0 : _a.forEach((view) => {
       var _a2;
-      if (view.name == name) (_a2 = view.scene) == null ? void 0 : _a2.add(mesh);
+      if (view.name == name) {
+        (_a2 = view.scene) == null ? void 0 : _a2.add(mesh);
+        track.track(mesh);
+      }
     });
     if ([
       1
@@ -31715,6 +32670,7 @@ const TeethShader = {
             }
 		`
 };
+const cModelDefaultColor = "rgb(179,142,107)";
 const cModelCrownColor = {
   r: 232 / 255,
   g: 217 / 255,
@@ -32122,8 +33078,15 @@ function mat2Mesh(elments, mesh, options = {}) {
   mesh.updateMatrixWorld();
 }
 function create4ToothNumberMesh(group, options = {}) {
-  const uMeshList = group.children.filter((e) => e.userData.isUpper && e.userData.code != "10");
-  const lMeshList = group.children.filter((e) => !e.userData.isUpper && e.userData.code != "40");
+  const filterMesh = ({ code, isUpper }, isUpperJaw) => {
+    if (code !== void 0 && isUpper !== void 0) {
+      if (isUpperJaw) return isUpper && code != "10";
+      else return !isUpper && code != "40";
+    }
+    return false;
+  };
+  const uMeshList = group.children.filter((e) => filterMesh(e.userData, true));
+  const lMeshList = group.children.filter((e) => filterMesh(e.userData, false));
   const info = { upper: [], lower: [] };
   uMeshList.forEach((e) => info.upper.push(computeToothInfo(e, options)));
   lMeshList.forEach((e) => info.lower.push(computeToothInfo(e, options)));
@@ -32156,6 +33119,8 @@ function computeToothInfo(target, options = {}) {
     if (mesh.visible) {
       mesh.quaternion.rotateTowards(camera.quaternion, 1);
     }
+  };
+  mesh.onAfterRender = (renderer, scene, camera, geometry, material, group) => {
   };
   mesh.visible = false;
   target.add(mesh);
@@ -36507,6 +37472,7 @@ const alias3 = {
   Color,
   Camera,
   Scene,
+  Group,
   AxesHelper,
   Mesh,
   Vector2,
@@ -36533,6 +37499,8 @@ const alias3 = {
   MeshStandardMaterial,
   MeshPhongMaterial,
   DoubleSide,
+  BackSide,
+  FrontSide,
   ObjectSpaceNormalMap,
   CatmullRomCurve3,
   Raycaster,
@@ -36543,11 +37511,18 @@ const alias3 = {
   // constannts
   LinearSRGBColorSpace,
   SRGBColorSpace,
+  AlwaysStencilFunc,
+  IncrementWrapStencilOp,
+  DecrementWrapStencilOp,
+  NotEqualStencilFunc,
+  ReplaceStencilOp,
   // examples
   // geometry
   BufferGeometryUtils,
   // math
-  Lut
+  Lut,
+  // other constatns
+  cModelDefaultColor
 };
 const aliasBvh = {
   computeBoundsTree,
@@ -37898,16 +38873,45 @@ const rShaderCrown = {
     }
 `
 };
-var eRModelType = /* @__PURE__ */ ((eRModelType2) => {
-  eRModelType2["Jaw"] = "Jaw";
-  eRModelType2["Crown"] = "Crown";
-  eRModelType2["Inlay"] = "Inlay";
-  eRModelType2["Onlay"] = "Onlays";
-  eRModelType2["Veneer"] = "Veneer";
-  eRModelType2["JawFullUpper"] = "uJawFull";
-  eRModelType2["JawFullLower"] = "lJawFull";
-  return eRModelType2;
-})(eRModelType || {});
+var eModelType = /* @__PURE__ */ ((eModelType2) => {
+  eModelType2["rJaw"] = "Jaw";
+  eModelType2["rCrown"] = "Crown";
+  eModelType2["rInlay"] = "Inlay";
+  eModelType2["rOnlay"] = "Onlays";
+  eModelType2["rVeneer"] = "Veneer";
+  eModelType2["rJawFullUpper"] = "uJawFull";
+  eModelType2["rJawFullLower"] = "lJawFull";
+  return eModelType2;
+})(eModelType || {});
+const cColor4Mesh = {
+  jaw: "#eeeeee",
+  // color(srgb 0.12 0.13 0.11)
+  crown: "#B1A298",
+  // color(srgb 0.69 0.64 0.6);
+  jaw1: "#C59C62"
+};
+function getMeshColor(type) {
+  if (type == "crown") {
+    return cColor4Mesh.crown;
+  } else if (type == "jaw1") {
+    return cColor4Mesh.jaw1;
+  }
+  return cColor4Mesh.jaw;
+}
+function appendGeometryColor(geo, color) {
+  const position = geo.attributes.position;
+  const total = position.array.length;
+  if (color) {
+    const colors = new Float32Array(total);
+    for (let i = 0; i < total; i += 3) {
+      setXYZ(colors, i, color.r, color.g, color.b);
+    }
+    geo.setAttribute("color", new BufferAttribute(colors, 3));
+    geo.attributes.color.needsUpdate = true;
+  }
+  if (!geo.attributes.normal) geo.computeVertexNormals();
+  geo.normalizeNormals();
+}
 function rBufferToModel(info, options = {}) {
   let geo;
   if (info.buffer instanceof ArrayBuffer) {
@@ -37916,10 +38920,10 @@ function rBufferToModel(info, options = {}) {
   } else {
     geo = info.buffer;
   }
-  if (options.type == eRModelType.Crown) {
+  if (options.type == eModelType.rCrown) {
     rAppendGeometryDistance(geo);
   } else {
-    rAppendGeometryColor(geo, options.color);
+    appendGeometryColor(geo, options.color || new Color(getMeshColor(options.type)));
   }
   const mesh = new Mesh(geo, getMaterialByOptions(options));
   mesh.name = info.ftype;
@@ -37932,7 +38936,7 @@ function rBufferToModel(info, options = {}) {
 }
 function getMaterialByOptions(options = {}) {
   let mat;
-  if (options.type == eRModelType.Crown) {
+  if (options.type == eModelType.rCrown) {
     mat = new ShaderMaterial({
       uniforms: {
         color: { value: new Color(options.color) },
@@ -37967,18 +38971,6 @@ function getMaterialByOptions(options = {}) {
   }
   return mat;
 }
-function rAppendGeometryColor(geo, color) {
-  const position = geo.attributes.position;
-  const total = position.array.length;
-  const colors = new Float32Array(total);
-  for (let i = 0; i < total; i += 3) {
-    setXYZ(colors, i, color.r, color.g, color.b);
-  }
-  geo.setAttribute("color", new BufferAttribute(colors, 3));
-  if (!geo.attributes.normal) geo.computeVertexNormals();
-  geo.normalizeNormals();
-  geo.attributes.color.needsUpdate = true;
-}
 function rAppendGeometryDistance(geo) {
   const position = geo.attributes.position;
   const total = position.count / 1;
@@ -37997,14 +38989,17 @@ export {
   StrMesh,
   alias3,
   aliasBvh,
+  appendGeometryColor,
   bindDracoEncoder,
   colorUpdateByIndex,
   create4ToothNumberMesh,
   createGumMesh,
   debug_ToothVisualPoint,
+  eControlType,
   eEntryCode,
   eMaterialReplace,
   eMaterialType,
+  eViewCameraPlace,
   geometry2Mesh,
   listenDomEvent,
   mat2Mesh,

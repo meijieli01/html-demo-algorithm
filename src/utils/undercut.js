@@ -1,5 +1,5 @@
 import * as UnderCutModule from '../../public/libs/cut/DirectDaoao'
-import { alias3 } from '../third/mq-render/viewer.es'
+import { alias3 } from '../third/mq-webui/viewer.es'
 
 let wasmModule;
 export class UnderCut {

@@ -14,7 +14,7 @@ import { onMounted, onBeforeUnmount } from 'vue';
 import { 
     MqMultiViewEditor, mesh2stl, eEntryCode, alias3,
     updateMaterialColor, updateMaterialOpacity, 
-} from '../third/mq-render/viewer.es';
+} from '../third/mq-webui/viewer.es';
 import { saveBinaryFile } from '../third/snippet/toolkit';
 import { toYYMMDDHHmmss } from '../utils/util';
 import { useRoute } from 'vue-router'

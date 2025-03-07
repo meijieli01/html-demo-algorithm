@@ -71,7 +71,7 @@ import SubSelection from './sub/SubSelection.vue';
 import SubProgress from './sub/SubProgress.vue';
 import { getMeshMaterialOption, addColor2Mesh } from '../third/auxThree';
 import { readFromStorage, writeToStorage } from '../third/snippet/storage';
-import { FilePathLoader, PathLoader } from '../third/mq-render/viewer.es';
+import { FilePathLoader, PathLoader } from '../third/mq-webui/viewer.es';
 import { upload, callAi, getHistory } from '../api/ct';
 import { calcPer, filterFile } from '../utils/util';
 const props = defineProps({

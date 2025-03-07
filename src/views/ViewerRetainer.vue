@@ -33,6 +33,26 @@
                         <label class="form-label my-auto mx-1">Tightness/Offset</label>
                         <input class="form-control form-control-sm w-50" v-model="m1.innerLevelSet">
                     </div>
+                    <div class="d-flex justify-content-evenly">
+                        <label class="form-label my-auto mx-1">Lingual Margin</label>
+                        <select class="form-select form-select-sm w-50" v-model="m1.lingualStraight">
+                            <option v-for="(item,i) in info2" :key="i" :value="item.value" v-html="item.label"></option>
+                        </select>
+                    </div>
+                    <div class="d-flex justify-content-evenly">
+                        <label class="form-label my-auto mx-1">Lingual Offset</label>
+                        <input class="form-control form-control-sm w-50" v-model="m1.lingualOffset">
+                    </div>
+                    <div class="d-flex justify-content-evenly">
+                        <label class="form-label my-auto mx-1">Buccal Margin</label>
+                        <select class="form-select form-select-sm w-50" v-model="m1.buccalStraight">
+                            <option v-for="(item,i) in info2" :key="i" :value="item.value" v-html="item.label"></option>
+                        </select>
+                    </div>
+                    <div class="d-flex justify-content-evenly">
+                        <label class="form-label my-auto mx-1">Buccal Offset</label>
+                        <input class="form-control form-control-sm w-50" v-model="m1.buccalOffset">
+                    </div>
                     <div class="d-flex justify-content-start my-2">
                         <input class="form-check-input mx-2" type="checkbox" :checked="m2.hasCut" @change="inputChangeUnderCut"/>
                         <label class="form-check-label" for="shellHollow">UnderCut Direction</label>
@@ -169,7 +189,7 @@ import elLoading from '../third/snippet/loading';
 import { 
     FilePathLoader, PathLoader, mesh2drc, MarkerLines, toIndexGeometry, colorUpdateByIndex,
     alias3, bindDracoEncoder
-} from '../third/mq-render/viewer.es';
+} from '../third/mq-webui/viewer.es';
 import { upload, getHistory, callAiRetainerNew } from '../api/all';
 import { configRetainer } from '../../config';
 import { toYYMMDDHHmmss } from '../utils/util';
@@ -185,6 +205,10 @@ const info1 = [
     {id: 1, label: 'Upper'},
     {id: 2, label: 'Lower'},
     // {id: 3, label: 'None'},
+]
+const info2 = [
+    {id: 1, value: true, label: 'Straight'},
+    {id: 2, value: false, label: 'Scalloped'},
 ]
 const color4Mesh = [
     // [0.23, 0.76, 0.71], // upper
@@ -235,7 +259,11 @@ const m1 = reactive({
     isShell: configRetainer.isShell,
     levelSet: '0.6',
     innerLevelSet: '0',
-    isPrint: true,    
+    isPrint: true,
+    lingualStraight: true,
+    lingualOffset: 0.0,
+    buccalStraight: true,
+    buccalOffset: 0.0,    
 });
 const m2 = reactive({
     jaw: '3',

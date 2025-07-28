@@ -17,6 +17,8 @@
     "vue": "^3.0.5",
     "vue-i18n": "^10.0.3",
     "vue-router": "^4.0.0",
+    "vue3-draggable-resizable": "^1.6.5",
+    "vue3-infinite-viewer": "^0.17.1",
     "vuex": "^4.0.0"
   },
   "devDependencies": {

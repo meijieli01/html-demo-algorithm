@@ -53,6 +53,10 @@
                         <label class="form-label my-auto mx-1">Buccal Offset</label>
                         <input class="form-control form-control-sm w-50" v-model="m1.buccalOffset">
                     </div>
+                    <div class="d-flex justify-content-evenly">
+                        <label class="form-label my-auto mx-1" style="font-size:smaller;">ProximalBlockoutValue</label>
+                        0.0<input type="range" min="0" max="1.0" step="0.01" :title="m1.proximalBlockoutValue" class="form-range form-range-sm w-50" v-model="m1.proximalBlockoutValue">1.0
+                    </div>
                     <div class="d-flex justify-content-start my-2">
                         <input class="form-check-input mx-2" type="checkbox" :checked="m2.hasCut" @change="inputChangeUnderCut"/>
                         <label class="form-check-label" for="shellHollow">UnderCut Direction</label>
@@ -192,7 +196,7 @@ import {
 } from '../third/mq-webui/viewer.es';
 import { upload, getHistory, callAiRetainerNew } from '../api/all';
 import { configRetainer } from '../../config';
-import { toYYMMDDHHmmss } from '../utils/util';
+import { toYYMMDDHHmmss, filterFile } from '../utils/util';
 import { UnderCut } from '../utils/undercut';
 
 const props = defineProps({
@@ -264,6 +268,7 @@ const m1 = reactive({
     lingualOffset: 0.0,
     buccalStraight: true,
     buccalOffset: 0.0,    
+    proximalBlockoutValue: 1.0,
 });
 const m2 = reactive({
     jaw: '3',
@@ -367,7 +372,7 @@ function clickByCode(type) {
                 if (m1.type == 1) {           
                     updateCacheHistoryData(m1.tempDir, 'history', m1, false);
                 }
-                ud.pathList = data.files;
+                ud.pathList = data.files.filter(e=>filterFile(e));
                 elViewer.value.resetAxes();
                 if (data.lowerMat) mat.lower = arrayVectorToMatrix(data.lowerMat);
                 if (data.upperMat) mat.upper = arrayVectorToMatrix(data.upperMat);
@@ -395,7 +400,8 @@ function clickByCode(type) {
         ud.lockBtn = 1;        
         gScene.clear();
         app3.updateFrame();
-        m2.hasCut = true;
+        // 2025-4-17 default cut is off
+        m2.hasCut = false;
         ud.infoList = [];
         [7,8].forEach(e=>{
             if (markers[e]) app3.add(markers[e]);
@@ -428,6 +434,9 @@ function clickByCode(type) {
                         if (str.startsWith('underCut')) {
                             parameters.underCut = JSON.parse(strValue);                            
                         }
+                        if (str.startsWith('proximalBlockoutValue')) {
+                            parameters.proximalBlockoutValue = parseFloat(strValue);
+                        }
                     })
                     updateCacheHistoryData(parseInt(ids[0]), ids[1] || 'history', parameters, true);
                 })
@@ -453,6 +462,7 @@ function updateCacheHistoryData(tmpDir, customId, parameters, isNew) {
         tmp.customId = customId;
         tmp.isShell = parameters.isShell;
         tmp.levelSet = parameters.levelSet;
+        tmp.proximalBlockoutValue = parameters.proximalBlockoutValue;
         tmp.innerLevelSet = parameters.innerLevelSet;        
         if (parameters.underCut) {
             tmp.underCut = parameters.underCut;
@@ -474,12 +484,13 @@ function fixNum(x) {
 }
 function selectTimestamp() {
     const { 
-        tmpDir, customId, isShell, levelSet, innerLevelSet, underCut
+        tmpDir, customId, isShell, levelSet, innerLevelSet, underCut, proximalBlockoutValue,
     } = ud.selTimestamp || {};
     ud.customId = '';
     ud.lockBtn = 0;
     m1.isShell = isShell;
     m1.levelSet = levelSet;
+    m1.proximalBlockoutValue = proximalBlockoutValue || 1.0;
     m1.innerLevelSet = innerLevelSet;
     if (underCut) {
         m2.hasCut = true;

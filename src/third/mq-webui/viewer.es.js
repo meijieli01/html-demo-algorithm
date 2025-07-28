@@ -31468,6 +31468,7 @@ class MqRender {
     this.handler4Before = [];
     this.handler4After = [];
     this.viewCameraMaxSize = 0;
+    this.isCallInit = false;
   }
   cfgCamera(options) {
     this.cameraNear = options.near || 0.1;
@@ -31509,18 +31510,23 @@ class MqRender {
     } else {
       throw new Error("container is not a HTMLElement or Canvas");
     }
+    this.isCallInit = true;
   }
   initControl(camera, type = 0) {
     const { renderer, options } = this;
     const optControl = options.optionControl || {};
-    let enableZoom = true, enablePan = true, enableRotate = true;
-    let speedZoom = 1.2, speedPan = 3.5, speedRotate = 2;
+    let enableZoom = true, enablePan = true, enableRotate = true, enableDamping = true;
+    let speedZoom = 1.2, speedPan = 3.5, speedRotate = 2, dampingFactor = 0.3, minDistance = 2, maxDistance = 200;
     if (typeof optControl.enableZoom == "boolean") enableZoom = optControl.enableZoom;
     if (typeof optControl.enablePan == "boolean") enablePan = optControl.enablePan;
     if (typeof optControl.enableRotate == "boolean") enableRotate = optControl.enableRotate;
+    if (typeof optControl.enableDamping == "boolean") enableDamping = optControl.enableDamping;
     if (optControl.speedZoom) speedZoom = optControl.speedZoom;
     if (optControl.speedPan) speedPan = optControl.speedPan;
     if (optControl.speedRotate) speedRotate = optControl.speedRotate;
+    if (optControl.dampingFactor) dampingFactor = optControl.dampingFactor;
+    if (optControl.minDistance) minDistance = optControl.minDistance;
+    if (optControl.maxDistance) maxDistance = optControl.maxDistance;
     const { domElement } = renderer;
     let control;
     if (type == 0) control = new TrackballControls(camera, domElement);
@@ -31532,6 +31538,12 @@ class MqRender {
     control.noPan = !enablePan;
     control.noRotate = !enableRotate;
     control.staticMoving = true;
+    if (enableDamping) {
+      control.enableDamping = enableDamping;
+      control.dynamicDampingFactor = dampingFactor;
+    }
+    control.minDistance = minDistance;
+    control.maxDistance = maxDistance;
     control.keys = ["65", "83", "68"];
     control.target.set(0, 0, 0);
     this.control = control;
@@ -31541,6 +31553,26 @@ class MqRender {
       if (this.control.screen.width < 1 || this.control.screen.height < 1) {
         this.control.handleResize();
       }
+    }
+  }
+  /**
+   * code = 0 default 
+   * 1 3shape
+   */
+  setControlMouse(code = 0) {
+    const { control } = this;
+    if (code == 1) {
+      control.mouseButtons = {
+        LEFT: null,
+        MIDDLE: MOUSE.PAN,
+        RIGHT: MOUSE.ROTATE
+      };
+    } else {
+      control.mouseButtons = {
+        LEFT: MOUSE.ROTATE,
+        MIDDLE: MOUSE.DOLLY,
+        RIGHT: MOUSE.PAN
+      };
     }
   }
   clearScene(isReset = false) {
@@ -31558,7 +31590,8 @@ class MqRender {
     }
   }
   dispose() {
-    const { control, sceneOrtho } = this;
+    const { control, sceneOrtho, isCallInit } = this;
+    if (!isCallInit) return;
     sceneOrtho.clear();
     if (control) control.dispose();
     this.clearScene(true);
@@ -31718,6 +31751,10 @@ class MqRender {
     const { sceneOrtho } = this;
     sceneOrtho.add(ui);
   }
+  removeUi(ui) {
+    const { sceneOrtho } = this;
+    sceneOrtho.remove(ui);
+  }
   addBeforHandler(e) {
     this.handler4Before.push(e);
   }
@@ -31807,7 +31844,13 @@ class MqRender {
 function localUpdateCamera(camera, scene, oCamera, options) {
   const { width, height, view, index, total } = options;
   scene.add(camera);
-  if (!scene.background && view) scene.background = view.background;
+  if (view && view.background) {
+    if (!scene.background) {
+      scene.background = view.background;
+    } else {
+      if (!view.background.equals(scene.background)) scene.background.copy(view.background);
+    }
+  }
   if (index == 0) {
     if (camera instanceof PerspectiveCamera) {
       camera.aspect = width / height;
@@ -37468,6 +37511,11 @@ BufferGeometry.prototype.computeBoundsTree = computeBoundsTree;
 BufferGeometry.prototype.disposeBoundsTree = disposeBoundsTree;
 Mesh.prototype.raycast = acceleratedRaycast;
 const alias3 = {
+  WebGLRenderer,
+  DirectionalLight,
+  AmbientLight,
+  Object3D,
+  LoadingManager,
   ObjectLoader,
   Color,
   Camera,
@@ -37517,6 +37565,10 @@ const alias3 = {
   NotEqualStencilFunc,
   ReplaceStencilOp,
   // examples
+  TrackballControls,
+  STLLoader,
+  OBJLoader,
+  PLYLoader,
   // geometry
   BufferGeometryUtils,
   // math
@@ -38703,6 +38755,86 @@ function listenDomEvent(canavs, callback, options = {}) {
     clearEvent
   };
 }
+class MqHotMap {
+  constructor(options, elContainer) {
+    this.options = options;
+    this.canvas = document.createElement("canvas");
+    this.canvas.width = options.width || 100;
+    this.canvas.height = options.height || 200;
+    this.ctx = this.canvas.getContext("2d");
+    this.x = 0;
+    this.y = 0;
+    if (elContainer) {
+      this.canvas.style.cssText = options.style;
+      elContainer.appendChild(this.canvas);
+    }
+    this.texture = new CanvasTexture(this.canvas);
+    this.color = new Color();
+    this.updateTexture();
+  }
+  getTexture() {
+    return this.texture;
+  }
+  /**
+   * 获取范围，返回的是0到1之间的uv的垂直坐标系，对应着颜色的分布
+   * 这个用于定制的软渲染，全部逻辑由shader根据uv来确定
+   * @param value
+   */
+  getUv(value) {
+    const { options } = this;
+    const { colorStops } = options;
+    for (let i = 0; i < colorStops.length; i++) {
+      const one = colorStops[i];
+      if (one.isInRange(value)) return Math.abs(parseFloat(one.label));
+    }
+    return 2;
+  }
+  getColor(value) {
+    const { options, color } = this;
+    const { colorStops } = options;
+    for (let i = 0; i < colorStops.length; i++) {
+      const one = colorStops[i];
+      if (one.isInRange(value)) {
+        color.setStyle(one.color);
+        return color;
+      }
+    }
+    color.setRGB(0, 0, 0);
+    return color;
+  }
+  updateTexture(option = {}) {
+    const { ctx, options, texture } = this;
+    const { width, height, colorStops, fontColor, fontWidth, font } = options;
+    ctx.clearRect(0, 0, width, height);
+    let x = width - (fontWidth || 20), colorWidth = width - x, y = 0;
+    colorStops.forEach((one, i) => {
+      if (i + 1 < colorStops.length) {
+        const oneNext = colorStops[i + 1];
+        const hCurrent = height * (oneNext.position - one.position);
+        ctx.fillStyle = one.color;
+        ctx.fillRect(x, y, colorWidth, hCurrent - 2);
+        if (one.label) {
+          ctx.font = option.font || font || "100 72px sans-serif";
+          ctx.fillStyle = option.fontColor || fontColor || "black";
+          ctx.fillText(one.label, 0, y);
+        }
+        y += hCurrent;
+      }
+    });
+    texture.needsUpdate = true;
+  }
+  getUi(options = {}) {
+    const { texture, options: innerOptions } = this;
+    const sprite = new Sprite(new SpriteMaterial({
+      map: texture
+    }));
+    sprite.center.set(options.xCenter || 0.5, options.yCenter || 0.5);
+    sprite.position.set(options.xPos || 0.5, options.yPos || 0, options.zPos || 0);
+    sprite.scale.set(options.xScale || innerOptions.width, options.yScale || innerOptions.height, options.zScale || 1);
+    sprite.name = options.name || `ui_${Date.now()}`;
+    return sprite;
+  }
+}
 function toIndexGeometry(geo, tolerance = 1e-6) {
   if (!geo.index) {
     bufferGeometryMergeVertices(geo);
@@ -38792,7 +38924,12 @@ function updateMaterialColor(material, strColor) {
   if (material.color) material.color.copy(color);
 }
 function updateMaterialOpacity(material, opacity) {
-  material.opacity = opacity;
+  const { isShaderMaterial, uniforms } = material;
+  if (isShaderMaterial) {
+    if (uniforms.opacity) uniforms.opacity.value = opacity;
+  } else {
+    material.opacity = opacity;
+  }
   material.transparent = !(opacity == 1);
   material.needsUpdate = true;
 }
@@ -38850,7 +38987,7 @@ const rShaderCrown = {
 
         if(useMapColor) {  
             if (vDistance < 1.0 && vDistance > 0.0) {
-                targetColor = texture2D(textureMap, vec2(0, vDistance));
+                targetColor = texture2D(textureMap, vec2(0.950, vDistance));
                 // targetColor = vec4(0.0, 0.0, 1.0, 1.0);
             } else {
                 targetColor = vec4(color.r, color.g, color.b, 1.0);
@@ -38874,13 +39011,18 @@ const rShaderCrown = {
 `
 };
 var eModelType = /* @__PURE__ */ ((eModelType2) => {
-  eModelType2["rJaw"] = "Jaw";
+  eModelType2["Jaw"] = "Jaw";
   eModelType2["rCrown"] = "Crown";
   eModelType2["rInlay"] = "Inlay";
   eModelType2["rOnlay"] = "Onlays";
   eModelType2["rVeneer"] = "Veneer";
-  eModelType2["rJawFullUpper"] = "uJawFull";
-  eModelType2["rJawFullLower"] = "lJawFull";
+  eModelType2["rShell"] = "Shell";
+  eModelType2["JawFullUpper"] = "uJawFull";
+  eModelType2["JawFullLower"] = "lJawFull";
+  eModelType2["iUpperGuide"] = "uImplantGuid";
+  eModelType2["iLowerGuide"] = "lImplantGuid";
+  eModelType2["iReport"] = "implantReport";
+  eModelType2["iGuidance"] = "implantGuidance";
   return eModelType2;
 })(eModelType || {});
 const cColor4Mesh = {
@@ -38898,34 +39040,45 @@ function getMeshColor(type) {
   }
   return cColor4Mesh.jaw;
 }
-function appendGeometryColor(geo, color) {
+function appendGeometryColor(geo, color, cb) {
   const position = geo.attributes.position;
   const total = position.array.length;
   if (color) {
     const colors = new Float32Array(total);
     for (let i = 0; i < total; i += 3) {
-      setXYZ(colors, i, color.r, color.g, color.b);
+      if (cb) {
+        const tmp2 = cb(i);
+        setXYZ(colors, i, tmp2.r, tmp2.g, tmp2.b);
+      } else {
+        setXYZ(colors, i, color.r, color.g, color.b);
+      }
     }
     geo.setAttribute("color", new BufferAttribute(colors, 3));
     geo.attributes.color.needsUpdate = true;
   }
-  if (!geo.attributes.normal) geo.computeVertexNormals();
   geo.normalizeNormals();
+}
+function appendGeometryDistance$1(geo) {
+  const position = geo.attributes.position;
+  const total = position.count / 1;
+  const distances = new Float32Array(total).fill(2);
+  geo.setAttribute("mqDistance", new BufferAttribute(distances, 1));
+  geo.attributes.mqDistance.needsUpdate = true;
 }
 function rBufferToModel(info, options = {}) {
   let geo;
   if (info.buffer instanceof ArrayBuffer) {
-    const loader = new CommonLoader(info.filename);
+    const loader = new CommonLoader(info.filename, options);
     geo = loader.parse(info.buffer);
   } else {
     geo = info.buffer;
   }
   if (options.type == eModelType.rCrown) {
-    rAppendGeometryDistance(geo);
+    appendGeometryDistance(geo);
   } else {
     appendGeometryColor(geo, options.color || new Color(getMeshColor(options.type)));
   }
-  const mesh = new Mesh(geo, getMaterialByOptions(options));
+  const mesh = new Mesh(geo, getMaterialByOptions$1(options));
   mesh.name = info.ftype;
   mesh.userData = {
     ftype: info.ftype,
@@ -38934,7 +39087,7 @@ function rBufferToModel(info, options = {}) {
   };
   return mesh;
 }
-function getMaterialByOptions(options = {}) {
+function getMaterialByOptions$1(options = {}) {
   let mat;
   if (options.type == eModelType.rCrown) {
     mat = new ShaderMaterial({
@@ -38971,7 +39124,7 @@ function getMaterialByOptions(options = {}) {
   }
   return mat;
 }
-function rAppendGeometryDistance(geo) {
+function appendGeometryDistance(geo) {
   const position = geo.attributes.position;
   const total = position.count / 1;
   const distances = new Float32Array(total).fill(2);
@@ -38980,9 +39133,99 @@ function rAppendGeometryDistance(geo) {
   geo.normalizeNormals();
   geo.attributes.mqDistance.needsUpdate = true;
 }
+function mqBufferToMesh(info, options = {}) {
+  const { buffer, ...rest } = info;
+  let geo;
+  if (buffer instanceof ArrayBuffer) {
+    const loader = new CommonLoader(rest.filename, options);
+    geo = loader.parse(buffer);
+  } else {
+    geo = buffer;
+  }
+  if (options.hasIndex) {
+    toIndexGeometry(geo);
+  }
+  if (options.mqDistance) {
+    appendGeometryDistance$1(geo);
+  }
+  appendGeometryColor(geo, options.color || new Color(getMeshColor(options.type)));
+  const mesh = new Mesh(geo, getMaterialByOptions(options));
+  mesh.name = rest.id || rest.filename;
+  mesh.userData = { ...rest };
+  return mesh;
+}
+function getMaterialByOptions(options = {}) {
+  const { type, mqDistance, useMapColor, ...rest } = options;
+  let mat;
+  if (["target"].includes(type)) {
+    mat = new ShaderMaterial({
+      uniforms: {
+        color: { value: new Color(options.color) },
+        emissive: { value: new Color(0) },
+        ambientLightColor: { value: new Color(2434341) },
+        roughness: { value: 0.3 },
+        metalness: { value: 0.6 },
+        opacity: { value: 1 },
+        useMapColor: { value: useMapColor || false },
+        textureMap: { value: null }
+      },
+      vertexShader: rShaderCrown.vertexShader,
+      fragmentShader: rShaderCrown.fragmentShader,
+      side: DoubleSide,
+      // vertexColors: true,
+      transparent: false,
+      shadowSide: DoubleSide
+    });
+  } else if (["standard"].includes(type)) {
+    mat = new MeshStandardMaterial({
+      side: DoubleSide,
+      metalness: 0.1,
+      roughness: 0.75,
+      vertexColors: true,
+      ...rest
+    });
+  } else {
+    mat = new MeshPhongMaterial({
+      side: DoubleSide,
+      transparent: false,
+      depthTest: true,
+      depthWrite: true,
+      vertexColors: true,
+      reflectivity: 1,
+      shininess: 30,
+      ...rest
+    });
+  }
+  return mat;
+}
+function toGeometryData(arr) {
+  const list = [];
+  arr.forEach((one) => {
+    const geo = new BufferGeometry();
+    if (one.p.buffer) {
+      geo.setAttribute("position", new BufferAttribute(one.p, 3));
+    } else {
+      geo.setAttribute("position", new BufferAttribute(one.p, 3));
+    }
+    if (one.i.buffer) {
+      geo.setIndex(new BufferAttribute(one.i, 1));
+    } else {
+      geo.setIndex(one.i);
+    }
+    geo.computeVertexNormals();
+    list.push(geo);
+  });
+  return list;
+}
+const workerManifold = new Worker(new URL(
+  /* @vite-ignore */
+  "" + new URL("assets/workerManifold-BK2X1oJ-.js", import.meta.url).href,
+  import.meta.url
+));
 export {
   FilePathLoader,
   MarkerLines,
+  MqHotMap,
   MqMultiViewEditor,
   PEType,
   PathLoader,
@@ -39007,9 +39250,12 @@ export {
   mesh2drc,
   mesh2ply,
   mesh2stl,
+  mqBufferToMesh,
   rBufferToModel,
   toIndexGeometry,
   toMeshWithMaterialReplace,
+  toGeometryData as toWorkerGeometryData,
   updateMaterialColor,
-  updateMaterialOpacity
+  updateMaterialOpacity,
+  workerManifold
 };

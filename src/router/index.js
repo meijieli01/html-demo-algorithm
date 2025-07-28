@@ -72,6 +72,12 @@ export const mapComponent2LocalFile = {
     functionCode: 'Smile',
     functionId: '201',
   },
+  'Canvas': {
+    component: () => import('../views/CanvasFunction.vue'),
+    functionName: 'CanvasFunction',
+    functionCode: 'CanvasFunction',
+    functionId: '221',
+  },
 }
 
 const router = createRouter({

@@ -2,9 +2,9 @@
     <div class="canvas-page">
       <div class="top-buttons">
         <button  width="150px" height="32px" buttonClass="grey-button">Main Menu</button>
-        <button @click="openFileDialog" width="150px" height="32px" buttonClass="red-button">Add Frame</button>
-        <button @click="addCbctFrame" width="150px" height="32px" buttonClass="red-button">Add Cbct</button>
-        <input ref="fileInput" type="file" multiple accept="image/*,.stl,.ply,.obj" @change="handleFiles" style="display:none" />
+        <button @click="openFileDialog" width="150px" height="32px" title="model file support stl,ply,obj, and cbct support file is nii format" buttonClass="red-button">Add Frame</button>
+        <!--<button @click="addCbctFrame" width="150px" height="32px" buttonClass="red-button">Add Cbct</button>-->
+        <input ref="fileInput" type="file" multiple accept="image/*,.stl,.ply,.obj,.nii,.gz" @change="handleFiles" style="display:none" />
       </div>
       <InfiniteViewer class="viewer" :zoom="1" ref="viewer">
         <div class="canvas" ref="canvasContainer">
@@ -24,7 +24,7 @@
             </div>
             <div class="frame-content" :class="frame.type" @mousedown.stop="" @mousemove.stop="" >
               <img v-if="frame.type === 'image'" :src="frame.url" />
-              <iframe v-if="frame.type === 'cbct'" width="100%" height="100%" :src="frame.url" sandbox="allow-same-origin allow-scripts allow-forms allow-top-navigation" />
+              <iframe v-if="frame.type === 'cbct'" width="100%" height="100%" :id="frame.id" :src="frame.url" sandbox="allow-same-origin allow-scripts allow-forms allow-top-navigation" />
               <canvas v-else :ref="el => frame.canvasRef = el" class="mesh-canvas"></canvas>
             </div>
           </VueDraggableResizable>
@@ -49,8 +49,9 @@
   function openFileDialog() {
     fileInput.value.click();
   }
-  function addCbctFrame() {
+  function addCbctFrame(file) {
     const isInternal = ['192.168.0.16'].includes(location.hostname);
+    const delayTime = (isInternal ? 3 : 15) * 1000;
       const frame = {
       id:Date.now() + Math.random(),
       type:'cbct',
@@ -63,8 +64,13 @@
       height: 800 + Math.random() * 100,
       exth: 400,
       extw: 400,
+      file,
       }
       frames.push(frame);
+      setTimeout(()=>{
+        const elIFrame = document.getElementById(frame.id).contentWindow;
+        if (elIFrame) elIFrame.postMessage({type:'FILE_NII_DATA', file:frame.file},'*');
+      }, delayTime);
   }
   
   function removeFrame(frame) {
@@ -83,6 +89,10 @@
     const input = event.target;
     if (!input.files) return;
     for (const file of Array.from(input.files)) {
+        if (/\.(nii|gz)$/i.test(file.name)) {
+            addCbctFrame(file);
+            return;
+        }
       const type = /\.(stl|ply|obj)$/i.test(file.name) ? 'mesh' : 'image';
       const url = URL.createObjectURL(file);
       const frame = {

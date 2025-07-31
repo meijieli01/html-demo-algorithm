@@ -1,7 +1,7 @@
 <template>
     <div class="canvas-function-root">
         <div class="top-buttons">
-            <!--<button class="btn btn-primary"  width="150px" height="32px" buttonClass="grey-button">Main Menu</button>-->
+            <button class="btn btn-primary" @click="handleEvt($event,'addLinkUrl')" width="150px" height="32px" title="add link url to new iframe">Add link</button>
             <button class="btn btn-primary" @click="openFileDialog" width="150px" height="32px" title="model file support stl,ply,obj, and cbct support file is nii format" buttonClass="red-button">Add Frame</button>
             <!--<button @click="addCbctFrame" width="150px" height="32px" buttonClass="red-button">Add Cbct</button>-->
             <input ref="fileInput" type="file" multiple accept="image/*,.stl,.ply,.obj,.nii,.gz" @change="handleFiles" style="display:none" />
@@ -11,10 +11,10 @@
             @mousedown="handleEvt($event,'mdown4Viewer')"
             @mouseup="handleEvt($event,'mup4Viewer')"
           >
-            <div class="viewport-board" ref="canvasContainer">
+          <!--<div class="viewport-board" ref="canvasContainer">-->
                 <DraggableContainer :adsorbParent="false" :referenceLineVisible="false">
                     <VueDraggableResizable
-                        :initW="400+frame.extw" :initH="300 + frame.exth"
+                        :initW="0 + frame.extw" :initH="0 + frame.exth"
                         :draggable="true" :resizable="true"
                         v-for="frame in frames" :key="frame.id"
                         v-model:x="frame.x" v-model:y="frame.y" v-model:w="frame.w" v-model:h="frame.h"
@@ -26,7 +26,7 @@
                         <CanvasTarget :frame="frame" @op="handleFrameOp" />
                     </VueDraggableResizable>
                 </DraggableContainer>
-            </div>
+                <!--</div>-->
         </InfiniteViewer>
     </div>
 </template>
@@ -37,12 +37,14 @@ import InfiniteViewer from 'vue3-infinite-viewer';
 import VueDraggableResizable from 'vue3-draggable-resizable';
 import { DraggableContainer } from 'vue3-draggable-resizable';
 import CanvasTarget from './CanvasTarget.vue';
+import CanvasDlg from './CanvasDlg.vue';
 import 'vue3-draggable-resizable/dist/Vue3DraggableResizable.css';
 import { alias3 } from '../third/mq-webui/viewer.es';
 import { Observable } from 'rxjs';
 import img1 from '../assets/scanbody_1.png?url';
 import img2 from '../assets/scanbody_2.png?url';
 import img3 from '../assets/scanbody_3.png?url';
+import { useModalConfirm } from '../utils/bootstrap.js';
 
 
 const frames = reactive([]);
@@ -51,9 +53,15 @@ const elViewer = ref();
 const ud = reactive({
     isReady: false,
     activeChild: false,
+    curx: 0,
+    cury: 0,
+    gap: 40,
 })
 
+const { showConfirm } = useModalConfirm();
+
 onMounted(()=>{
+    window.open(`https://47.108.166.54:4053/`);
     window.addEventListener('message',(e)=>{
         const {type, status, id } = e.data;
         console.log('message', e, id);
@@ -79,33 +87,58 @@ onMounted(()=>{
             y: 100 + Math.random() * 100,
             width: 400,
             height: 300,
-            exth: 0,
-            extw: 0,
+            exth: 400,
+            extw: 300,
         };
         frames.push(frame);
     });
+    [
+    //'https://test.masteralign.cn/editor?uuid=fa6517a35b1849c99f9482b9d57d8044&from=1'
+    ].forEach((url,i)=>{
+    });
     initArrangeFrames();
 });
-
 function initArrangeFrames(type='vertical') {
-    const gap = 40;
-    let curx = gap;
-    let cury = gap;
+    let curx = ud.gap;
+    let cury = ud.gap;
     frames.forEach((frame,i)=>{
         if ('vertical' == type) {
             if (i == 0) {
-                frame.x = gap;
+                frame.x = ud.gap;
                 frame.y = cury;
-                cury += frame.height + gap;
+                cury += frame.height + ud.gap * 2;
             } else {
-                frame.x = gap;
-                frame.y = cury + gap;
-                cury += frame.height + gap * 2;
+                frame.x = ud.gap;
+                frame.y = cury + ud.gap * 2;
+                cury += frame.height + ud.gap * 4;
             }
         }
     });
+    ud.curx = ud.gap;
+    ud.cury = cury;
 }
-
+function addFrameUrl(url) {
+    const id = Date.now() + Math.random();
+    let x = ud.curx;
+    let y = ud.cury + ud.gap * 2;
+    const frame = {
+        id,
+        type:'iframe',
+        name:`frame${id}`,
+        active: false,
+        isTop: false,
+        url,
+        x,
+        y,
+        width: 1200,
+        height: 800,
+        exth: 1200,
+        extw: 800,
+    };
+    ud.cury += frame.height + ud.gap * 4;
+    frames.push(frame);
+    
+}
 function sendToIframe(frame, frequency = 2000) {
     return new Observable(observer=>{
         let count = 0;
@@ -130,7 +163,6 @@ function sendToIframe(frame, frequency = 2000) {
         }
     })
 }
-
 function openFileDialog() {
     fileInput.value.click();
 }
@@ -139,7 +171,7 @@ function addCbctFrame(file) {
     const delayTime = (isInternal ? 3 : 15) * 1000;
     const frame = {
         id:Date.now() + Math.random(),
-        type:'cbct',
+        type:'iframe',
         name:'cbct',
         active: false,
         isTop: false,
@@ -180,6 +212,17 @@ function handleEvt(evt, type) {
         ud.mdown = true;
     } else if (type == 'mup4Viewer') {
         ud.mdown = false;
+    } else if (type == 'addLinkUrl') {
+        showConfirm({
+            props: {
+                title:'Url',
+                ops: {
+                    ok:(url)=> addFrameUrl(url),
+                },
+            },
+            component: CanvasDlg,
+        }).then(()=>{
+        })
     }
 }
 
@@ -286,6 +329,7 @@ function fileExtension(name) {
     display: flex;
     flex-direction: column;
     background: #1e1e1e;
+    user-select: none;
 }
 .top-buttons {
     display: flex;

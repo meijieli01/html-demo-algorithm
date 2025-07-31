@@ -1,0 +1,44 @@
+:root {
+    --layout-width-sidebar: 202px;
+    --layout-height-topbar: 60px;
+    --layout-main-top-form: 56px;
+    --layout-main-bottom-pagination: 45px;
+    --mq-main-row-height: 40px;
+    --mq-sr-primary: #CC0033;
+    --mq-communicate-textarea-height: 108px;
+    --mq-border-radius: 4px;
+    --mq-divider-color: #18bae3;
+    --mq-side-menu-row-height: 55px;
+    --mq-menu-hover: rgba(0, 0, 0, 0.5);
+}
+
+$toolMenuHover: rgba(0, 0, 0, 0.5) !default;
+$toolMenuSelect: rgba(0, 0, 0, 0.1) !default;
+$primary: #18bae3;
+
+// $theme-colors: (
+//     "primary": $primary,
+// );
+
+[data-bs-theme=dark] {
+    --mq-table-head-bg: gray;
+    --mq-menu-hover: rgba(0, 0, 0, 0.5);
+}
+
+[data-bs-theme=light] {
+    --mq-side-menu-row-height: 55px;
+    --mq-table-head-bg: gray;
+
+}
+
+/*
+ * 对宽度进行扩展，支持更多的宽度
+ */
+$widthKey: 5, 10, 15, 20, 30, 35, 40, 45, 55, 60, 65, 70, 80, 85, 90, 95;
+
+@each $i in $widthKey {
+    .w-#{$i} {
+        width: $i * 1% !important;
+    }
+}
+

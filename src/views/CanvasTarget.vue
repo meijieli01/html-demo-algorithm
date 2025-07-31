@@ -4,7 +4,7 @@
             <div v-if="frame.type === 'image'" class="image-container">
                 <img class="p-2" :src="frame.url" />
             </div>
-            <iframe v-else-if="frame.type === 'cbct'" width="100%" height="100%" :id="frame.id" :src="frame.url" sandbox="allow-same-origin allow-scripts allow-forms allow-top-navigation" />
+            <iframe v-else-if="frame.type === 'iframe'" width="100%" height="100%" :id="frame.id" :src="frame.url" sandbox="allow-same-origin allow-scripts allow-forms allow-top-navigation" />
             <div v-else class="canvas-container">
                 <canvas :ref="el => frame.canvasRef = el" class="mesh-canvas"></canvas>
             </div>

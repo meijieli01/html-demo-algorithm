@@ -1,0 +1,15 @@
+@import './global.scss';
+
+$wWebkitScrollbar: 1px !default;
+::-webkit-scrollbar {
+    width: $wWebkitScrollbar;
+    background: var(--bs-secondary-bg); 
+}
+::-webkit-scrollbar-thumb {    
+    background: var(--mq-sr-primary);
+}
+
+body {
+    user-select: none;
+}
+

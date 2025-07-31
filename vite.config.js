@@ -3,7 +3,10 @@ import vue from '@vitejs/plugin-vue'
 import html from 'vite-plugin-html'
 import svgLoader from 'vite-svg-loader';
 import {resolve} from 'path';
+import Components from 'unplugin-vue-components/vite';
+import { BootstrapVueNextResolver } from 'bootstrap-vue-next';
 import {getBaseRoot} from './config';
+import sass from 'sass';
 
 // https://vitejs.dev/config/
 export default defineConfig(({mode}) => {
@@ -22,12 +25,29 @@ export default defineConfig(({mode}) => {
         },
         minify: false,
       }),
+        Components({
+            resolvers: [BootstrapVueNextResolver()],
+        }),
     ],
     entry: './index.html',
     resolve: {
       alias: [
         {find: '@', replacement: resolve(__dirname, 'src')}
       ],
+    },
+    css: {
+        preprocessorOptions: {
+            scss: {
+                implementation: sass,
+                sassOptions: {
+                    quietDeps: true,
+                },
+                api: 'modern-compiler',
+                additionaldData: `@import @/styles/variables.scss";`,
+                charset: true,
+                syntax: 'scss',
+            },
+        },
     },
     base: getBaseRoot(),
     publicDir: './public/',

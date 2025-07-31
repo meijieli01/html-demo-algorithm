@@ -1,8 +1,13 @@
 import { createApp } from 'vue'
+import { createBootstrap } from 'bootstrap-vue-next'
 import App from './App.vue'
 import router from './router'
 import store from './store';
 import { i18n } from './lang/index';
+
+import 'bootstrap/scss/bootstrap.scss';
+import 'bootstrap-vue-next/dist/bootstrap-vue-next.css';
+import 'bootstrap-icons/font/bootstrap-icons.css';
 import './utils/b5.theme';
 
 const newPageList = ['/editor', '/assigned'] // 跳转新页面
@@ -30,4 +35,5 @@ createApp(App)
 .use(router)
 .use(store)
 .use(i18n)
+.use(createBootstrap())
 .mount('#app')

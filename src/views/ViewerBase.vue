@@ -88,7 +88,7 @@ function eventByType(category, event, item, type) {
         event.preventDefault();
         event.stopPropagation();
     } 
-    if (['AI_NightGuard', 'AI_Retainer', 'AI_BracketRemove', 'pmp_retainer'].includes(category)) {        
+    if (['AI_NightGuard', 'AI_Retainer', 'AI_BracketRemove', 'pmp_retainer', 'AI_Oc_Re'].includes(category)) {        
         if (type == 'download') {
             return donwloadByName(item.filename, {
                 prefix: `${category.split('_')[1]}`,

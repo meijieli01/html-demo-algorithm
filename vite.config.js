@@ -66,16 +66,26 @@ export default defineConfig(({mode}) => {
         },
       },
     },
-    server: {
-      port: 8600,
-      strictPort: true,
-      proxy: {
-        '/api': {
-          target: env.VITE_APP_BASE_API,
-          changeOrigin: true,
-          rewrite: (path) => path.replace(/^\/api/, '')
-        }
-      }
-    },
-  }
+        server: {
+            port: 8600,
+            strictPort: true,
+            proxy: {
+                '/api': {
+                  target: env.VITE_APP_BASE_API,
+                  changeOrigin: true,
+                  rewrite: (path) => path.replace(/^\/api/, '')
+                },
+                '/api2': {
+                    target: env.VITE_APP_API_DENTAL,
+                    changeOrigin: true,                
+                    rewrite: (path) => path.replace(/^\/api2/, '')
+                },
+                '/api3': {
+                    target: 'https://studio-china-dev--treatment-generation-modal-generate.modal.run',
+                    changeOrigin: true,                
+                    rewrite: (path) => path.replace(/^\/api3/, '')
+                },
+            }
+        },
+    }
 })

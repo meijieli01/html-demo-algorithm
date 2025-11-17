@@ -1,7 +1,7 @@
 <template>
     <div class="layout-topbar">
         <div class="flex-grow-1 d-flex route-list">
-            <div class="my-auto mx-3" v-for="(sub,i) in viewerInfo" :key="i">
+            <div class="" v-for="(sub,i) in viewerInfo" :key="i">
                 <router-link :to="sub.path" class="" :class="{ active: $route.path === sub.path }" v-html="sub.name"></router-link>
             </div>
         </div>
@@ -43,3 +43,18 @@ async function logout() {
     location.reload();
 }
 </script>
+<style scoped>
+.route-list {
+    font-size: 14px;
+    a {
+        color: lightgray;
+        text-decoration: none;
+        &.active {
+          color: $primary;
+        }
+    }
+    & > div {
+        margin: auto 8px;
+    }
+}
+</style>

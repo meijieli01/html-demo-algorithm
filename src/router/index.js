@@ -35,12 +35,6 @@ export const mapComponent2LocalFile = {
     functionCode: 'ViewerNight',
     functionId: '103',
   },
-  // 'NGRETAINER': {
-  //   component: () => import('../views/one/NGRetainer.vue'),
-  //   functionName: 'NGRetainer',
-  //   functionCode: 'ViewerNGRetainer',
-  //   functionId: '106',
-  // },
   'AiClean': {
     component: () => import('../views/one/AiClean.vue'),
     functionName: 'AiClean',
@@ -86,7 +80,20 @@ const router = createRouter({
 })
 
 if (import.meta.env.DEV) {
-  window.router = router
+    window.router = router;
+    mapComponent2LocalFile.NGRETAINER ={
+        component: () => import('../views/one/NGRetainer.vue'),
+        functionName: 'NGRetainer',
+        functionCode: 'ViewerNGRetainer',
+        functionId: '106',
+    };
+    mapComponent2LocalFile.DentalGod = {
+        component: () => import('../views/dental/DentalGod.vue'),
+        functionName: 'DentalGod',
+        functionCode: 'DentalGod',
+        functionId: '231',
+    };
 }
+
 
 export default router
